@@ -514,4 +514,14 @@ for(pi_r1 in pr_r1_seq){
     print("end pi_r1 loop")
 }
 
+# Clean run saved to 1443_2Oct2018.RData
+
+par(mfrow=c(2,2))
+image(t(totalS))
+title("totalS")
+image(t(totalsr))
+title("totalsr")
+image(t(totalSr))
+title("totalSr")
 image(t(totalsR))
+title("totalsR")
