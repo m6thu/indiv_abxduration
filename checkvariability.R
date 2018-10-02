@@ -15,8 +15,8 @@ mean.max.los<-20                      # mean.max.los= mean of max length of stay
 
 #variable parameters 
 ###epidemiological 
-p.s<-0.5                              # p=probability of receiving antibiotic for sensitive organisms
-p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
+p.s<-0                              # p=probability of receiving antibiotic for sensitive organisms
+p.r<-0                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
 prob_StartBact<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
 #                                     # possible states: S- carry sensitive organism only 
 #                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
@@ -38,7 +38,7 @@ abx.r<-0.3                            # probability of clearing R to become r un
 
 repop.s1<- 0                          # probability of repopulation of s to become S 
 repop.s2<- 0                          # probability of repopulation of sr to become SR 
-repop.s3<- 0.01                       # probability of repopulation of sR to become sr
+repop.s3<- 0                       # probability of repopulation of sR to become sr
 repop.r1<- 0                          # probability of repopulation of Sr to become sR 
 repop.r2<- 0                          # probability of repopulation of sr to become sR 
 
@@ -483,10 +483,10 @@ for (i in 1:iterations){
 
     #increase overtime
     df.short <- colo_table_filled_short[[i]]
-    short_totalR[,i]<- rowSums(df.short == "sR" | df.short == "sr" | df.short == "Sr")
+    short_totalR[,i]<- rowSums(df.short == "sR")
     
     df.long <- colo_table_filled_long[[i]]
-    long_totalR[,i] <- rowSums(df.long == "sR" | df.long == "sr" | df.long == "Sr")
+    long_totalR[,i] <- rowSums(df.long == "sR")
 
 }
 
@@ -494,11 +494,13 @@ for (i in 1:iterations){
 # Debug cases: 36, 61, 160, 163, 212, 240, 258, 275, 300, 557, 565, 648, 658, 692, 735, 783, 813, 897 from run 1501_28Sept2018.RData
 # A clean run: 1553_28Sept2018.RData, still uses lists in iteration collection instead of matrix that is easier to summarize from
 
+
+# Check between 2 simple scenarios
 par(mfrow=c(1,2))
 
 x <- 1:n.days
 y.short <- short_totalR[,1]/n.bed
-r.plot.short <- plot(x, y.short, type="l", ylim=c(0,1), main=paste("Short mean abx:", mean_short, "days"),
+r.plot.short <- plot(x, y.short, type="l", ylim=c(0,1), main=paste("Short mean abx:", mean_short, "days", "(", round(mean(rowSums(short_totalR)/iterations/n.bed), digits=2), ")"),
                      xlab="Time", ylab="% patients carrying MDRO", col=rgb(0,0,0,alpha=0.1))
 for(i in 2:iterations){
     lines(x, short_totalR[,i]/n.bed, col=rgb(0,0,0,alpha=0.1))
@@ -507,7 +509,7 @@ lines(x, rowSums(short_totalR)/iterations/n.bed, col=2)
 abline(h = mean(rowSums(short_totalR)/iterations/n.bed), col=2, lwd=2)
 
 y.long <- long_totalR[,1]/n.bed
-r.plot.long <- plot(x, y.long, type="l", ylim=c(0,1), main=paste("Long mean abx:", mean_long, "days"),
+r.plot.long <- plot(x, y.long, type="l", ylim=c(0,1), main=paste("Long mean abx:", mean_long, "days", "(", round(mean(rowSums(long_totalR)/iterations/n.bed), digits=2), ")"),
                     xlab="Time", ylab="% patients carrying MDRO", col=rgb(0,0,0,alpha=0.1))
 for(i in 2:iterations){
     lines(x, long_totalR[,i]/n.bed, col=rgb(0,0,0,alpha=0.1))
