@@ -442,10 +442,7 @@ mean_dur <- 4                           # antibiotic duration
 
 ######################### Heatmap Prototype (transmission vs prescription) ###########################
 
-abx_table <- list()
-array_LOS_list <- list()
-array_StartBact <- list()
-colo_table_filled <- list()
+save_runs <- list()
 
 pr_r1_seq <- seq(0, 0.01, 0.001) 
 p.s_seq <- seq(0, 1, 0.1)
@@ -454,6 +451,8 @@ totalS <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
 totalsr <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
 totalSr <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
 totalsR <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
+
+iterations <- 10
 
 i <- 1 # total count
 pi_r1_count <- 1
@@ -465,28 +464,55 @@ for(pi_r1 in pr_r1_seq){
     for(p.s in p.s_seq){
         p.r <- 0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
         
-        print(paste(pi_r1, p.s))
-        #Generate length of stay and antibiotic duration table
-        abx_table[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_dur)
-        #Generate baseline carriage status
-        array_LOS_list[[i]] <- array_LOS(los_duration=abx_table[[i]][2])
-        #Update values for every day
-        array_StartBact[[i]] <- gen_StartBact(los=array_LOS_list[[i]], prob_StartBact)
-        #output
-        colo_table_filled[[i]] <- nextDay(bed_table= abx_table[[i]][[1]], array_LOS=array_LOS_list[[i]], 
-                                                treat_table=abx_table[[i]][[3]], colo_table=array_StartBact[[i]], 
-                                                pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, repop.r1 = repop.r1, 
-                                                repop.r2 = repop.r2, repop.s1 = repop.s1, repop.s2 = repop.s2)
-        #Summary
-        df <- colo_table_filled[[i]]
-        totalS[pi_r1_count, p.s_count]<- mean(rowSums(df == "S")/n.bed)
-        totalsr[pi_r1_count, p.s_count]<- mean(rowSums(df == "sr")/n.bed)
-        totalSr[pi_r1_count, p.s_count]<- mean(rowSums(df == "Sr")/n.bed)
-        totalsR[pi_r1_count, p.s_count]<- mean(rowSums(df == "sR")/n.bed)
+        # saves for iterations
+        abx_iter <- list()
+        array_LOS_iter <- list()
+        array_StartBact_iter <- list()
+        colo_table_filled_iter <- list()
+        
+        iter_totalS <- matrix(NA, nrow = n.days, ncol = iterations)
+        iter_totalsr <- matrix(NA, nrow = n.days, ncol = iterations)
+        iter_totalSr <- matrix(NA, nrow = n.days, ncol = iterations)
+        iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+        
+        for(iter in 1:iterations){
+            
+            print(paste("iter:", iter, "pi_r1:", pi_r1_count, '-', pi_r1, "p.s:", p.s_count, '-', p.s))
+            #Generate length of stay and antibiotic duration table
+            abx_iter[[iter]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_dur)
+            #Generate baseline carriage status
+            array_LOS_iter[[iter]] <- array_LOS(los_duration=abx_iter[[iter]][2])
+            #Update values for every day
+            array_StartBact_iter[[iter]] <- gen_StartBact(los=array_LOS_iter[[iter]], prob_StartBact)
+            #output
+            colo_table_filled_iter[[iter]] <- nextDay(bed_table= abx_iter[[iter]][[1]], array_LOS=array_LOS_iter[[iter]], 
+                                                    treat_table=abx_iter[[iter]][[3]], colo_table=array_StartBact_iter[[iter]], 
+                                                    pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, repop.r1 = repop.r1, 
+                                                    repop.r2 = repop.r2, repop.s1 = repop.s1, repop.s2 = repop.s2)
+            #Summary
+            df <- colo_table_filled_iter[[iter]]
+            iter_totalS[,iter] <- rowSums(df == "S")
+            iter_totalsr[,iter] <- rowSums(df == "sr")
+            iter_totalSr[,iter] <- rowSums(df == "Sr")
+            iter_totalsR[,iter] <- rowSums(df == "sR")
+
+            #print("end iteration loop")
+        }
+        save_runs[[i]] <- list(abx_iter, array_LOS_iter, array_StartBact_iter, colo_table_filled_iter, 
+                               iter_totalS, iter_totalsr, iter_totalSr, iter_totalsR)
         # increment index
         i <- i + 1
-        p.s_count <- p.s_count + 1
         
+        totalS[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalS)/iterations/n.bed)
+        totalsr[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalsr)/iterations/n.bed)
+        totalSr[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalSr)/iterations/n.bed)
+        totalsR[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+        
+        p.s_count <- p.s_count + 1
+        print("end p.s loop")
     }
     pi_r1_count <- pi_r1_count + 1
+    print("end pi_r1 loop")
 }
+
+heatmap(totalSr)
