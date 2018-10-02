@@ -516,12 +516,23 @@ for(pi_r1 in pr_r1_seq){
 
 # Clean run saved to 1443_2Oct2018.RData
 
+require(fields)
+
+zlim = range(totalS, totalsr, totalSr, totalsR)
 par(mfrow=c(2,2))
-image(t(totalS))
+image.plot(t(totalS), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
 title("totalS")
-image(t(totalsr))
+axis(1, at = (1:ncol(totalS)-1)/10, labels=as.character(p.s_seq))
+axis(2, at = (1:nrow(totalS)-1)/10, labels=as.character(pr_r1_seq))
+image.plot(t(totalsr), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
 title("totalsr")
-image(t(totalSr))
+axis(1, at = (1:ncol(totalsr)-1)/10, labels=as.character(p.s_seq))
+axis(2, at = (1:nrow(totalsr)-1)/10, labels=as.character(pr_r1_seq))
+image.plot(t(totalSr), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
 title("totalSr")
-image(t(totalsR))
+axis(1, at = (1:ncol(totalSr)-1)/10, labels=as.character(p.s_seq))
+axis(2, at = (1:nrow(totalSr)-1)/10, labels=as.character(pr_r1_seq))
+image.plot(t(totalsR), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
 title("totalsR")
+axis(1, at = (1:ncol(totalsR)-1)/10, labels=as.character(p.s_seq))
+axis(2, at = (1:nrow(totalsR)-1)/10, labels=as.character(pr_r1_seq))
