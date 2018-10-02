@@ -495,7 +495,6 @@ for(pi_r1 in pr_r1_seq){
             iter_totalsr[,iter] <- rowSums(df == "sr")
             iter_totalSr[,iter] <- rowSums(df == "Sr")
             iter_totalsR[,iter] <- rowSums(df == "sR")
-
             #print("end iteration loop")
         }
         save_runs[[i]] <- list(abx_iter, array_LOS_iter, array_StartBact_iter, colo_table_filled_iter, 
@@ -515,4 +514,4 @@ for(pi_r1 in pr_r1_seq){
     print("end pi_r1 loop")
 }
 
-heatmap(totalSr)
+image(t(totalsR))
