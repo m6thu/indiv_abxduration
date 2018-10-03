@@ -411,8 +411,8 @@ mean.max.los <- 20                      # mean.max.los= mean of max length of st
 
 #variable parameters 
 ###epidemiological 
-# p.s<-0                              # p=probability of receiving antibiotic for sensitive organisms
-# p.r<-0                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
+p.s<-0.2                              # p=probability of receiving antibiotic for sensitive organisms
+p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
 prob_StartBact <- c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
 #                                     # possible states: S- carry sensitive organism only 
 #                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
@@ -421,7 +421,7 @@ prob_StartBact <- c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability 
 #                                                        s - carry small population of sensitive organisms 
 
 ###biological 
-# pi_r1 <- 0.003                        # pi_r1= probability of R transmitting to S to become Sr
+pi_r1 <- 0.003                        # pi_r1= probability of R transmitting to S to become Sr
 # bif<- 2                               # bacterial interference factor 
 # pi_r2 <- pi_r1 * bif                  # pi_r2= probability of R transmitting to s to become sr 
 # #                                       (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
@@ -432,11 +432,11 @@ mu2 <- 0                              # mu2= probability of clearance of sr to b
 abx.s <-0.2                            # probability of clearing S to become s under antibiotic treatment (daily)
 abx.r <-0.3                            # probability of clearing R to become r under antibiotic treatment (daily)
 
-repop.s1 <- 0                          # probability of repopulation of s to become S 
-repop.s2 <- 0                          # probability of repopulation of sr to become SR 
-repop.s3 <- 0                       # probability of repopulation of sR to become sr
-repop.r1 <- 0                          # probability of repopulation of Sr to become sR 
-repop.r2 <- 0                          # probability of repopulation of sr to become sR 
+# repop.s1 <- 0                          # probability of repopulation of s to become S 
+# repop.s2 <- 0                          # probability of repopulation of sr to become SR 
+# repop.s3 <- 0                       # probability of repopulation of sR to become sr
+# repop.r1 <- 0                          # probability of repopulation of Sr to become sR 
+# repop.r2 <- 0                          # probability of repopulation of sr to become sR 
 
 mean_dur <- 4                           # antibiotic duration
 
@@ -444,25 +444,39 @@ mean_dur <- 4                           # antibiotic duration
 
 save_runs <- list()
 
-pr_r1_seq <- seq(0, 0.01, 0.001) 
-p.s_seq <- seq(0, 1, 0.1)
+## Change parameters here: START
+y_name <- "bif"
+bif_seq <- seq(0, 500, 100)
+y_seq <- bif_seq
 
-totalS <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
-totalsr <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
-totalSr <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
-totalsR <- matrix(NA, nrow = length(pr_r1_seq), ncol = length(p.s_seq))
+x_name <- "repop.s"
+repop.s_seq <- seq(0, 0.9, 0.1)
+x_seq <- repop.s_seq
 
-iterations <- 10
+iterations <- 10 # repeats per each parameter setting
+# Change parameter: END
+# Other things to consider: if any parameters are dependent add them inside loop below
+# Parameters not added here are considered fixed as defined above in Fixed Parameters
+
+totalS <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+totalsr <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+totalSr <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+totalsR <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
 
 i <- 1 # total count
-pi_r1_count <- 1
-for(pi_r1 in pr_r1_seq){
-    bif <- 2                               # bacterial interference factor 
-    pi_r2 <- pi_r1 * bif                  # pi_r2= probability of R transmitting to s to become sr 
+y_count <- 1
+for(y in y_seq){
+    # calculate parameter dependencies on y paramter here
+    pi_r2 <- pi_r1 * y                  # pi_r2= probability of R transmitting to s to become sr 
     #                                       (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
-    p.s_count <- 1 
-    for(p.s in p.s_seq){
-        p.r <- 0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
+    x_count <- 1 
+    for(x in x_seq){
+        # calculate parameter dependencies on y parameter here
+        repop.s1 <- x                        # probability of repopulation of s to become S 
+        repop.s2 <- x                          # probability of repopulation of sr to become SR 
+        repop.s3 <- x                       # probability of repopulation of sR to become sr
+        repop.r1 <- x*10                          # probability of repopulation of Sr to become sR 
+        repop.r2 <- x*10                          # probability of repopulation of sr to become sR 
         
         # saves for iterations
         abx_iter <- list()
@@ -477,7 +491,7 @@ for(pi_r1 in pr_r1_seq){
         
         for(iter in 1:iterations){
             
-            print(paste("iter:", iter, "pi_r1:", pi_r1_count, '-', pi_r1, "p.s:", p.s_count, '-', p.s))
+            print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
             #Generate length of stay and antibiotic duration table
             abx_iter[[iter]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_dur)
             #Generate baseline carriage status
@@ -502,37 +516,40 @@ for(pi_r1 in pr_r1_seq){
         # increment index
         i <- i + 1
         
-        totalS[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalS)/iterations/n.bed)
-        totalsr[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalsr)/iterations/n.bed)
-        totalSr[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalSr)/iterations/n.bed)
-        totalsR[pi_r1_count, p.s_count] <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+        totalS[y_count, x_count] <- mean(rowSums(iter_totalS)/iterations/n.bed)
+        totalsr[y_count, x_count] <- mean(rowSums(iter_totalsr)/iterations/n.bed)
+        totalSr[y_count, x_count] <- mean(rowSums(iter_totalSr)/iterations/n.bed)
+        totalsR[y_count, x_count] <- mean(rowSums(iter_totalsR)/iterations/n.bed)
         
-        p.s_count <- p.s_count + 1
-        print("end p.s loop")
+        x_count <- x_count + 1
+        #print("end p.s loop")
     }
-    pi_r1_count <- pi_r1_count + 1
-    print("end pi_r1 loop")
+    y_count <- y_count + 1
+    #print("end pi_r1 loop")
 }
 
 # Clean run saved to 1443_2Oct2018.RData
+image_name <- paste0(y_name, "_vs_", x_name, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save.image(paste0(image_name, ".Rdata"))
 
 require(fields)
 
-zlim = range(totalS, totalsr, totalSr, totalsR)
+pdf(image_name)
 par(mfrow=c(2,2))
-image.plot(t(totalS), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
+image.plot(t(totalS), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
 title("totalS")
-axis(1, at = (1:ncol(totalS)-1)/10, labels=as.character(p.s_seq))
-axis(2, at = (1:nrow(totalS)-1)/10, labels=as.character(pr_r1_seq))
-image.plot(t(totalsr), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
+axis(1, at = (1:ncol(totalS)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalS)-1)/10, labels=as.character(y_seq))
+image.plot(t(totalsr), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
 title("totalsr")
-axis(1, at = (1:ncol(totalsr)-1)/10, labels=as.character(p.s_seq))
-axis(2, at = (1:nrow(totalsr)-1)/10, labels=as.character(pr_r1_seq))
-image.plot(t(totalSr), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
+axis(1, at = (1:ncol(totalsr)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalsr)-1)/10, labels=as.character(y_seq))
+image.plot(t(totalSr), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
 title("totalSr")
-axis(1, at = (1:ncol(totalSr)-1)/10, labels=as.character(p.s_seq))
-axis(2, at = (1:nrow(totalSr)-1)/10, labels=as.character(pr_r1_seq))
-image.plot(t(totalsR), xlab="antibiotic prob (p.s)", ylab="transmission prob (pr_r1)", axes=F, col=rev(terrain.colors(100)), zlim = zlim)
+axis(1, at = (1:ncol(totalSr)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalSr)-1)/10, labels=as.character(y_seq))
+image.plot(t(totalsR), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
 title("totalsR")
-axis(1, at = (1:ncol(totalsR)-1)/10, labels=as.character(p.s_seq))
-axis(2, at = (1:nrow(totalsR)-1)/10, labels=as.character(pr_r1_seq))
+axis(1, at = (1:ncol(totalsR)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalsR)-1)/10, labels=as.character(y_seq))
+dev.off()
