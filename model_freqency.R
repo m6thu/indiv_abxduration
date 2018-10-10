@@ -47,14 +47,14 @@ repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to be
 
 # in-host gut
 bact_slots <- 1000                      # environmental carrying capacity
-bact_start <- 100                       # bacteria level (number) for starting 
+bact_start <- 500                       # bacteria level (number) for starting 
                                         # where big letter = 1*bact_start, singly small = 0.5*bact_start
                                         # small next to big = 0.05*bact_start
 R_thres <- 100                          # R threshold level for tranmissibility
-abxr_killr <- 100                       # amount of r killed by broad spectrum abx r
-abxr_kills <- 100                       # amount of s killed by broad spectrum abx r
-abxs_kills <- 100                       # amount of s killed by narrow spectrum abx s
-r_trans <- 50                           # amount transmitted used as (r_trans*pi_p2)
+abxr_killr <- 50                       # amount of r killed by broad spectrum abx r
+abxr_kills <- 50                       # amount of s killed by broad spectrum abx r
+abxs_kills <- 50                       # amount of s killed by narrow spectrum abx s
+r_trans <- 100                           # amount transmitted used as (r_trans*pi_p2)
 
 positive_norm_sample <- function(mean, sd){                      
     v<-round(rnorm(1, mean=mean, sd=sd))
@@ -397,17 +397,32 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
                 grow = 1 - (R_table[i-1, j] + S_table[i-1, j])/bact_slots
                 # update population of R based on equation in scratch paper above
                 # calculate effect of transmission
-                R_trans = r_trans*pi_r
+                R_trans = r_trans
                 # calculate effect of death antibiotics R
                 R_abx = -(treat_table[i-1, j] > 1)*abxr_killr
                 # apply effects (consider what to do if effect causes out of bounds)
                 R_table[i, j] = R_table[i-1, j] + grow + R_trans + R_abx
+                
+                if(R_table[i, j] > bact_slots){
+                    R_table[i, j] = bact_slots
+                }
+                if(R_table[i, j] < 0){
+                    R_table[i, j] = 0
+                }
                 
                 # update population of S
                 # calculate effect of death antibiotics R
                 S_abx = -(treat_table[i-1, j] == 1)*abxr_kills-(treat_table[i-1, j] > 1)*abxr_killr
                 # apply effects (consider what to do if effect causes out of bounds)
                 S_table[i, j] = S_table[i-1, j] + grow + S_abx
+                
+                if(S_table[i, j] > bact_slots){
+                    S_table[i, j] = bact_slots
+                }
+                if(S_table[i, j] < 0){
+                    S_table[i, j] = 0
+                }
+                
             }
         }
         
@@ -417,6 +432,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
 }
 
 abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
+abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
 
 array_LOS_short<-array_LOS(los_duration=abx.short[2])
 array_LOS_long<- array_LOS(los_duration=abx.long[2])
@@ -449,22 +465,22 @@ abx_img.short<-image(1:nrow(abx.mat.short),1:ncol(abx.mat.short),abx.mat.short,c
 abx_img.long<-image(1:nrow(abx.mat.long),1:ncol(abx.mat.long),abx.mat.long,col=cols.a, xlab='Time', ylab='Bed No.', main="Long duration of antibiotics")
 
 #carriage pixel
-orig_short <- colo_table_filled_short
+orig_short <- colo_table_filled_short[[2]]
 dim.saved <- dim(orig_short)
-colo_table_filled_short[colo_table_filled_short=="S" | colo_table_filled_short=="s"] <- s1
-colo_table_filled_short[colo_table_filled_short=="sr"|colo_table_filled_short=="Sr"|colo_table_filled_short=="sR"] <- 2
-colo_table_filled_short <- as.numeric(colo_table_filled_short)
-dim(colo_table_filled_short)<-dim.saved
+colo_table_filled_short[[2]][colo_table_filled_short[[2]] > 0] <- 1
+colo_table_filled_short[[2]][colo_table_filled_short[[2]] < 0] <- 2
+colo_table_filled_short[[2]] <- as.numeric(colo_table_filled_short[[2]])
+dim(colo_table_filled_short[[2]])<-dim.saved
 
-orig_long <- colo_table_filled_long
-colo_table_filled_long[colo_table_filled_long=="S" | colo_table_filled_long=="s"]<-1
-colo_table_filled_long[colo_table_filled_long=="sr"|colo_table_filled_long=="Sr"|colo_table_filled_long=="sR"]<-2
-colo_table_filled_long<-as.numeric(colo_table_filled_long)
-dim(colo_table_filled_long)<-dim.saved
+orig_long <- colo_table_filled_long[[2]]
+colo_table_filled_long[[2]][colo_table_filled_long[[2]] > 0]<-1
+colo_table_filled_long[[2]][colo_table_filled_long[[2]] < 0]<-2
+colo_table_filled_long[[2]]<-as.numeric(colo_table_filled_long[[2]])
+dim(colo_table_filled_long[[2]])<-dim.saved
 
-cols<-c('chartreuse3', 'red')
-col_img.short<-image(1:nrow(colo_table_filled_short),1:ncol(colo_table_filled_short), colo_table_filled_short, col=cols, xlab='Time', ylab='Bed No.')
-col_img.long<-image(1:nrow(colo_table_filled_long),1:ncol(colo_table_filled_long),colo_table_filled_long,col=cols, xlab='Time', ylab='Bed No.')
+cols<-c('red','chartreuse3')
+col_img.short<-image(1:nrow(colo_table_filled_short[[2]]),1:ncol(colo_table_filled_short[[2]]), colo_table_filled_short[[2]], col=cols, xlab='Time', ylab='Bed No.')
+col_img.long<-image(1:nrow(colo_table_filled_long[[2]]),1:ncol(colo_table_filled_long[[2]]),colo_table_filled_long[[2]],col=cols, xlab='Time', ylab='Bed No.')
 
 #increase overtime
 df.short<-as.data.frame(orig_short)
