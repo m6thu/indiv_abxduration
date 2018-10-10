@@ -3,7 +3,7 @@
 #########################################################################
 
 rm(list=ls()) # Clean working environment
-setwd("/Users/moyin/Desktop") #set working directory
+setwd("~/Desktop") #set working directory
 
 ###########################1. Input parameters##########################
 #fixed parameters 

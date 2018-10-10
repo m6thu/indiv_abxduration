@@ -1,48 +1,11 @@
-# Adapted from MDP_individualmodel_110918.R
+# Adapted from checkvariability.R
 
 #########################################################################
 #######Effect of antibiotic duration on hospitalised patients############
 #########################################################################
 
 rm(list=ls()) # Clean working environment
-setwd("~/Desktop") #set working directory
-
-###########################1. Input parameters##########################
-#fixed parameters 
-n.bed<-20                             # n.bed= number of beds in the ward
-n.days<- 100                          # n.days= number of days we want to observe
-mean.max.los<-20                      # mean.max.los= mean of max length of stay (normal distribution)
-
-#variable parameters 
-###epidemiological 
-p.s<-0.2                              # p=probability of receiving antibiotic for sensitive organisms
-p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
-prob_StartBact<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
-#                                     # possible states: S- carry sensitive organism only 
-#                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
-#                                                        sR- carry largely resistant organisms and small population of sensitive organisms
-#                                                        sr- carry small population of sensitive organisms and resistant organisms
-#                                                        s - carry small population of sensitive organisms 
-
-###biological 
-pi_r1 <- 0.003                        # pi_r1= probability of R transmitting to S to become Sr
-bif<- 2                               # bacterial interference factor 
-pi_r2 <- pi_r1 * bif                  # pi_r2= probability of R transmitting to s to become sr 
-#                                       (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
-
-mu1 <- 0                              # mu1= probability of clearance of Sr to become S
-mu2 <- 0                              # mu2= probability of clearance of sr to become s 
-
-abx.s<-0.2                            # probability of clearing S to become s under antibiotic treatment (daily)
-abx.r<-0.3                            # probability of clearing R to become r under antibiotic treatment (daily)
-
-repop.s1<- 0                          # probability of repopulation of s to become S 
-repop.s2<- 0                          # probability of repopulation of sr to become SR 
-repop.s3<- 0                       # probability of repopulation of sR to become sr
-repop.r1<- 0                          # probability of repopulation of Sr to become sR 
-repop.r2<- 0                          # probability of repopulation of sr to become sR 
-
-bact_start <- 1000
+setwd("~/Desktop/model ver2 exploration") #set working directory
 
 positive_norm_sample <- function(mean, sd){                      
     v<-round(rnorm(1, mean=mean, sd=sd))
@@ -75,7 +38,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
     patient.id <- c(1:n.patient)    
     #vectorise the patient id to be used for filling in the patient.matrix
     
-    vector.los <- rep(0, n.days)
+    vector.los <- rep(0,n.days)
     #Generating a vector with 0s 
     #make up an empty vector for 0th column of matrix so that the next column starts with 
     #(last patient number of the previous column+i)
@@ -328,8 +291,7 @@ gen_StartBact <- function(los, prob_StartBact){
     Patient_StartBact[Patient_unif <= sum(prob_StartBact[1])] <- 'S'
     
     #Creating matrix for carriage status
-    S_Bactlevelstart <- matrix(NA, n.days, n.bed)
-    R_Bactlevelstart <- matrix(NA, n.days, n.bed)
+    array_StartBact <- matrix(NA, n.days, n.bed)
     
     end_idx <- 1
     for(i in 1:number_of_patients){
@@ -337,43 +299,15 @@ gen_StartBact <- function(los, prob_StartBact){
         # print(paste(end_idx, end_idx + los[2, i] - 1))
         # print(c(Patient_StartBact[i], rep(NA, los[2, i]-1)))
         # print(length(c(Patient_StartBact[i], rep(NA, los[2, i]-1))))
-        if(Patient_StartBact[i] == 's'){
-            S_level <- 0.5*bact_start
-            R_level <- 0*bact_start
-        }else if(Patient_StartBact[i] == 'sr'){
-            S_level <- 0.5*bact_start
-            R_level <- 0.5*bact_start
-        }else if(Patient_StartBact[i] == 'sR'){
-            S_level <- 0.05*bact_start
-            R_level <- 1*bact_start
-        }else if(Patient_StartBact[i] == 'Sr'){
-            S_level <- 1*bact_start
-            R_level <- 0.05*bact_start
-        }else if(Patient_StartBact[i] == 'S'){
-            S_level <- 1*bact_start
-            R_level <- 0*bact_start
-        }else{
-            stop("gen_StartBact did not give defined state to translate into bacteria level")
-        }
-        
-        S_Bactlevelstart[end_idx:(end_idx + los[2, i] - 1)] <- c(S_level, rep(NA, los[2, i]-1))
-        R_Bactlevelstart[end_idx:(end_idx + los[2, i] - 1)] <- c(R_level, rep(NA, los[2, i]-1))
+        array_StartBact[end_idx:(end_idx + los[2, i] - 1)] <- c(Patient_StartBact[i], rep(NA, los[2, i]-1))
         end_idx = end_idx + los[2, i]
     }
     
-    return(list(S_Bactlevelstart, R_Bactlevelstart))
-}
-
-updateGut <- function(){
-    
+    return(array_StartBact)
 }
 
 # 4. Update values for every day (define function)
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, 
-                    repop.r1, repop.r2, repop.s1, repop.s2){
-    
-    S_table <- colo_table[[1]]
-    R_table <- colo_table[[2]]
+nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,repop.s3, abx.r,abx.s){
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
@@ -384,7 +318,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
             #print(colo_table[i-1, j])
             if(is.na(colo_table[i, j])){
                 if(colo_table[i-1, j] == "S"){
-                    # print("----case S")
+                    #print("----case S")
                     # check antibiotic
                     roll_clear <- runif(1, 0, 1)
                     roll_transmit <- runif(1, 0, 1)
@@ -436,12 +370,14 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
                     #print("----case sr")
                     roll_repop <- runif(1, 0, 1)
                     roll_decolonise <- runif(1, 0, 1)
-                    # check antibiotics 
+                    # check antibiotics
                     if(treat_table[i-1, j] == 1 & roll_repop < repop.r2){
                         colo_table[i, j] <- "sR"
-                    }else if(treat_table[i-1, j] == 0 &roll_repop < repop.s2){
+                    }else if(treat_table[i-1, j] == 0 & roll_repop < repop.s2){
                         colo_table[i, j] <- "Sr"
-                    }else if (roll_decolonise < mu2){ 
+                    }else if(treat_table[i-1, j] == 0 & roll_repop < repop.r3){
+                        colo_table[i, j] <- "sR"
+                    }else if (roll_decolonise < mu2){
                         colo_table[i, j] <- "s"
                     }else {
                         colo_table[i, j] <- "sr"
@@ -466,110 +402,158 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
         }  # for j
     } # for i
     
-    return(list(S_table, R_table))
+    return(colo_table)
 }
 
-abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
-abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
+###################### Fixed parameters for heatmap ######################
+#fixed parameters 
+n.bed <- 20                             # n.bed= number of beds in the ward
+n.days <- 100                           # n.days= number of days we want to observe
+mean.max.los <- 20                      # mean.max.los= mean of max length of stay (normal distribution)
 
-array_LOS_short<-array_LOS(los_duration=abx.short[2])
-array_LOS_long<- array_LOS(los_duration=abx.long[2])
+#variable parameters 
+###epidemiological 
+p.s<-0.4                                # p=probability of receiving antibiotic for sensitive organisms
+p.r<-0.05                               # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
+prob_StartBact <- c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
+#                                       # possible states: S- carry sensitive organism only 
+#                                                         Sr- carry largely sensitive organisms and small population of resistant organisms
+#                                                         sR- carry largely resistant organisms and small population of sensitive organisms
+#                                                         sr- carry small population of sensitive organisms and resistant organisms
+#                                                          s - carry small population of sensitive organisms 
 
-array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact)
-array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
+###biological
+pi_r1 <- 0.003                         # pi_r1= probability of R transmitting to S to become Sr
+bif<- 20                               # bacterial interference factor - how much high proportion of S protects against colonisation with R
+pi_r2 <- pi_r1 * bif                   # pi_r2= probability of R transmitting to s to become sr
+# #                                      (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
 
-colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
-                                   treat_table=abx.short[[3]], colo_table=array_StartBact_short, 
-                                   pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                   repop.r1 = repop.r1, repop.r2 = repop.r2, 
-                                   repop.s1 = repop.s1, repop.s2 = repop.s2)
-colo_table_filled_long <- nextDay(bed_table= abx.long[[1]], array_LOS=array_LOS_long, 
-                                  treat_table=abx.long[[3]], colo_table=array_StartBact_long, 
-                                  pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                  repop.r1 = repop.r1, repop.r2 = repop.r2, 
-                                  repop.s1 = repop.s1, repop.s2 = repop.s2)
+mu1 <- 0                              # mu1= probability of clearance of Sr to become S
+mu2 <- 0.01                           # mu2= probability of clearance of sr to become s
 
-####################6. Visualisation #####################
+abx.s <-0.5                            # probability of clearing S to become s under antibiotic treatment (daily)
+abx.r <-0.5                            # probability of clearing R to become r under antibiotic treatment (daily)
 
-#present in one space
-par(mfrow=c(4,2))
+repop.s1 <- 0                          # probability of repopulation of s to become S
+repop.s2 <- 0                          # probability of repopulation of sr to become SR
+repop.s3 <- 0.05                       # probability of repopulation of sR to become sr
+repop.r1 <- 0                          # probability of repopulation of Sr to become sR
+repop.r2 <- 0.5                        # probability of repopulation of sr to become sR
+bif1<- 0.2                             # bacterial interference factor - how much antibiotics selects for R
+repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
+#                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
 
-#plots
-#antibiotics pixel
-abx.mat.short<- abx.short[[3]]
-abx.mat.long<- abx.long[[3]]
-cols.a<-c('0'='grey', '1'='orange', '2'= 'orange3','3'= 'orange3')
-abx_img.short<-image(1:nrow(abx.mat.short),1:ncol(abx.mat.short),abx.mat.short,col=cols.a, xlab='Time', ylab='Bed No.', main="Short duration of antibiotics")
-abx_img.long<-image(1:nrow(abx.mat.long),1:ncol(abx.mat.long),abx.mat.long,col=cols.a, xlab='Time', ylab='Bed No.', main="Long duration of antibiotics")
+######################### Heatmap Prototype (transmission vs prescription) ###########################
 
-#carriage pixel
-orig_short <- colo_table_filled_short
-dim.saved <- dim(orig_short)
-colo_table_filled_short[colo_table_filled_short=="S" | colo_table_filled_short=="s"] <- s1
-colo_table_filled_short[colo_table_filled_short=="sr"|colo_table_filled_short=="Sr"|colo_table_filled_short=="sR"] <- 2
-colo_table_filled_short <- as.numeric(colo_table_filled_short)
-dim(colo_table_filled_short)<-dim.saved
+save_runs <- list()
 
-orig_long <- colo_table_filled_long
-colo_table_filled_long[colo_table_filled_long=="S" | colo_table_filled_long=="s"]<-1
-colo_table_filled_long[colo_table_filled_long=="sr"|colo_table_filled_long=="Sr"|colo_table_filled_long=="sR"]<-2
-colo_table_filled_long<-as.numeric(colo_table_filled_long)
-dim(colo_table_filled_long)<-dim.saved
+interval.x=10
+interval.y=10
 
-cols<-c('chartreuse3', 'red')
-col_img.short<-image(1:nrow(colo_table_filled_short),1:ncol(colo_table_filled_short), colo_table_filled_short, col=cols, xlab='Time', ylab='Bed No.')
-col_img.long<-image(1:nrow(colo_table_filled_long),1:ncol(colo_table_filled_long),colo_table_filled_long,col=cols, xlab='Time', ylab='Bed No.')
+## Change parameters here: START
+mean_dur <- 4                           # antibiotic duration
 
-#increase overtime
-df.short<-as.data.frame(orig_short)
-df.short$totalR<-rep(0, nrow(df.short))
-for (i in 1:nrow(df.short)) {
-    for (j in 1:ncol(df.short)) {
-        if(df.short[i, j]=="sR"|df.short[i, j]=="sr"|df.short[i, j]=="Sr") {
-            df.short$totalR[i] <- df.short$totalR[i] + 1
+x_name <- "bif"
+bif_seq <- seq(1, 20, length.out = interval.y)
+x_seq<- pi_r1 * bif_seq  
+
+y_name <- "repop.r2"
+y_seq <- seq(0,0.9, length.out = interval.y)
+
+iterations <- 10 # repeats per each parameter setting
+# Change parameter: END
+# Other things to consider: if any parameters are dependent add them inside loop below
+# Parameters not added here are considered fixed as defined above in Fixed Parameters
+
+totalS <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+totalsr <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+totalSr <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+totalsR <- matrix(NA, nrow = length(y_seq), ncol = length(x_seq))
+
+i <- 1 # total count
+y_count <- 1
+for(y in y_seq){
+    x_count <- 1 
+    for(x in x_seq){
+        
+        # saves for iterations
+        abx_iter <- list()
+        array_LOS_iter <- list()
+        array_StartBact_iter <- list()
+        colo_table_filled_iter <- list()
+        
+        iter_totalS <- matrix(NA, nrow = n.days, ncol = iterations)
+        iter_totalsr <- matrix(NA, nrow = n.days, ncol = iterations)
+        iter_totalSr <- matrix(NA, nrow = n.days, ncol = iterations)
+        iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+        
+        #insert variables for exploration here 
+        pi_r2 <-x
+        repop.r2<-y
+    
+        for(iter in 1:iterations){
+            
+            print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
+            #Generate length of stay and antibiotic duration table
+            abx_iter[[iter]] <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=mean_dur)
+            #Generate baseline carriage status
+            array_LOS_iter[[iter]] <- array_LOS(los_duration=abx_iter[[iter]][2])
+            #Update values for every day
+            array_StartBact_iter[[iter]] <- gen_StartBact(los=array_LOS_iter[[iter]], prob_StartBact)
+            #output
+            colo_table_filled_iter[[iter]] <- nextDay(bed_table= abx_iter[[iter]][[1]], array_LOS=array_LOS_iter[[iter]], 
+                                                    treat_table=abx_iter[[iter]][[3]], colo_table=array_StartBact_iter[[iter]], 
+                                                    pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
+                                                    abx.r=abx.r,abx.s=abx.s,
+                                                    repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
+                                                    repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
+            #Summary
+            df <- colo_table_filled_iter[[iter]]
+            iter_totalS[,iter] <- rowSums(df == "S")
+            iter_totalsr[,iter] <- rowSums(df == "sr")
+            iter_totalSr[,iter] <- rowSums(df == "Sr")
+            iter_totalsR[,iter] <- rowSums(df == "sR")
+            #print("end iteration loop")
         }
+        save_runs[[i]] <- list(abx_iter, array_LOS_iter, array_StartBact_iter, colo_table_filled_iter, 
+                               iter_totalS, iter_totalsr, iter_totalSr, iter_totalsR)
+        # increment index
+        i <- i + 1
+        
+        totalS[y_count, x_count] <- mean(rowSums(iter_totalS)/iterations/n.bed)
+        totalsr[y_count, x_count] <- mean(rowSums(iter_totalsr)/iterations/n.bed)
+        totalSr[y_count, x_count] <- mean(rowSums(iter_totalSr)/iterations/n.bed)
+        totalsR[y_count, x_count] <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+        
+        x_count <- x_count + 1
     }
+    y_count <- y_count + 1
+
 }
 
-df.long<-as.data.frame(orig_long)
-df.long$totalR<-rep(0, nrow(df.long))
-for (i in 1:nrow(df.long)) {
-    for (j in 1:ncol(df.long)) {
-        if (df.long[i,j]=="sR"|df.long[i,j]=="sr"|df.long[i,j]=="Sr") {
-            df.long$totalR[i] <- df.long$totalR[i] + 1
-        }
-    }
-}
+# Clean run saved to 1443_2Oct2018.RData
+image_name <- paste0(y_name, "_vs_", x_name, "_", mean_dur, "days", format(Sys.time(), "%d%b%Y_%H%M%Z"), ".pdf")
+save.image(paste0(image_name, ".Rdata"))
 
-x <- c(1:n.days)
-y.short <- df.short$totalR/n.bed
-y.long <- df.long$totalR/n.bed
-r.plot.short<-plot(x,y.short, type="l", ylim=c(0,1), xlab="Time", ylab="% patients carrying MDRO")
-lines(x,y.long, col=2)
-r.plot.long<-plot(x, y.long, type="l", ylim=c(0,1), xlab="Time", ylab="% patients carrying MDRO")
+require(fields)
 
-#total acquisitions 
-df.short$newR <- rep(0, nrow(df.short))
-df.long$newR <- rep(0, nrow(df.long))
+pdf(image_name)
+par(mfrow=c(2,2))
+image.plot(t(totalS), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
+title("totalS")
+axis(1, at = (1:ncol(totalS)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalS)-1)/10, labels=as.character(y_seq))
+image.plot(t(totalsr), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
+title("totalsr")
+axis(1, at = (1:ncol(totalsr)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalsr)-1)/10, labels=as.character(y_seq))
+image.plot(t(totalSr), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
+title("totalSr")
+axis(1, at = (1:ncol(totalSr)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalSr)-1)/10, labels=as.character(y_seq))
+image.plot(t(totalsR), xlab=x_name, ylab=y_name, axes=F, col=rev(terrain.colors(100)))
+title("totalsR")
+axis(1, at = (1:ncol(totalsR)-1)/10, labels=as.character(x_seq))
+axis(2, at = (1:nrow(totalsR)-1)/10, labels=as.character(y_seq))
+dev.off()
 
-for(i in 2:nrow(df.short)){
-    for(j in 1:ncol(df.short)){
-        if((df.short[i, j] == "sR"|df.short[i, j] == "sr"|df.short[i, j] == "Sr") & (df.short[i-1, j] == "S" | df.short[i-1, j] == "s")){
-            df.short$newR[i] <- df.short$newR[i] + 1 
-        }
-    }
-}
-y.short<- df.short$newR
-
-for(i in 2:nrow(df.long)){
-    for(j in 1:ncol(df.long)){
-        if((df.long[i, j] == "sR"|df.long[i, j] == "sr"|df.long[i, j] == "Sr") & (df.long[i-1, j] == "S" | df.long[i-1, j] == "s")){
-            df.long$newR[i] <- df.long$newR[i] + 1 
-        }
-    }
-}
-y.long<- df.long$newR
-
-acq.short<-plot(x,y.short, type='l', xlab="Time", ylab="Number of patients acquiring MDRO")
-lines(x,y.long, col=2)
-acq.long<-plot(x,y.long, type='l', xlab="Time", ylab="Number of patients acquiring MDRO")
