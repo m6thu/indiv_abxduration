@@ -30,19 +30,31 @@ bif<- 2                               # bacterial interference factor
 pi_r2 <- pi_r1 * bif                  # pi_r2= probability of R transmitting to s to become sr 
 #                                       (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
 
-mu1 <- 0                              # mu1= probability of clearance of Sr to become S
-mu2 <- 0                              # mu2= probability of clearance of sr to become s 
+mu1 <- 0.01                              # mu1= probability of clearance of Sr to become S
+mu2 <- 0.02                              # mu2= probability of clearance of sr to become s 
 
 abx.s<-0.2                            # probability of clearing S to become s under antibiotic treatment (daily)
 abx.r<-0.3                            # probability of clearing R to become r under antibiotic treatment (daily)
 
-repop.s1<- 0                          # probability of repopulation of s to become S 
-repop.s2<- 0                          # probability of repopulation of sr to become SR 
-repop.s3<- 0                       # probability of repopulation of sR to become sr
-repop.r1<- 0                          # probability of repopulation of Sr to become sR 
-repop.r2<- 0                          # probability of repopulation of sr to become sR 
+repop.s1<- 0.1                          # probability of repopulation of s to become S 
+repop.s2<- 0.2                          # probability of repopulation of sr to become SR 
+repop.s3<- 0.3                       # probability of repopulation of sR to become sr
+repop.r1<- 0.4                          # probability of repopulation of Sr to become sR 
+repop.r2<- 0.5                          # probability of repopulation of sr to become sR 
+bif1<- 0.2                             # bacterial interference factor - how much antibiotics selects for R
+repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
+#                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
 
-bact_start <- 1000
+# in-host gut
+bact_slots <- 1000                      # environmental carrying capacity
+bact_start <- 100                       # bacteria level (number) for starting 
+                                        # where big letter = 1*bact_start, singly small = 0.5*bact_start
+                                        # small next to big = 0.05*bact_start
+R_thres <- 100                          # R threshold level for tranmissibility
+abxr_killr <- 100                       # amount of r killed by broad spectrum abx r
+abxr_kills <- 100                       # amount of s killed by broad spectrum abx r
+abxs_kills <- 100                       # amount of s killed by narrow spectrum abx s
+r_trans <- 50                           # amount transmitted used as (r_trans*pi_p2)
 
 positive_norm_sample <- function(mean, sd){                      
     v<-round(rnorm(1, mean=mean, sd=sd))
@@ -364,113 +376,47 @@ gen_StartBact <- function(los, prob_StartBact){
     return(list(S_Bactlevelstart, R_Bactlevelstart))
 }
 
-updateGut <- function(){
-    
-}
-
 # 4. Update values for every day (define function)
 nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, 
-                    repop.r1, repop.r2, repop.s1, repop.s2){
+                    repop.r1, repop.r2, repop.r3, repop.s1, repop.s2){
     
     S_table <- colo_table[[1]]
     R_table <- colo_table[[2]]
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
-        # For each bed
+        # elect transmission candidates (from a threshold)
+        # from number of candidates calculate transmissibility of R
+        
+        r_num <- sum(R_table[i-1,] > R_thres)
+        prob_r <- 1-((1-pi_r2)^r_num)
+        #for each person:
         for(j in 1:ncol(bed_table)){
-            #case S
-            #print(paste("i:", i, "j:", j))
-            #print(colo_table[i-1, j])
-            if(is.na(colo_table[i, j])){
-                if(colo_table[i-1, j] == "S"){
-                    # print("----case S")
-                    # check antibiotic
-                    roll_clear <- runif(1, 0, 1)
-                    roll_transmit <- runif(1, 0, 1)
-                    if (treat_table[i-1, j] == 1 & roll_clear < abx.s){
-                        colo_table[i, j] <- "s"
-                    } else if (treat_table[i-1, j] > 1 & roll_clear < abx.r){
-                        colo_table[i, j] <- "s"
-                    } else if (roll_transmit < pi_r1){ 
-                        colo_table[i, j] <- "Sr"
-                    }else {
-                        colo_table[i, j] <- "S"
-                    }
-                    
-                    # case s
-                }else if(colo_table[i-1, j] == "s"){
-                    #print("----case s")
-                    # roll for transmission of r
-                    roll_r <- runif(1, 0, 1)
-                    r_num <- sum(colo_table[i-1,] == "sR") #only R can be transmitted 
-                    prob_r <- 1-((1-pi_r2)^r_num)
-                    # roll for repopulation of s to become S
-                    roll_s <- runif(1, 0, 1)
-                    if (roll_r < prob_r) { 
-                        colo_table[i,j]<-"sr" 
-                    } else if ( roll_s < repop.s1) {
-                        colo_table[i,j]<-"S" 
-                    } else{
-                        colo_table[i, j] <- "s"
-                    }
-                    
-                    # case Sr
-                }else if(colo_table[i-1, j] == "Sr"){
-                    #print("----case Sr")
-                    # check antibiotics 
-                    roll_clear <- runif(1, 0, 1)
-                    roll_decolonise <- runif(1, 0, 1)
-                    if(treat_table[i-1, j] ==1 & roll_clear < abx.s){
-                        colo_table[i, j] <- "sr"
-                    } else if (treat_table[i-1, j] >1 & roll_clear < abx.r ) {
-                        colo_table[i, j] <- "sr"
-                    } else if(roll_decolonise < mu1){ 
-                        colo_table[i, j] <- "S"
-                    }else {
-                        colo_table[i, j] <- "Sr"
-                    }
-                    
-                    # case sr
-                }else if(colo_table[i-1, j] == "sr"){
-                    #print("----case sr")
-                    roll_repop <- runif(1, 0, 1)
-                    roll_decolonise <- runif(1, 0, 1)
-                    # check antibiotics 
-                    if(treat_table[i-1, j] == 1 & roll_repop < repop.r2){
-                        colo_table[i, j] <- "sR"
-                    }else if(treat_table[i-1, j] == 0 &roll_repop < repop.s2){
-                        colo_table[i, j] <- "Sr"
-                    }else if (roll_decolonise < mu2){ 
-                        colo_table[i, j] <- "s"
-                    }else {
-                        colo_table[i, j] <- "sr"
-                    }
-                    
-                    # case sR
-                }else if(colo_table[i-1, j] == "sR"){
-                    #print("----case sR")
-                    roll_clear <- runif(1, 0, 1)
-                    if(treat_table[i-1, j] > 1 & roll_clear < abx.r){
-                        colo_table[i, j] <- "sr"
-                    }else if (treat_table[i-1, j] == 0 & roll_clear < repop.s3){
-                        colo_table[i, j] <- "sr"
-                    }else {
-                        colo_table[i, j] <- "sR"
-                    }
-                }else{
-                    print("error")
-                    colo_table[i, j] <- "E"
-                }
-            } # if 0
-        }  # for j
-    } # for i
+            if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
+                # calculate effect of bacteria growth (repop)
+                grow = 1 - (R_table[i-1, j] + S_table[i-1, j])/bact_slots
+                # update population of R based on equation in scratch paper above
+                # calculate effect of transmission
+                R_trans = r_trans*pi_r
+                # calculate effect of death antibiotics R
+                R_abx = -(treat_table[i-1, j] > 1)*abxr_killr
+                # apply effects (consider what to do if effect causes out of bounds)
+                R_table[i, j] = R_table[i-1, j] + grow + R_trans + R_abx
+                
+                # update population of S
+                # calculate effect of death antibiotics R
+                S_abx = -(treat_table[i-1, j] == 1)*abxr_kills-(treat_table[i-1, j] > 1)*abxr_killr
+                # apply effects (consider what to do if effect causes out of bounds)
+                S_table[i, j] = S_table[i-1, j] + grow + S_abx
+            }
+        }
+        
+    }
     
     return(list(S_table, R_table))
 }
 
 abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
-abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
 
 array_LOS_short<-array_LOS(los_duration=abx.short[2])
 array_LOS_long<- array_LOS(los_duration=abx.long[2])
@@ -481,12 +427,12 @@ array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
 colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
                                    treat_table=abx.short[[3]], colo_table=array_StartBact_short, 
                                    pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                   repop.r1 = repop.r1, repop.r2 = repop.r2, 
+                                   repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3=repop.r3,
                                    repop.s1 = repop.s1, repop.s2 = repop.s2)
 colo_table_filled_long <- nextDay(bed_table= abx.long[[1]], array_LOS=array_LOS_long, 
                                   treat_table=abx.long[[3]], colo_table=array_StartBact_long, 
                                   pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                  repop.r1 = repop.r1, repop.r2 = repop.r2, 
+                                  repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3=repop.r3, 
                                   repop.s1 = repop.s1, repop.s2 = repop.s2)
 
 ####################6. Visualisation #####################
