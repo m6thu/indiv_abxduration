@@ -4,6 +4,7 @@
 
 rm(list=ls()) # Clean working environment
 
+# model can be "simple", "binary", or "frequency"
 model <- "frequency"
 
 source("default_params.R")
@@ -125,8 +126,8 @@ if(model == "binary"){
     layout(rbind(c(1,1,2,2),
                  c(3,3,4,4),
                  c(5,5,6,6),
-                 c(7,7,8,8),
-                 c(0,9,9,0)
+                 #c(7,7,8,8),
+                 c(0,7,7,0)
     ))
     
     #plots

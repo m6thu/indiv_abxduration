@@ -243,7 +243,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
     return(list(patient.matrix, los_duration, matrix_AtbTrt3))
 }
 
-array_LOS<- function(los_duration) {
+array_LOS_func<- function(los_duration) {
     los.dur<-as.vector(table(los_duration))
     array_LOS<-array(dim=c(2,length(los.dur)))
     array_LOS[1,]<-c(1:length(los.dur))
@@ -314,7 +314,7 @@ gen_StartBact <- function(los, prob_StartBact){
 
 # 4. Update values for every day (define function)
 nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
-                    pi_r1, pi_r2, mu1, mu2, 
+                    pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                     repop.r1, repop.r2, repop.r3, repop.s1, repop.s2){
     
     S_table <- colo_table[[1]]
@@ -369,6 +369,68 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     return(list(S_table, R_table))
 }
 
+whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
+                        prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                        repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,
+                        iterations=10, short_dur, long_dur){
+    
+    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    for(iter in 1:iterations){
+        
+        #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
+        #Generate length of stay and antibiotic duration table
+        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=short_dur)
+        #Generate baseline carriage status
+        array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
+        #Update values for every day
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        #output
+        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
+                                          treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
+                                          pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
+                                          abx.r=abx.r,abx.s=abx.s,
+                                          repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
+                                          repop.s1 = repop.s1, repop.s2 = repop.s2)
+        #Summary
+        df <- data.frame(colo_table_filled_iter[[2]])
+        iter_totalsR[, iter] <- rowSums(df)
+        #print("end iteration loop")
+    }
+    totalsR_short <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    
+    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    for(iter in 1:iterations){
+        
+        #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
+        #Generate length of stay and antibiotic duration table
+        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=long_dur)
+        #Generate baseline carriage status
+        array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
+        #Update values for every day
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        #output
+        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
+                                          treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
+                                          pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
+                                          abx.r=abx.r,abx.s=abx.s,
+                                          repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
+                                          repop.s1 = repop.s1, repop.s2 = repop.s2)
+        #Summary
+        df <- data.frame(colo_table_filled_iter[[2]])
+        iter_totalsR[,iter] <- rowSums(df)
+        #print("end iteration loop")
+    }
+    totalsR_long <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    
+    print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
+    
+    return(totalsR_long - totalsR_short)
+}
+
+# whole_model(n.bed, n.days, mean.max.los, p.s, p.r,
+# prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+# repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,
+# iterations=10, 4, 14)
 
 ######################### Heatmap Prototype (transmission vs prescription) ###########################
 # 
