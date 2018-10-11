@@ -36,4 +36,16 @@ bif1<- 0.2                             # bacterial interference factor - how muc
 repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
 #                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
 
-mean_dur <- 4                           # antibiotic duration
+### in-host gut
+bact_slots <- 1000                      # environmental carrying capacity
+bact_start <- 500                       # bacteria level (number) for starting 
+                                        # where big letter = 1*bact_start, singly small = 0.5*bact_start
+                                        # small next to big = 0.05*bact_start
+R_thres <- 100                          # R threshold level for tranmissibility
+abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
+abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
+abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
+r_trans <- 100                          # amount transmitted
+r_growth <- 2                           # growth constant for logistic growth
+
+mean_dur <- 4                           # antibiotic duration (days)

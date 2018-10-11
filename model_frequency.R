@@ -1,61 +1,3 @@
-# Adapted from MDP_individualmodel_110918.R
-
-#########################################################################
-#######Effect of antibiotic duration on hospitalised patients############
-#########################################################################
-
-rm(list=ls()) # Clean working environment
-setwd("~/Desktop") #set working directory
-
-###########################1. Input parameters##########################
-#fixed parameters 
-n.bed<-20                             # n.bed= number of beds in the ward
-n.days<- 100                          # n.days= number of days we want to observe
-mean.max.los<-20                      # mean.max.los= mean of max length of stay (normal distribution)
-
-#variable parameters 
-###epidemiological 
-p.s<-0.2                              # p=probability of receiving antibiotic for sensitive organisms
-p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
-prob_StartBact<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
-#                                     # possible states: S- carry sensitive organism only 
-#                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
-#                                                        sR- carry largely resistant organisms and small population of sensitive organisms
-#                                                        sr- carry small population of sensitive organisms and resistant organisms
-#                                                        s - carry small population of sensitive organisms 
-
-###biological 
-pi_r1 <- 0.003                        # pi_r1= probability of R transmitting to S to become Sr
-bif<- 2                               # bacterial interference factor 
-pi_r2 <- pi_r1 * bif                  # pi_r2= probability of R transmitting to s to become sr 
-#                                       (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
-
-mu1 <- 0.01                              # mu1= probability of clearance of Sr to become S
-mu2 <- 0.02                              # mu2= probability of clearance of sr to become s 
-
-abx.s<-0.2                            # probability of clearing S to become s under antibiotic treatment (daily)
-abx.r<-0.3                            # probability of clearing R to become r under antibiotic treatment (daily)
-
-repop.s1<- 0.1                          # probability of repopulation of s to become S 
-repop.s2<- 0.2                          # probability of repopulation of sr to become SR 
-repop.s3<- 0.3                       # probability of repopulation of sR to become sr
-repop.r1<- 0.4                          # probability of repopulation of Sr to become sR 
-repop.r2<- 0.5                          # probability of repopulation of sr to become sR 
-bif1<- 0.2                             # bacterial interference factor - how much antibiotics selects for R
-repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
-#                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
-
-# in-host gut
-bact_slots <- 1000                      # environmental carrying capacity
-bact_start <- 500                       # bacteria level (number) for starting 
-                                        # where big letter = 1*bact_start, singly small = 0.5*bact_start
-                                        # small next to big = 0.05*bact_start
-R_thres <- 100                          # R threshold level for tranmissibility
-abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
-abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
-abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
-r_trans <- 100                          # amount transmitted
-r_growth <- 2                           # growth constant for logistic growth
 
 positive_norm_sample <- function(mean, sd){                      
     v<-round(rnorm(1, mean=mean, sd=sd))
@@ -64,13 +6,6 @@ positive_norm_sample <- function(mean, sd){
     }
     return(v)
 }
-
-###################### Define Functions #############################
-
-#2. Generate length of stay and antibiotic duration table (define function)
-#(1 for short duration and 1 for long duration) 
-#simulate inpatients with various lengths of stay
-#allocate various duration of antibiotics for each patient
 
 abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
     
@@ -433,94 +368,6 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     
     return(list(S_table, R_table))
 }
-
-abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
-abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
-
-array_LOS_short<-array_LOS(los_duration=abx.short[2])
-array_LOS_long<- array_LOS(los_duration=abx.long[2])
-
-array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact)
-array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
-
-colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
-                                   treat_table=abx.short[[3]], colo_table=array_StartBact_short, 
-                                   pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                   repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3=repop.r3,
-                                   repop.s1 = repop.s1, repop.s2 = repop.s2)
-colo_table_filled_long <- nextDay(bed_table= abx.long[[1]], array_LOS=array_LOS_long, 
-                                  treat_table=abx.long[[3]], colo_table=array_StartBact_long, 
-                                  pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                  repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3=repop.r3, 
-                                  repop.s1 = repop.s1, repop.s2 = repop.s2)
-
-####################6. Visualisation #####################
-
-#present in one space
-#par(mfrow=c(4,2))
-layout(rbind(c(1,1,2,2),
-             c(3,3,4,4),
-             c(5,5,6,6),
-             c(7,7,8,8),
-             c(0,9,9,0)
-             ))
-
-#plots
-#antibiotics pixel
-abx.mat.short<- abx.short[[3]]
-abx.mat.long<- abx.long[[3]]
-cols.a<-c('0'='grey', '1'='orange', '2'= 'orange3','3'= 'orange3')
-abx_img.short<-image(1:nrow(abx.mat.short),1:ncol(abx.mat.short),abx.mat.short,col=cols.a, xlab='Time', ylab='Bed No.', main="Short duration of antibiotics")
-abx_img.long<-image(1:nrow(abx.mat.long),1:ncol(abx.mat.long),abx.mat.long,col=cols.a, xlab='Time', ylab='Bed No.', main="Long duration of antibiotics")
-
-#carriage differentiation pixel
-orig_short <- colo_table_filled_short[[2]]
-colo_table_filled_short <- diff(colo_table_filled_short[[2]])
-dim.saved <- dim(colo_table_filled_short)
-colo_table_filled_short[colo_table_filled_short > 0] <- 1
-colo_table_filled_short[colo_table_filled_short <= 0] <- 2
-colo_table_filled_short <- as.numeric(colo_table_filled_short)
-dim(colo_table_filled_short)<-dim.saved
-
-orig_long <- colo_table_filled_long[[2]]
-colo_table_filled_long <- diff(colo_table_filled_long[[2]])
-colo_table_filled_long[colo_table_filled_long > 0]<-1
-colo_table_filled_long[colo_table_filled_long <= 0]<-2
-colo_table_filled_long<-as.numeric(colo_table_filled_long)
-dim(colo_table_filled_long)<-dim.saved
-
-cols<-c('chartreuse3','red')
-col_img.short<-image(1:nrow(colo_table_filled_short),1:ncol(colo_table_filled_short), colo_table_filled_short, col=cols, xlab='Time', ylab='Bed No.')
-col_img.long<-image(1:nrow(colo_table_filled_long),1:ncol(colo_table_filled_long),colo_table_filled_long,col=cols, xlab='Time', ylab='Bed No.')
-
-#carriage pixel
-colo_table_filled_short <- orig_short
-
-colo_table_filled_long <- orig_long
-
-colfunc <- colorRampPalette(c("black", "white"))
-cols <- colfunc(0, )
-col_img.short<-image(1:nrow(colo_table_filled_short),1:ncol(colo_table_filled_short), colo_table_filled_short, col=cols, xlab='Time', ylab='Bed No.')
-col_img.long<-image(1:nrow(colo_table_filled_long),1:ncol(colo_table_filled_long),colo_table_filled_long,col=cols, xlab='Time', ylab='Bed No.')
-
-#increase overtime
-df.short<-as.data.frame(orig_short)
-df.short$totalR<-rowSums(df.short)
-
-df.long<-as.data.frame(orig_long)
-df.long$totalR<-rowSums(df.long)
-
-x <- c(1:n.days)
-y.short <- df.short$totalR/n.bed
-y.long <- df.long$totalR/n.bed
-r.plot.short<-plot(x,y.short, type="l", ylim=c(0,bact_slots), xlab="Time", ylab="% patients carrying MDRO")
-#lines(x,y.long, col=2)
-r.plot.long<-plot(x, y.long, type="l", ylim=c(0,bact_slots), xlab="Time", ylab="% patients carrying MDRO")
-
-# difference between both plot
-y.diff <- y.long-y.short
-r.plot.long<-plot(x, y.diff, type="l", ylim=c(-bact_slots,bact_slots), xlab="Time", ylab="% patients carrying MDRO")
-abline(h=0)
 
 
 ######################### Heatmap Prototype (transmission vs prescription) ###########################
