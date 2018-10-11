@@ -8,7 +8,7 @@ mean.max.los<-20                      # mean.max.los= mean of max length of stay
 ###epidemiological 
 p.s<-0.5                              # p=probability of receiving antibiotic for sensitive organisms
 p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
-prob_StartBact<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
+prob_StartBact_bi<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
 #                                     # possible states: S- carry sensitive organism only 
 #                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
 #                                                        sR- carry largely resistant organisms and small population of sensitive organisms
@@ -36,6 +36,16 @@ bif1<- 0.2                             # bacterial interference factor - how muc
 # repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
 #                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
 
-short_dur <- 2
-mean_dur <- 4                           # antibiotic duration
-long_dur <- 6
+### in-host gut (freq model only)
+bact_slots <- 1000                      # environmental carrying capacity
+bact_start <- 500                       # bacteria level (number) for starting 
+                                        # where big letter = 1*bact_start, singly small = 0.5*bact_start
+                                        # small next to big = 0.05*bact_start
+R_thres <- 100                          # R threshold level for tranmissibility
+abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
+abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
+abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
+r_trans <- 100                          # amount transmitted
+r_growth <- 2                           # growth constant for logistic growth
+
+mean_dur <- 4                           # antibiotic duration (days)

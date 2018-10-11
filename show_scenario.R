@@ -10,10 +10,119 @@ model <- "binary"
 source("default_params.R")
 source(paste0("model_", model,".R"))
 
+# Simple model has prob_Start has less slots than others
+if(model == "simple"){
+    #fixed parameters 
+    n.bed<-20                             # n.bed= number of beds in the ward
+    n.days<- 100                          # n.days= number of days we want to observe
+    mean.max.los<-10                      # mean.max.los= mean of max length of stay (normal distribution)
+    minDur<- 1                            # minDur=the min duration of antibiotic
+    
+    #variable parameters 
+    ###epidemiological 
+    p<-0.2                                # p=probability of receiving antibiotic
+    prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
+    
+    ###biological 
+    pi_s <- 0.003                         # pi_s= probability of S transmitting to N 
+    pi_r <- 0.003                         # pi_r= probability of R transmitting to N 
+    bif<- 0.002                               # bacterial interference factor 
+    pi_sr <- pi_r * bif                   # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
+    mu_s <- 0                             # mu_s= rate of clearance of S to become N
+    mu_r <- 0                             # mu_r= rate of clearance of R to become S 
+    abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 
+}
+
 ####################6. Visualisation #####################
 
+if(model == "simple"){
+    
+    #present in one space
+    par(mfrow=c(4,2))
+    
+    #plots
+    #antibiotics pixel
+    abx.mat.short<- as.matrix(abx.short[[3]])
+    abx.mat.long<- as.matrix(abx.long[[3]])
+    cols.a<-c('0'='grey', '1'='orange')
+    (abx_img.short<-image(1:nrow(abx.mat.short),1:ncol(abx.mat.short),abx.mat.short,col=cols.a, xlab='Time', ylab='Bed No.', main="Short duration of antibiotics"))
+    (abx_img.long<-image(1:nrow(abx.mat.long),1:ncol(abx.mat.long),abx.mat.long,col=cols.a, xlab='Time', ylab='Bed No.', main="Long duration of antibiotics"))
+    
+    #carriage pixel
+    o<- colo_table_filled_short
+    dim.saved<-dim(o)
+    colo_table_filled_short[colo_table_filled_short=="R"]<-2
+    colo_table_filled_short[colo_table_filled_short=="S"]<-3
+    colo_table_filled_short[colo_table_filled_short=="N"]<-1
+    colo_table_filled_short<-as.numeric(colo_table_filled_short)
+    dim(colo_table_filled_short)<-dim.saved
+    q<- colo_table_filled_long
+    colo_table_filled_long[colo_table_filled_long=="R"]<-2
+    colo_table_filled_long[colo_table_filled_long=="S"]<-3
+    colo_table_filled_long[colo_table_filled_long=="N"]<-1
+    colo_table_filled_long<-as.numeric(colo_table_filled_long)
+    dim(colo_table_filled_long)<-dim.saved
+    cols<-c('grey', 'red', 'chartreuse3')
+    (col_img.short<-image(1:nrow(colo_table_filled_short),1:ncol(colo_table_filled_short), colo_table_filled_short, col=cols, xlab='Time', ylab='Bed No.'))
+    (col_img.long<-image(1:nrow(colo_table_filled_long),1:ncol(colo_table_filled_long),colo_table_filled_long,col=cols, xlab='Time', ylab='Bed No.'))
+    
+    #increase overtime
+    df.short<-as.data.frame(o)
+    df.short$totalR<-rep(0, nrow(df.short))
+    for (i in 1:nrow(df.short)) {
+        for (j in 1:ncol(df.short)) {
+            if (df.short[i,j]=="R") {
+                df.short$totalR[i]<- df.short$totalR[i]+1
+            } else {df.short$totalR[i]<- df.short$totalR[i]}
+        }
+    }
+    
+    df.long<-as.data.frame(q)
+    df.long$totalR<-rep(0, nrow(df.long))
+    for (i in 1:nrow(df.long)) {
+        for (j in 1:ncol(df.long)) {
+            if (df.long[i,j]=="R") {
+                df.long$totalR[i]<- df.long$totalR[i]+1
+            } else {df.long$totalR[i]<- df.long$totalR[i]}
+        }
+    }
+    
+    x<-c(1:n.days)
+    y.short<-df.short$totalR/n.bed
+    y.long<-df.long$totalR/n.bed
+    r.plot.short<-plot(x,y.short, type="l", ylim=c(0,1), xlab="Time", ylab="Proportion of patients carrying resistant organisms")
+    r.plot.long<-plot(x, y.long, type="l", ylim=c(0,1), xlab="Time", ylab="Proportion of patients carrying resistant organisms")
+    
+    #total acquisitions 
+    df.short$newR<-rep(0, nrow(df.short))
+    df.long$newR<-rep(0, nrow(df.long))
+    
+    for(i in 2:nrow(df.short)){
+        for(j in 1:ncol(df.short)){
+            if(df.short[i, j] == "R"){
+                if(df.short[i-1, j] == "S"|df.short[i-1, j] == "N"){
+                    df.short$newR[i]<-df.short$newR[i]+1 
+                } else {df.short$newR[i]<-df.short$newR[i]}
+            }
+        }
+    }
+    y.short<- df.short$newR
+    
+    for(i in 2:nrow(df.long)){
+        for(j in 1:ncol(df.long)){
+            if(df.long[i, j] == "R"){
+                if(df.long[i-1, j] == "S"|df.long[i-1, j] == "N"){
+                    df.long$newR[i]<-df.long$newR[i]+1 
+                } else {df.long$newR[i]<-df.long$newR[i]}
+            }
+        }
+    }
+    y.long<- df.long$newR
+    
+    acq.short<-plot(x,y.short, type='l', xlab="Time", ylab="Number of patients acquiring resistant organisms")
+    acq.long<-plot(x,y.long, type='l', xlab="Time", ylab="Number of patients acquiring resistant organisms")
 
-if(model == "binary"){
+}else if(model == "binary"){
     abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
     abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
     
