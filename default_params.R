@@ -17,8 +17,8 @@ prob_StartBact_bi<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability
 
 ###biological 
 pi_r1 <- 0.003                        # pi_r1= probability of R transmitting to S to become Sr
-bif<- 2                               # bacterial interference factor 
-pi_r2 <- pi_r1 * bif                  # pi_r2= probability of R transmitting to s to become sr 
+bif_bi<- 2                               # bacterial interference factor 
+pi_r2 <- pi_r1 * bif_bi                  # pi_r2= probability of R transmitting to s to become sr 
 #                                       (pi_r1 < pi_r2 if being colonised with S protects colonisation by R)
 
 mu1 <- 0                              # mu1= probability of clearance of Sr to become S
@@ -49,3 +49,21 @@ r_trans <- 100                          # amount transmitted
 r_growth <- 2                           # growth constant for logistic growth
 
 mean_dur <- 4                           # antibiotic duration (days)
+
+# Simple model has prob_Start has less slots than others
+
+minDur<- 1                            # minDur=the min duration of antibiotic
+
+#variable parameters 
+###epidemiological 
+p<-0.2                                # p=probability of receiving antibiotic
+prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
+
+###biological 
+pi_s <- 0.003                         # pi_s= probability of S transmitting to N 
+pi_r <- 0.003                         # pi_r= probability of R transmitting to N 
+bif<- 0.002                               # bacterial interference factor 
+pi_sr <- pi_r * bif                   # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
+mu_s <- 0                             # mu_s= rate of clearance of S to become N
+mu_r <- 0                             # mu_r= rate of clearance of R to become S 
+abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 

@@ -10,28 +10,7 @@ model <- "binary"
 source("default_params.R")
 source(paste0("model_", model,".R"))
 
-# Simple model has prob_Start has less slots than others
-if(model == "simple"){
-    #fixed parameters 
-    n.bed<-20                             # n.bed= number of beds in the ward
-    n.days<- 100                          # n.days= number of days we want to observe
-    mean.max.los<-10                      # mean.max.los= mean of max length of stay (normal distribution)
-    minDur<- 1                            # minDur=the min duration of antibiotic
-    
-    #variable parameters 
-    ###epidemiological 
-    p<-0.2                                # p=probability of receiving antibiotic
-    prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
-    
-    ###biological 
-    pi_s <- 0.003                         # pi_s= probability of S transmitting to N 
-    pi_r <- 0.003                         # pi_r= probability of R transmitting to N 
-    bif<- 0.002                               # bacterial interference factor 
-    pi_sr <- pi_r * bif                   # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
-    mu_s <- 0                             # mu_s= rate of clearance of S to become N
-    mu_r <- 0                             # mu_r= rate of clearance of R to become S 
-    abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 
-}
+
 
 ####################6. Visualisation #####################
 
@@ -129,8 +108,8 @@ if(model == "simple"){
     array_LOS_short<-array_LOS_func(los_duration=abx.short[2])
     array_LOS_long<- array_LOS_func(los_duration=abx.long[2])
     
-    array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact)
-    array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
+    array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact_bi)
+    array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact_bi)
     
     colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
                                        treat_table=abx.short[[3]], colo_table=array_StartBact_short, 

@@ -259,9 +259,9 @@ array_LOS_func<- function(los_duration) {
 
 #################3. Generate baseline carriage status 
 
-gen_StartBact <- function(los, prob_StartBact){
+gen_StartBact <- function(los, prob_StartBact_bi){
   
-  stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
+  stopifnot(sum(prob_StartBact_bi) < 1) # Assert all probabilities combined are less than 1
   
   #define probabilities of importing S, Sr, sR, sr, s
   # prob_start_S <-  prob_StartBact[1]
@@ -274,11 +274,11 @@ gen_StartBact <- function(los, prob_StartBact){
   number_of_patients <- dim(los)[2]
   Patient_unif <- runif(number_of_patients, 0, 1)
   Patient_StartBact <- rep(NA, number_of_patients)
-  Patient_StartBact[Patient_unif > sum(prob_StartBact)] <- 's'
-  Patient_StartBact[(Patient_unif > sum(prob_StartBact[1:3])) & (Patient_unif <= sum(prob_StartBact))] <- 'sr'
-  Patient_StartBact[(Patient_unif > sum(prob_StartBact[1:2])) & (Patient_unif <= sum(prob_StartBact[1:3]))] <- 'sR'
-  Patient_StartBact[(Patient_unif > sum(prob_StartBact[1])) & (Patient_unif <= sum(prob_StartBact[1:2]))] <- 'Sr'
-  Patient_StartBact[Patient_unif <= sum(prob_StartBact[1])] <- 'S'
+  Patient_StartBact[Patient_unif > sum(prob_StartBact_bi)] <- 's'
+  Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1:3])) & (Patient_unif <= sum(prob_StartBact_bi))] <- 'sr'
+  Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1:2])) & (Patient_unif <= sum(prob_StartBact_bi[1:3]))] <- 'sR'
+  Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1])) & (Patient_unif <= sum(prob_StartBact_bi[1:2]))] <- 'Sr'
+  Patient_StartBact[Patient_unif <= sum(prob_StartBact_bi[1])] <- 'S'
   
   #Creating matrix for carriage status
   array_StartBact <- matrix(NA, n.days, n.bed)
@@ -398,7 +398,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
 }
 
 whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
-                        prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                        prob_StartBact_bi, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                         repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
                         iterations=10, short_dur, long_dur){
     
@@ -411,7 +411,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact_bi)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
@@ -435,7 +435,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact_bi)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
