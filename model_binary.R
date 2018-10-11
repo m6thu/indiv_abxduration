@@ -299,7 +299,7 @@ gen_StartBact <- function(los, prob_StartBact){
 
 
 ####################4. Update values for every day  
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,repop.s3, abx.r,abx.s){
+nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, repop.r1, repop.r2, repop.s1, repop.s2,repop.s3, abx.r,abx.s){
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
@@ -399,7 +399,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
 
 whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                         prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
-                        repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, repop.s3,
+                        repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
                         iterations=10, short_dur, long_dur){
     
     iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
@@ -417,7 +417,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
                                           pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
-                                          repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
+                                          repop.r1 = repop.r1, repop.r2 = repop.r2,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
         #Summary
         df <- data.frame(colo_table_filled_iter)
@@ -441,7 +441,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
                                           pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
-                                          repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
+                                          repop.r1 = repop.r1, repop.r2 = repop.r2,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3)
         #Summary
         df <- data.frame(colo_table_filled_iter)

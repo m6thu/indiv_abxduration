@@ -5,7 +5,7 @@
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
-model <- "frequency"
+model <- "binary"
 
 source("default_params.R")
 source(paste0("model_", model,".R"))
@@ -14,6 +14,25 @@ source(paste0("model_", model,".R"))
 
 
 if(model == "binary"){
+    abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
+    abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
+    
+    array_LOS_short<-array_LOS_func(los_duration=abx.short[2])
+    array_LOS_long<- array_LOS_func(los_duration=abx.long[2])
+    
+    array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact)
+    array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
+    
+    colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
+                                       treat_table=abx.short[[3]], colo_table=array_StartBact_short, 
+                                       pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
+                                       repop.r1 = repop.r1, repop.r2 = repop.r2,
+                                       repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3, abx.r = abx.r, abx.s = abx.s)
+    colo_table_filled_long <- nextDay(bed_table= abx.long[[1]], array_LOS=array_LOS_long, 
+                                      treat_table=abx.long[[3]], colo_table=array_StartBact_long, 
+                                      pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
+                                      repop.r1 = repop.r1, repop.r2 = repop.r2,
+                                      repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3, abx.r = abx.r, abx.s = abx.s)
     #present in one space
     par(mfrow=c(4,2))
     
@@ -102,8 +121,8 @@ if(model == "binary"){
     abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
     abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
     
-    array_LOS_short<-array_LOS(los_duration=abx.short[2])
-    array_LOS_long<- array_LOS(los_duration=abx.long[2])
+    array_LOS_short<-array_LOS_func(los_duration=abx.short[2])
+    array_LOS_long<- array_LOS_func(los_duration=abx.long[2])
     
     array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact)
     array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
@@ -111,13 +130,13 @@ if(model == "binary"){
     colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
                                        treat_table=abx.short[[3]], colo_table=array_StartBact_short, 
                                        pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                       repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3=repop.r3,
-                                       repop.s1 = repop.s1, repop.s2 = repop.s2)
+                                       repop.r1 = repop.r1, repop.r2 = repop.r2,
+                                       repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3, abx.r = abx.r, abx.s = abx.s)
     colo_table_filled_long <- nextDay(bed_table= abx.long[[1]], array_LOS=array_LOS_long, 
                                       treat_table=abx.long[[3]], colo_table=array_StartBact_long, 
                                       pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                      repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3=repop.r3, 
-                                      repop.s1 = repop.s1, repop.s2 = repop.s2)
+                                      repop.r1 = repop.r1, repop.r2 = repop.r2,
+                                      repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3, abx.r = abx.r, abx.s = abx.s)
     
     ####################6. Visualisation #####################
     
