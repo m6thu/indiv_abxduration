@@ -367,8 +367,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2,
                         colo_table[i, j] <- "sR"
                     }else if(treat_table[i-1, j] == 0 & roll_repop < repop.s2){
                         colo_table[i, j] <- "Sr"
-                    }else if(treat_table[i-1, j] == 0 & roll_repop < repop.r3){
-                        colo_table[i, j] <- "sR"
+                    # }else if(treat_table[i-1, j] == 0 & roll_repop < repop.r3){
+                    #     colo_table[i, j] <- "sR"
                     }else if (roll_decolonise < mu2){
                         colo_table[i, j] <- "s"
                     }else {
