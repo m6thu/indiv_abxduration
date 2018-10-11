@@ -32,5 +32,8 @@ repop.s2<- 0                          # probability of repopulation of sr to bec
 repop.s3<- 0.01                       # probability of repopulation of sR to become sr
 repop.r1<- 0                          # probability of repopulation of Sr to become sR 
 repop.r2<- 0                          # probability of repopulation of sr to become sR 
+bif1<- 0.2                             # bacterial interference factor - how much antibiotics selects for R
+repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
+#                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
 
 mean_dur <- 4                           # antibiotic duration

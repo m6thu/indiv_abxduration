@@ -247,9 +247,6 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
   return(list(patient.matrix, los_duration, matrix_AtbTrt3))
 }
 
-abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
-abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
-
 array_LOS<- function(los_duration) {
   los.dur<-as.vector(table(los_duration))
   array_LOS<-array(dim=c(2,length(los.dur)))
@@ -302,103 +299,105 @@ gen_StartBact <- function(los, prob_StartBact){
 
 
 ####################4. Update values for every day  
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, repop.r1, repop.r2, repop.s1, repop.s2){
-  
-  # For each day (first day should be filled)
-  for(i in 2:nrow(bed_table)){
-    # For each bed
-    for(j in 1:ncol(bed_table)){
-      #case S
-      #print(paste("i:", i, "j:", j))
-      #print(colo_table[i-1, j])
-      if(is.na(colo_table[i, j])){
-        if(colo_table[i-1, j] == "S"){
-          #print("----case S")
-          # check antibiotic
-          roll_clear <- runif(1, 0, 1)
-          roll_transmit <- runif(1, 0, 1)
-          if (treat_table[i-1, j] == 1 & roll_clear < abx.s){
-            colo_table[i, j] <- "s"
-          } else if (treat_table[i-1, j] > 1 & roll_clear < abx.r){
-            colo_table[i, j] <- "s"
-          } else if (roll_transmit < pi_r1){ 
-            colo_table[i, j] <- "Sr"
-          }else {
-            colo_table[i, j] <- "S"
-          }
-          
-          # case s
-        }else if(colo_table[i-1, j] == "s"){
-          #print("----case s")
-          # roll for transmission of r
-          roll_r <- runif(1, 0, 1)
-          r_num <- sum(colo_table[i-1,] == "sR") #only R can be transmitted 
-          prob_r <- 1-((1-pi_r2)^r_num)
-          # roll for repopulation of s to become S
-          roll_s <- runif(1, 0, 1)
-          if (roll_r < prob_r) { 
-            colo_table[i,j]<-"sr" 
-          } else if ( roll_s < repop.s1) {
-            colo_table[i,j]<-"S" 
-          } else{
-            colo_table[i, j] <- "s"
-          }
-          
-          # case Sr
-        }else if(colo_table[i-1, j] == "Sr"){
-          #print("----case Sr")
-          # check antibiotics 
-          roll_clear <- runif(1, 0, 1)
-          roll_decolonise <- runif(1, 0, 1)
-          if(treat_table[i-1, j] ==1 & roll_clear < abx.s){
-            colo_table[i, j] <- "sr"
-          } else if (treat_table[i-1, j] >1 & roll_clear < abx.r ) {
-            colo_table[i, j] <- "sr"
-          } else if(roll_decolonise < mu1){ 
-            colo_table[i, j] <- "S"
-          }else {
-            colo_table[i, j] <- "Sr"
-          }
-          
-          # case sr
-        }else if(colo_table[i-1, j] == "sr"){
-          #print("----case sr")
-          roll_repop <- runif(1, 0, 1)
-          roll_decolonise <- runif(1, 0, 1)
-          # check antibiotics 
-          if(treat_table[i-1, j] == 1 & roll_repop < repop.r2){
-            colo_table[i, j] <- "sR"
-          }else if(treat_table[i-1, j] == 0 &roll_repop < repop.s2){
-            colo_table[i, j] <- "Sr"
-          }else if (roll_decolonise < mu2){ 
-            colo_table[i, j] <- "s"
-          }else {
-            colo_table[i, j] <- "sr"
-          }
-          
-          # case sR
-        }else if(colo_table[i-1, j] == "sR"){
-          #print("----case sR")
-          roll_clear <- runif(1, 0, 1)
-          if(treat_table[i-1, j] > 1 & roll_clear < abx.r){
-            colo_table[i, j] <- "sr"
-          }else if (treat_table[i-1, j] == 0 & roll_clear < repop.s3){
-            colo_table[i, j] <- "sr"
-          }else {
-            colo_table[i, j] <- "sR"
-          }
-        }else{
-          print("error")
-          colo_table[i, j] <- "E"
-        }
-      } # if 0
-    }  # for j
-  } # for i
-  
-  return(colo_table)
+nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_r1, pi_r2, mu1, mu2, repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,repop.s3, abx.r,abx.s){
+    
+    # For each day (first day should be filled)
+    for(i in 2:nrow(bed_table)){
+        # For each bed
+        for(j in 1:ncol(bed_table)){
+            #case S
+            #print(paste("i:", i, "j:", j))
+            #print(colo_table[i-1, j])
+            if(is.na(colo_table[i, j])){
+                if(colo_table[i-1, j] == "S"){
+                    #print("----case S")
+                    # check antibiotic
+                    roll_clear <- runif(1, 0, 1)
+                    roll_transmit <- runif(1, 0, 1)
+                    if (treat_table[i-1, j] == 1 & roll_clear < abx.s){
+                        colo_table[i, j] <- "s"
+                    } else if (treat_table[i-1, j] > 1 & roll_clear < abx.r){
+                        colo_table[i, j] <- "s"
+                    } else if (roll_transmit < pi_r1){ 
+                        colo_table[i, j] <- "Sr"
+                    }else {
+                        colo_table[i, j] <- "S"
+                    }
+                    
+                    # case s
+                }else if(colo_table[i-1, j] == "s"){
+                    #print("----case s")
+                    # roll for transmission of r
+                    roll_r <- runif(1, 0, 1)
+                    r_num <- sum(colo_table[i-1,] == "sR") #only R can be transmitted 
+                    prob_r <- 1-((1-pi_r2)^r_num)
+                    # roll for repopulation of s to become S
+                    roll_s <- runif(1, 0, 1)
+                    if (roll_r < prob_r) { 
+                        colo_table[i,j]<-"sr" 
+                    } else if ( roll_s < repop.s1) {
+                        colo_table[i,j]<-"S" 
+                    } else{
+                        colo_table[i, j] <- "s"
+                    }
+                    
+                    # case Sr
+                }else if(colo_table[i-1, j] == "Sr"){
+                    #print("----case Sr")
+                    # check antibiotics 
+                    roll_clear <- runif(1, 0, 1)
+                    roll_decolonise <- runif(1, 0, 1)
+                    if(treat_table[i-1, j] ==1 & roll_clear < abx.s){
+                        colo_table[i, j] <- "sr"
+                    } else if (treat_table[i-1, j] >1 & roll_clear < abx.r ) {
+                        colo_table[i, j] <- "sr"
+                    } else if(roll_decolonise < mu1){ 
+                        colo_table[i, j] <- "S"
+                    }else {
+                        colo_table[i, j] <- "Sr"
+                    }
+                    
+                    # case sr
+                }else if(colo_table[i-1, j] == "sr"){
+                    #print("----case sr")
+                    roll_repop <- runif(1, 0, 1)
+                    roll_decolonise <- runif(1, 0, 1)
+                    # check antibiotics
+                    if(treat_table[i-1, j] == 1 & roll_repop < repop.r2){
+                        colo_table[i, j] <- "sR"
+                    }else if(treat_table[i-1, j] == 0 & roll_repop < repop.s2){
+                        colo_table[i, j] <- "Sr"
+                    }else if(treat_table[i-1, j] == 0 & roll_repop < repop.r3){
+                        colo_table[i, j] <- "sR"
+                    }else if (roll_decolonise < mu2){
+                        colo_table[i, j] <- "s"
+                    }else {
+                        colo_table[i, j] <- "sr"
+                    }
+                    
+                    # case sR
+                }else if(colo_table[i-1, j] == "sR"){
+                    #print("----case sR")
+                    roll_clear <- runif(1, 0, 1)
+                    if(treat_table[i-1, j] > 1 & roll_clear < abx.r){
+                        colo_table[i, j] <- "sr"
+                    }else if (treat_table[i-1, j] == 0 & roll_clear < repop.s3){
+                        colo_table[i, j] <- "sr"
+                    }else {
+                        colo_table[i, j] <- "sR"
+                    }
+                }else{
+                    print("error")
+                    colo_table[i, j] <- "E"
+                }
+            } # if 0
+        }  # for j
+    } # for i
+    
+    return(colo_table)
 }
 
-whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r, mean_dur,
+whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                         prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                         repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, repop.s3,
                         iterations=10, short_dur, long_dur){
@@ -410,7 +409,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r, mean_dur,
         #Generate length of stay and antibiotic duration table
         abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=short_dur)
         #Generate baseline carriage status
-        array_LOS_iter <- array_LOS(los_duration=abx_iter[2])
+        array_LOS_iter <- array_LOS(los_duration=abx_iter[[1]][2])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
         #output
@@ -434,7 +433,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r, mean_dur,
         #Generate length of stay and antibiotic duration table
         abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=long_dur)
         #Generate baseline carriage status
-        array_LOS_iter <- array_LOS(los_duration=abx_iter[2])
+        array_LOS_iter <- array_LOS(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
         #output
@@ -443,7 +442,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r, mean_dur,
                                           pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
-                                          repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
+                                          repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3)
         #Summary
         df <- colo_table_filled_iter
         iter_totalsR <- rowSums(df == "sR")
