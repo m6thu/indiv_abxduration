@@ -72,7 +72,7 @@ for(y in y_seq){
                                                       treat_table=abx_iter[[iter]][[3]], colo_table=array_StartBact_iter[[iter]], 
                                                       pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
                                                       abx.r=abx.r,abx.s=abx.s,
-                                                      repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
+                                                      repop.r1 = repop.r1, repop.r2 = repop.r2, 
                                                       repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
             #Summary
             df <- colo_table_filled_iter[[iter]]
