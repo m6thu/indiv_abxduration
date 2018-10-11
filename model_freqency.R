@@ -54,7 +54,8 @@ R_thres <- 100                          # R threshold level for tranmissibility
 abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
 abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
 abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
-r_trans <- 100                           # amount transmitted
+r_trans <- 100                          # amount transmitted
+r_growth <- 2                           # growth constant for logistic growth
 
 positive_norm_sample <- function(mean, sd){                      
     v<-round(rnorm(1, mean=mean, sd=sd))
@@ -386,24 +387,24 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
-        # elect transmission candidates (from a threshold)
-        # from number of candidates calculate transmissibility of R
-        
+        # calculate how many people has R above transmission level
         r_num <- sum(R_table[i-1,] > R_thres)
+        # from number of r, calculate probability of transmission
         prob_r <- 1-((1-pi_r2)^r_num)
+        # roll for transmission
+        roll <- runif(1, 0, 1)
         #for each person:
         for(j in 1:ncol(bed_table)){
             if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
-                # calculate effect of bacteria growth (repop)
-                grow = 1 - (R_table[i-1, j] + S_table[i-1, j])/bact_slots
-                # update population of R based on equation in scratch paper above
-                # calculate effect of transmission
-                R_trans = r_trans
-                # calculate effect of death antibiotics R
+                # calculate effect of R logistic bacteria growth 
+                R_grow = r_growth*R_table[i-1, j]*(1 - (R_table[i-1, j] + S_table[i-1, j])/bact_slots)
+                # add effect of transmission if roll pass prob check and if previous R level is 0
+                R_trans = r_trans*((roll > prob_r) & !R_table[i-1, j])
+                # add effect of abx death if treat_table is r abx (== 2)
                 R_abx = -(treat_table[i-1, j] > 1)*abxr_killr
-                # apply effects (consider what to do if effect causes out of bounds)
-                R_table[i, j] = R_table[i-1, j] + grow + R_trans + R_abx
-                
+                # apply effects to current table
+                R_table[i, j] = R_table[i-1, j] + R_grow + R_trans + R_abx
+                # trim if value goes beyond range
                 if(R_table[i, j] > bact_slots){
                     R_table[i, j] = bact_slots
                 }
@@ -411,12 +412,13 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                     R_table[i, j] = 0
                 }
                 
-                # update population of S
-                # calculate effect of death antibiotics R
+                # calculate effect of S logistic bacteria growth 
+                S_grow = r_growth*S_table[i-1, j]*(1 - (R_table[i-1, j] + S_table[i-1, j])/bact_slots)
+                # calculate effect of death antibiotics R and effect of death by abx S
                 S_abx = -(treat_table[i-1, j] == 1)*abxr_kills-(treat_table[i-1, j] > 1)*abxr_killr
-                # apply effects (consider what to do if effect causes out of bounds)
-                S_table[i, j] = S_table[i-1, j] + grow + S_abx
-                
+                # apply effects
+                S_table[i, j] = S_table[i-1, j] + R_grow + S_abx
+                # trim bounds
                 if(S_table[i, j] > bact_slots){
                     S_table[i, j] = bact_slots
                 }
