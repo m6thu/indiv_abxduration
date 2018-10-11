@@ -247,7 +247,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
   return(list(patient.matrix, los_duration, matrix_AtbTrt3))
 }
 
-array_LOS<- function(los_duration) {
+array_LOS_func<- function(los_duration) {
   los.dur<-as.vector(table(los_duration))
   array_LOS<-array(dim=c(2,length(los.dur)))
   array_LOS[1,]<-c(1:length(los.dur))
@@ -409,7 +409,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
         #Generate length of stay and antibiotic duration table
         abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=short_dur)
         #Generate baseline carriage status
-        array_LOS_iter <- array_LOS(los_duration=abx_iter[[1]][2])
+        array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
         #output
@@ -420,11 +420,11 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
                                           repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
         #Summary
-        df <- colo_table_filled_iter
-        iter_totalsR <- rowSums(df == "sR")
+        df <- data.frame(colo_table_filled_iter)
+        iter_totalsR[iter] <- sum(rowSums(df == "sR"))
         #print("end iteration loop")
     }
-    totalsR_short <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    totalsR_short <- sum(iter_totalsR/n.bed/n.days)/iterations
     
     iter_totalsR <- vector()
     for(iter in 1:iterations){
@@ -433,7 +433,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
         #Generate length of stay and antibiotic duration table
         abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=long_dur)
         #Generate baseline carriage status
-        array_LOS_iter <- array_LOS(los_duration=abx_iter[[2]])
+        array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
         #output
@@ -444,11 +444,11 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
                                           repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3)
         #Summary
-        df <- colo_table_filled_iter
-        iter_totalsR <- rowSums(df == "sR")
+        df <- data.frame(colo_table_filled_iter)
+        iter_totalsR <- sum(rowSums(df == "sR"))
         #print("end iteration loop")
     }
-    totalsR_long <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    totalsR_long <- sum(iter_totalsR/n.bed/n.days)/iterations
     
     return(totalsR_long - totalsR_short)
 }
