@@ -402,7 +402,7 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                         repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, repop.s3,
                         iterations=10, short_dur, long_dur){
     
-    iter_totalsR <- vector()
+    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
@@ -421,12 +421,12 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
         #Summary
         df <- data.frame(colo_table_filled_iter)
-        iter_totalsR[iter] <- sum(rowSums(df == "sR"))
+        iter_totalsR[, iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
-    totalsR_short <- sum(iter_totalsR/n.bed/n.days)/iterations
+    totalsR_short <- mean(rowSums(iter_totalsR)/iterations/n.bed)
     
-    iter_totalsR <- vector()
+    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
@@ -445,10 +445,12 @@ whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3)
         #Summary
         df <- data.frame(colo_table_filled_iter)
-        iter_totalsR <- sum(rowSums(df == "sR"))
+        iter_totalsR[,iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
-    totalsR_long <- sum(iter_totalsR/n.bed/n.days)/iterations
+    totalsR_long <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    
+    print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
     
     return(totalsR_long - totalsR_short)
 }
