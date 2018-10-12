@@ -1,18 +1,34 @@
+positive_norm_sample <- function(mean, sd){                      
+    v<-round(rnorm(1, mean=mean, sd=sd))
+    if (v < 0) {
+        v<-v*-1
+    }
+    return(v)
+}
+
 abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     
-    # generate a table of number of days we want to observe (rows) against number of beds in the ward (columns), filled in with patient id numbers
-    patient.matrix<- matrix(NA, n.days, n.bed)  #make up a matrix of number of days we want to observe (rows) against number of beds in the ward (columns)
-    n.patient=50*n.days                         #generate patient id numbers, arbitary number of 50 to ensure there are enough total number of patients generated to fill table
-    n.patient.per.bed=c(1:n.patient)            #vectorise the patient id to be used for filling in the patient.matrix
-    vector.los<-rep(0,n.days)                   #make up a fake vector for 0th column of matrix so that the next column starts with (last patient number of the previous column+i)
+    # generate a table of number of days we want to observe (rows) -
+    # against number of beds in the ward (columns), filled in with patient id numbers
     
-    max.los<- function() {                      # los is a normal function with mean of mean.max.los
-        v<-round(rnorm(1, mean=mean.max.los, sd=2))
-        if (v< 0) {
-            v<--1*v
-        }
-        return(v)
-    }
+    patient.matrix <- matrix(NA, nrow=n.days, ncol=n.bed)
+    #make up a matrix of number of days we want to observe (rows) -
+    #against number of beds in the ward (columns)
+    
+    n.patient <- n.bed*n.days 
+    #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
+    #number of days. This is to ensure there are enough total number of patients generated to fill table
+    
+    patient.id <- c(1:n.patient)    
+    #vectorise the patient id to be used for filling in the patient.matrix
+    
+    vector.los <- rep(0,n.days)
+    #Generating a vector with 0s 
+    #make up an empty vector for 0th column of matrix so that the next column starts with 
+    #(last patient number of the previous column+i)
+    
+    # los is a normal function with mean of mean.max.los
+    # positive_norm_sample
     
     for (j in 1:n.bed) {                                     #for each column (representing different beds in the ward) in patient.matrix
         los=c()
@@ -43,10 +59,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     get1stdayofstay<-function(patientnumber,bednumber, bedoccmat){
         match(patientnumber, bedoccmat[,bednumber])
     }
-    #returns los of patient patientnumber in bed bedumber, in bed occupancy matrix, 0 if patient not found
-    getlos<-function(patientnumber,bednumber, bedoccmat){
-        sum(bedoccmat[,bednumber]==patientnumber)
-    }
+
     #number of days of antibiotic is randomly drawn from a uniform dist with min=minDur, max=maxDur
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
@@ -70,22 +83,24 @@ abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
             rand <- runif(1,0,1)
-            matrix_AtbTrt[get1stdayofstay(i,j,patient.matrix), j] <-  if (rand <= p) {
-                1
+            if (rand < p) {
+                matrix_AtbTrt[get1stdayofstay(i,j,patient.matrix), j] <-  1
+            } else {
+                matrix_AtbTrt[get1stdayofstay(i,j,patient.matrix), j] <-  0
             }
-            else{0}
         }
     }
-    # Complete the matrix of cummulative length of stay for treated patients
+    # Initial treatment value derived from probability, p.s for antibiotic.s 
+    
     for (i in 2:n.days){
         for (j in 1:n.bed){
-            matrix_AtbTrt[i, j] <-  if(is.na(matrix_AtbTrt[i,j]) & (matrix_AtbTrt[i-1,j]!=0)){
-                matrix_AtbTrt[i-1,j] + 1
+            if(is.na(matrix_AtbTrt[i,j]) & (matrix_AtbTrt[i-1,j] != 0)){
+                matrix_AtbTrt[i, j] <-  matrix_AtbTrt[i-1,j] + 1
+            }else if (!is.na(matrix_AtbTrt[i,j])){
+                matrix_AtbTrt[i, j] <-  matrix_AtbTrt[i, j]
+            }else{
+                matrix_AtbTrt[i, j] <-  0
             }
-            else if (!is.na(matrix_AtbTrt[i,j])){
-                matrix_AtbTrt[i, j]
-            }
-            else{0}
         }
     }
     
@@ -93,10 +108,11 @@ abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     matrix_AtbTrt2 <- matrix(NA, nrow=n.days, ncol=n.bed)
     for (i in 1:n.days){
         for (j in 1:n.bed){
-            matrix_AtbTrt2[i, j] <-  if(matrix_DuraDay[i,j]>=matrix_AtbTrt[i,j] & matrix_AtbTrt[i,j]!=0){
-                1
+            if(matrix_DuraDay[i,j]>=matrix_AtbTrt[i,j] & matrix_AtbTrt[i,j]!=0){
+                matrix_AtbTrt2[i, j] <-  1
+            }else{
+                matrix_AtbTrt2[i, j] <-  0
             }
-            else{0}
         }
     }
     
@@ -128,33 +144,23 @@ gen_StartBact <- function(patient.matrix, prob_StartBact){
     Patient_StartBact[Patient_unif<=prob_start_S] <- 'S'
     
     #Creating array for carriage status
-    array_StartBact<-matrix(NA, n.days, n.bed)
+    array_StartBact <- matrix(NA, n.days, n.bed)
     
-    #returns first day of stay for patientnumber in bednumber, or NA if patient not there
-    get1stdayofstay<-function(patientnumber,bednumber, bedoccmat){
-        match(patientnumber, bedoccmat[,bednumber])
-    }
-    
-    for (i in 1:number_of_patients){
-        for (j in 1:n.bed){
-            array_StartBact[get1stdayofstay(i,j, as.data.frame(patient.matrix)),j]<-Patient_StartBact[i]
-        }
-    }
-    
-    for (i in 1:n.days){
-        for (j in 1:n.bed){
-            array_StartBact[i, j] <-  if(is.na(array_StartBact[i,j])){
-                0
-            }
-            else{array_StartBact[i, j]}
-        }
+    end_idx <- 1
+    for(i in 1:number_of_patients){
+        # print(i)
+        # print(paste(end_idx, end_idx + los[2, i] - 1))
+        # print(c(Patient_StartBact[i], rep(NA, los[2, i]-1)))
+        # print(length(c(Patient_StartBact[i], rep(NA, los[2, i]-1))))
+        array_StartBact[end_idx:(end_idx + los[2, i] - 1)] <- c(Patient_StartBact[i], rep(NA, los[2, i]-1))
+        end_idx = end_idx + los[2, i]
     }
     
     return(array_StartBact)
 }
 
 ####################4. Update values for every day  #####################
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, mu_r, pi_s, pi_r){
+nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear){
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
