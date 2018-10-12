@@ -204,7 +204,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, 
                     }else if(roll_clear < mu_s){
                         # roll for clearance
                         colo_table[i, j] <- "N"
-                    }else if(roll_select > pi_sr){
+                    }else if(roll_select < pi_sr){
                         # roll for selection
                         colo_table[i, j] <- "R"
                     }else{
