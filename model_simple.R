@@ -6,7 +6,7 @@ positive_norm_sample <- function(mean, sd){
     return(v)
 }
 
-abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
+abx.table<- function(n.bed, n.days, mean.max.los, p, meanDur) {
     
     # generate a table of number of days we want to observe (rows) -
     # against number of beds in the ward (columns), filled in with patient id numbers
@@ -27,29 +27,38 @@ abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     #make up an empty vector for 0th column of matrix so that the next column starts with 
     #(last patient number of the previous column+i)
     
-    # los is a normal function with mean of mean.max.los
-    # positive_norm_sample
-    
-    for (j in 1:n.bed) {                                     #for each column (representing different beds in the ward) in patient.matrix
-        los=c()
-        final= vector.los[n.days]                              #last patient number in previous column
+    for (j in 1:n.bed) {
+        #for each column (representing different beds in the ward) in patient.matrix
         
-        for (i in 1:n.patient) {                               #for each row (representing number of days we want to observe)
-            los <- rep(n.patient.per.bed[i+final], max.los())    #repeat the (last patient number of the previous column+i) random number of times
-            vector.los <- c(vector.los, los)                     #combine 0th column (los0) and subsequent columns (los) into one vector
+        los <- c()
+        final <- vector.los[n.days]
+        #last patient number in previous column
+        
+        for (i in 1:n.days) {
+            #for each row (representing number of days we want to observe)
+            
+            los <- rep(patient.id[i+final], positive_norm_sample(mean.max.los, sd=2))
+            #repeat the (last patient number of the previous column+i) random number of times
+            
+            vector.los <- c(vector.los, los)
+            #combine 0th column (los0) and subsequent columns (los) into one vector
         }
         
-        vector.los<- vector.los[-(1:n.days)]                   #remove 0th column from patient.matrix
+        vector.los<- vector.los[-(1:n.days)]
+        #remove 0th column from patient.matrix
         
-        if (length(vector.los) > n.days) {                     #ensure each column is of the same length as number of days we are observing (number of rows)
+        if (length(vector.los) > n.days) {                     
             vector.los<-vector.los[1:n.days]
         }
+        #ensure each column is of the same length as number of days we are observing 
+        #(number of rows)
         
-        patient.matrix[,j] <- vector.los                       #fill the columns (different beds in the ward) with length of stay vector generated
+        patient.matrix[,j] <- vector.los
+        #fill the columns (different beds in the ward) with length of stay vector generated
     }
     
-    #frequency summary of patient.matrix - patient id against number of days of stay for each patient
     los_duration<-as.vector(patient.matrix)
+    #frequency summary of patient.matrix - patient id against number of days of stay for each patient
     
     #generate antibiotic use table
     
@@ -59,11 +68,11 @@ abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     get1stdayofstay<-function(patientnumber,bednumber, bedoccmat){
         match(patientnumber, bedoccmat[,bednumber])
     }
-
+    
     #number of days of antibiotic is randomly drawn from a uniform dist with min=minDur, max=maxDur
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
-            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j]<-floor(runif(min=minDur,max=maxDur,1))
+            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j]<-abs(round(rnorm(1, mean=meanDur, sd=5)))
         }
     }
     
@@ -119,7 +128,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p, minDur, maxDur) {
     return(list(patient.matrix, los_duration, matrix_AtbTrt2))
 }
 
-array_LOS<- function(los_duration) {
+array_LOS_func<- function(los_duration) {
     los.dur<-as.vector(table(los_duration))
     array_LOS<-array(dim=c(2,length(los.dur)))
     array_LOS[1,]<-c(1:length(los.dur))
@@ -130,18 +139,22 @@ array_LOS<- function(los_duration) {
 
 #################3. Generate baseline carriage status ##################
 
-gen_StartBact <- function(patient.matrix, prob_StartBact){
+gen_StartBact <- function(los, prob_StartBact){
+    
+    stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
+    
     #define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or nothing (N)
     prob_start_S <- prob_StartBact[1]
     prob_start_R <- prob_StartBact[2]
     prob_start_N <- 1-prob_start_S-prob_start_R
     
     #Generating a vector of random status with runif (change for other distribution)
-    number_of_patients<- max(as.data.frame(patient.matrix))
+    number_of_patients <- dim(los)[2]
     Patient_unif <- runif(number_of_patients,0,1)
-    Patient_StartBact[Patient_unif>prob_start_S+prob_start_R] <- 'N'
-    Patient_StartBact[Patient_unif<=prob_start_S+prob_start_R&Patient_StartBact>prob_start_S] <- 'R'
-    Patient_StartBact[Patient_unif<=prob_start_S] <- 'S'
+    Patient_StartBact <- rep(NA, number_of_patients)
+    Patient_StartBact[Patient_unif > (prob_start_S+prob_start_R)] <- 'N'
+    Patient_StartBact[(Patient_unif <= prob_start_S+prob_start_R) & (Patient_unif > prob_start_S)] <- 'R'
+    Patient_StartBact[Patient_unif <= prob_start_S] <- 'S'
     
     #Creating array for carriage status
     array_StartBact <- matrix(NA, n.days, n.bed)
@@ -170,7 +183,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, 
             # case R
             #print(paste("i:", i, "j:", j))
             #print(colo_table[i-1, j])
-            if(colo_table[i, j] == 0){
+            if(is.na(colo_table[i, j])){
                 if(colo_table[i-1, j] == "R"){
                     #print("----case R")
                     # roll for clearance
@@ -229,7 +242,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, 
                     print("error")
                     colo_table[i, j] <- "E"
                 }
-            } # if 0
+            }
         }  # for j
     } # for i
     
