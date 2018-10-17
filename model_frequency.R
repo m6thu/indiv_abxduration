@@ -369,7 +369,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     return(list(S_table, R_table))
 }
 
-whole_model <- function(n.bed, n.days, mean.max.los, p.s, p.r,
+diff_prevalence <- function(n.bed, n.days, mean.max.los, p.s, p.r,
                         prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                         repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,
                         iterations=10, short_dur, long_dur){
