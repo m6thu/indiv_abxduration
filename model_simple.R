@@ -248,3 +248,5 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, 
     
     return(colo_table)
 }
+
+diff_prevalence <- function(){}
