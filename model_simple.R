@@ -249,4 +249,47 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, 
     return(colo_table)
 }
 
-diff_prevalence <- function(){}
+diff_prevalence <- function(n.bed, n.days, mean.max.los, p,
+                            prob_StartBact, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear,
+                            iterations=10, short_dur, long_dur){
+    
+    iter_totalR <- matrix(NA, nrow = n.days, ncol = iterations)
+    for(iter in 1:iterations){
+        
+        abx_iter<-abx.table(n.bed, n.days, mean.max.los, p, meanDur = short_dur)
+        
+        array_LOS_iter<-array_LOS_func(los_duration=abx_iter[2])
+        
+        array_StartBact_iter<-gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        
+        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, treat_table=abx_iter[[3]], 
+                                           colo_table=array_StartBact_iter, pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
+    
+        #Summary
+        df <- data.frame(colo_table_filled_iter)
+        iter_totalR[, iter] <- rowSums(df == "R")    
+    }
+    totalR_short <- mean(rowSums(iter_totalR)/iterations/n.bed)
+    
+    iter_totalR <- matrix(NA, nrow = n.days, ncol = iterations)
+    for(iter in 1:iterations){
+        
+        abx_iter<-abx.table(n.bed, n.days, mean.max.los, p, meanDur = long_dur)
+        
+        array_LOS_iter<-array_LOS_func(los_duration=abx_iter[2])
+        
+        array_StartBact_iter<-gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        
+        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, treat_table=abx_iter[[3]], 
+                                          colo_table=array_StartBact_iter, pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
+        
+        #Summary
+        df <- data.frame(colo_table_filled_iter)
+        iter_totalR[, iter] <- rowSums(df == "R")    
+    }
+    totalR_long <- mean(rowSums(iter_totalR)/iterations/n.bed)
+    
+    print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
+    
+    return(totalsR_long - totalsR_short)
+}
