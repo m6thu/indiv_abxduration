@@ -294,6 +294,6 @@ diff_prevalence <- function(n.bed, n.days, mean.max.los, p,
     return(totalR_long - totalR_short)
 }
 
-diff_prevalence(n.bed, n.days, mean.max.los, p,
-prob_StartBact, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear,
-iterations=10, 4, 14)
+# diff_prevalence(n.bed, n.days, mean.max.los, p,
+# prob_StartBact, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear,
+# iterations=10, 4, 14)
