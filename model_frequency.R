@@ -350,9 +350,10 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                 # calculate effect of S logistic bacteria growth 
                 S_grow = r_growth*S_table[i-1, j]*(1 - (R_table[i-1, j] + S_table[i-1, j])/bact_slots)
                 # calculate effect of death antibiotics R and effect of death by abx S
-                S_abx = -(treat_table[i-1, j] == 1)*abxr_kills-(treat_table[i-1, j] > 1)*abxr_killr
+                S_abx_s = -(treat_table[i-1, j] == 1)*abxs_kills
+                S_abx_r = -(treat_table[i-1, j] > 1)*abxr_kills
                 # apply effects
-                S_table[i, j] = S_table[i-1, j] + R_grow + S_abx
+                S_table[i, j] = S_table[i-1, j] + R_grow + S_abx_s + S_abx_r
                 # trim range
                 if(S_table[i, j] > bact_slots){
                     S_table[i, j] = bact_slots
