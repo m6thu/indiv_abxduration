@@ -325,11 +325,12 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                     # check antibiotic
                     roll_clear <- runif(1, 0, 1)
                     roll_transmit <- runif(1, 0, 1)
+                    prob_r <- 1-((1-pi_r1)^r_num)
                     if (treat_table[i-1, j] == 1 & roll_clear < abx.s){
                         colo_table[i, j] <- "s"
                     } else if (treat_table[i-1, j] > 1 & roll_clear < abx.r){
                         colo_table[i, j] <- "s"
-                    } else if (roll_transmit < pi_r1){ 
+                    } else if (roll_transmit < prob_r){ 
                         colo_table[i, j] <- "Sr"
                     }else {
                         colo_table[i, j] <- "S"
