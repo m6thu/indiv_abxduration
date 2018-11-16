@@ -381,7 +381,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         iter_totalR.no[, iter] <- rowSums(df.R)
         
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]<-rowSums(df.R>R_thres)
+        iter_totalR.thres[, iter]<-rowSums(df.R >= R_thres)
         #print("end iteration loop")
     }
     totalR_no_short <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
@@ -412,7 +412,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         iter_totalR.no[, iter] <- rowSums(df.R)
         
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]<-rowSums(df.R>R_thres)
+        iter_totalR.thres[, iter] <- rowSums(df.R >= R_thres)
         #print("end iteration loop")
     }
     totalR_no_long <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
@@ -422,6 +422,6 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
 }
 
 diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
-                K = 100, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921, pi_r2 = 0.10,
+                K = 1000, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921, pi_r2 = 0.10,
                 R_thres = 100, r_growth = 2, r_trans = 100, abxr_killr = 500, abxr_kills = 500, abxs_kills = 500,
                 short_dur = 4, long_dur = 14)
