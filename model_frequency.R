@@ -276,8 +276,8 @@ gen_StartBact <- function(los, K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031
     # convert back to log, log part of logsumexp()
     s_bact <- log(s_bact)
     
-    S_Bactlevelstart <- matrix(NA, n.days, n.bed)
-    R_Bactlevelstart <- matrix(NA, n.days, n.bed)
+    S_Bactlevelstart <- matrix(NA, n.days, n.beds)
+    R_Bactlevelstart <- matrix(NA, n.days, n.beds)
     
     # pad with NAs
     end_idx <- 1
@@ -293,8 +293,9 @@ gen_StartBact <- function(los, K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031
 # 4. Update values for every day (define function)
 nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
                     pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
-                    repop.r1, repop.r2, repop.r3, repop.s1, repop.s2){
-    
+                    repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
+                    bact_slots, R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills){
+                    
     S_table <- colo_table[[1]]
     R_table <- colo_table[[2]]
     
@@ -339,7 +340,6 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                 if(S_table[i, j] < 0){
                     S_table[i, j] = 0
                 }
-                
             }
         }
         
@@ -349,8 +349,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
 }
 
 diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
-                        K, t_mean, t_sd, r_mean, r_sd, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
-                        repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,
+                        K, t_mean, t_sd, r_mean, r_sd, pi_r2,
+                        R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills,
                         short_dur, long_dur){
     
     n.days <- 30
@@ -364,20 +364,19 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, K=K , t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, K=K , t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.days)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
-                                          abx.r=abx.r,abx.s=abx.s,
-                                          repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
-                                          repop.s1 = repop.s1, repop.s2 = repop.s2)
+                                          pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                                          repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
+                                          bact_slots = K, R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills)
         #Summary
         df <- data.frame(colo_table_filled_iter[[2]])
         iter_totalsR[, iter] <- rowSums(df)
         #print("end iteration loop")
     }
-    totalsR_short <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
     iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
     for(iter in 1:iterations){
@@ -388,28 +387,26 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, K=K , t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, K=K , t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.days)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
-                                          abx.r=abx.r,abx.s=abx.s,
-                                          repop.r1 = repop.r1, repop.r2 = repop.r2, repop.r3 = repop.r3, 
-                                          repop.s1 = repop.s1, repop.s2 = repop.s2)
+                                          pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                                          repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
+                                          bact_slots = K, R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills)
         #Summary
         df <- data.frame(colo_table_filled_iter[[2]])
         iter_totalsR[,iter] <- rowSums(df)
         #print("end iteration loop")
     }
-    totalsR_long <- mean(rowSums(iter_totalsR)/iterations/n.bed)
+    totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
     print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
     
     return(totalsR_long - totalsR_short)
 }
 
-diff_prevalence(n.bed=20, mean.max.los=5, p.s=.1, p.r.day1=.1, p.r.dayafter=.1, K=100, 
-                t_mean=4, t_sd=1, r_mean=2, r_sd=2,
-                             pi_r1=.1, pi_r2=.1, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
-                            repop.r1=.1, repop.r2=.1, repop.r3=.1, repop.s1=.1, repop.s2=.1,
-                            short_dur=4, long_dur=14)
+diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
+                K = 100, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921, pi_r2 = 0.10,
+                R_thres = 100, r_growth = 2, r_trans = 100, abxr_killr = 500, abxr_kills = 500, abxs_kills = 500,
+                short_dur = 4, long_dur = 14)

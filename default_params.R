@@ -45,9 +45,7 @@ repop.r2<- 0                          # probability of repopulation of sr to bec
 
 ### in-host gut (freq model only)
 bact_slots <- 1000                      # environmental carrying capacity
-bact_start <- 500                       # bacteria level (number) for starting 
-                                        # where big letter = 1*bact_start, singly small = 0.5*bact_start
-                                        # small next to big = 0.05*bact_start
+
 R_thres <- 100                          # R threshold level for tranmissibility
 abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
 abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
