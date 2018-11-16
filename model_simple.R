@@ -99,7 +99,7 @@ abx.table<- function(n.bed, n.days, mean.max.los, p, meanDur) {
             }
         }
     }
-    # Initial treatment value derived from probability, p.s for antibiotic.s 
+    # Initial treatment value derived from probability, p for narrow spectrum antibiotic
     
     for (i in 2:n.days){
         for (j in 1:n.bed){

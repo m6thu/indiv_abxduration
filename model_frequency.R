@@ -7,7 +7,7 @@
 #     return(v)
 # }
 
-abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
+abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur) {
     
     # generate a table of number of days we want to observe (rows) -
     # against number of beds in the ward (columns), filled in with patient id numbers
@@ -172,14 +172,14 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
             rand <- runif(1,0,1)
-            if (rand < p.r) {
+            if (rand < p.r.day1) {
                 matrix_AtbTrt.r[get1stdayofstay(i,j,patient.matrix), j] <-  2
             } else {
                 matrix_AtbTrt.r[get1stdayofstay(i,j,patient.matrix), j] <-  0
             }
         }
     }
-    # Initial treatment value derived from probability, p.r for antibiotic.r 
+    # Initial treatment value derived from probability, p.r.day1 for antibiotic.r.day1
     
     howmanydaysofabt<- function(m, i, j){ 
         n <- 0
@@ -218,7 +218,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
                 rand <- runif(1,0,1)
                 # case of no antibiotics for resistant organisms in the day before
                 if (matrix_AtbTrt.r[i-1, j] == 0) {
-                    if (rand < p.r) {
+                    if (rand < p.r.dayafter) {
                         matrix_AtbTrt.r [i,j] <- 2
                     } else {
                         matrix_AtbTrt.r [i,j] <- 0
@@ -254,7 +254,7 @@ array_LOS_func<- function(los_duration) {
 
 #3. Generate baseline carriage status (define function)
 
-gen_StartBact <- function(los, prob_StartBact){
+gen_StartBact <- function(los, prob_StartBact, bact_start){
     
     stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
     
@@ -370,21 +370,23 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     return(list(S_table, R_table))
 }
 
-diff_prevalence <- function(n.bed, n.days, mean.max.los, p.s, p.r,
+diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,bact_start,
                         prob_StartBact, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                         repop.r1, repop.r2, repop.r3, repop.s1, repop.s2,
-                        iterations=10, short_dur, long_dur){
+                        short_dur, long_dur){
     
+    n.days <- 30
+    iterations <- 10
     iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
         #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=short_dur)
+        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r.day1, p.r.dayafter = p.r.dayafter, meanDur=short_dur)
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact=prob_StartBact, bact_start = bact_start )
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
@@ -404,11 +406,11 @@ diff_prevalence <- function(n.bed, n.days, mean.max.los, p.s, p.r,
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
         #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=long_dur)
+        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter = p.r.dayafter, meanDur=long_dur)
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact=prob_StartBact, bact_start = bact_start)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
@@ -546,3 +548,8 @@ diff_prevalence <- function(n.bed, n.days, mean.max.los, p.s, p.r,
 # axis(1, at = (1:ncol(totalsR)-1)/10, labels=as.character(x_seq))
 # axis(2, at = (1:nrow(totalsR)-1)/10, labels=as.character(y_seq))
 # dev.off()
+
+diff_prevalence(n.bed=20, mean.max.los=5, p.s=0.1, p.r.day1=0.1, p.r.dayafter=0.1, bact_start=10,
+                prob_StartBact=0.6, pi_r1=0.1, pi_r2=0.1, mu1=0.1, mu2=0.1, abx.r=0.1, abx.s=0.1,
+                repop.r1=0.1, repop.r2=.1, repop.r3=.1, repop.s1=.2, repop.s2=.2, short_dur=3, long_dur=10)
+    
