@@ -1,11 +1,11 @@
-######## Functions ########
-positive_norm_sample <- function(mean, sd){                      
-    v<-round(rnorm(1, mean=mean, sd=sd))
-    if (v < 0) {
-        v<-v*-1
-    }
-    return(v)
-}
+# ######## Functions ########
+# positive_norm_sample <- function(mean, sd){                      
+#     v<-round(rnorm(1, mean=mean, sd=sd))
+#     if (v < 0) {
+#         v<-v*-1
+#     }
+#     return(v)
+# }
 #########2. Generate length of stay and antibiotic duration table
 #(1 for short duration and 1 for long duration) 
 #simulate inpatients with various lengths of stay
@@ -45,7 +45,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
         for (i in 1:n.days) {
             #for each row (representing number of days we want to observe)
             
-            los <- rep(patient.id[i+final], positive_norm_sample(mean.max.los, sd=2))
+            los <- rep(patient.id[i+final], as.integer(rexp(1, 1/mean.max.los)))
             #repeat the (last patient number of the previous column+i) random number of times
             
             vector.los <- c(vector.los, los)
