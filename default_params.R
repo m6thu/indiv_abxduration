@@ -3,11 +3,14 @@
 n.bed<-20                             # n.bed= number of beds in the ward
 n.days<- 100                          # n.days= number of days we want to observe
 mean.max.los<-20                      # mean.max.los= mean of max length of stay (normal distribution)
+short_dur<-4
+long_dur<-14
 
 #variable parameters 
 ###epidemiological 
 p.s<-0.5                              # p=probability of receiving antibiotic for sensitive organisms
-p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
+p.r.day1<-0.1                         # p= probability of receiving antibiotic for resistant organisms on day 1 admission 
+p.r.dayafter<-0.1                     # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms
 #prob_StartBact_bi<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
 #                                     # possible states: S- carry sensitive organism only 
 #                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
