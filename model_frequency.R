@@ -254,58 +254,35 @@ array_LOS_func<- function(los_duration) {
 
 #3. Generate baseline carriage status (define function)
 
-gen_StartBact <- function(los, prob_StartBact){
+# Defaults from Rene's data ini_16S_log
+gen_StartBact <- function(los, K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days){
     
-    stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
+    # Perhaps add check here to make sure the K is somewhat sane?
     
-    #define probabilities of importing S, Sr, sR, sr, s
-    # prob_start_S <-  prob_StartBact[1]
-    # prob_start_Sr <- prob_StartBact[2]
-    # prob_start_sR <- prob_StartBact[3]
-    # prob_start_sr <- prob_StartBact[4]
-    # prob_start_s <- 1 - sum(prob_StartBact)
-    
-    #Generating a vector of random status with runif (change for other distribution)
     number_of_patients <- dim(los)[2]
-    Patient_unif <- runif(number_of_patients, 0, 1)
-    Patient_StartBact <- rep(NA, number_of_patients)
-    Patient_StartBact[Patient_unif > sum(prob_StartBact)] <- 's'
-    Patient_StartBact[(Patient_unif > sum(prob_StartBact[1:3])) & (Patient_unif <= sum(prob_StartBact))] <- 'sr'
-    Patient_StartBact[(Patient_unif > sum(prob_StartBact[1:2])) & (Patient_unif <= sum(prob_StartBact[1:3]))] <- 'sR'
-    Patient_StartBact[(Patient_unif > sum(prob_StartBact[1])) & (Patient_unif <= sum(prob_StartBact[1:2]))] <- 'Sr'
-    Patient_StartBact[Patient_unif <= sum(prob_StartBact[1])] <- 'S'
+    # Unit test example: mean(t_mean), sd(t_sd)
+    total_bact <- rnorm(number_of_patients, t_mean, t_sd)
+    r_bact <- rnorm(number_of_patients, r_mean, r_sd)
     
-    #Creating matrix for carriage status
+    # since both are on log scale, to sum them together would need logsumexp()
+    s_bact <- exp(total_bact) - exp(r_bact)
+    # spin until no minus values for log... probably not best way
+    while(min(s_bact) < 0){
+        spin_n <- sum(s_bact < 0)
+        spin_total <- rnorm(spin_n, t_mean, t_sd)
+        spin_r <- rnorm(spin_n, r_mean, r_sd)
+        s_bact[s_bact < 0] <- exp(spin_total) - exp(spin_r)
+    }
+    # convert back to log, log part of logsumexp()
+    s_bact <- log(s_bact)
+    
     S_Bactlevelstart <- matrix(NA, n.days, n.bed)
     R_Bactlevelstart <- matrix(NA, n.days, n.bed)
-    
+    # pad with NAs
     end_idx <- 1
     for(i in 1:number_of_patients){
-        # print(i)
-        # print(paste(end_idx, end_idx + los[2, i] - 1))
-        # print(c(Patient_StartBact[i], rep(NA, los[2, i]-1)))
-        # print(length(c(Patient_StartBact[i], rep(NA, los[2, i]-1))))
-        if(Patient_StartBact[i] == 's'){
-            S_level <- 0.5*bact_start
-            R_level <- 0*bact_start
-        }else if(Patient_StartBact[i] == 'sr'){
-            S_level <- 0.5*bact_start
-            R_level <- 0.5*bact_start
-        }else if(Patient_StartBact[i] == 'sR'){
-            S_level <- 0.05*bact_start
-            R_level <- 1*bact_start
-        }else if(Patient_StartBact[i] == 'Sr'){
-            S_level <- 1*bact_start
-            R_level <- 0.05*bact_start
-        }else if(Patient_StartBact[i] == 'S'){
-            S_level <- 1*bact_start
-            R_level <- 0*bact_start
-        }else{
-            stop("gen_StartBact did not give defined state to translate into bacteria level")
-        }
-        
-        S_Bactlevelstart[end_idx:(end_idx + los[2, i] - 1)] <- c(S_level, rep(NA, los[2, i]-1))
-        R_Bactlevelstart[end_idx:(end_idx + los[2, i] - 1)] <- c(R_level, rep(NA, los[2, i]-1))
+        S_Bactlevelstart[end_idx:(end_idx + los[2, i] - 1)] <- c(s_bact[i], rep(NA, los[2, i]-1))
+        R_Bactlevelstart[end_idx:(end_idx + los[2, i] - 1)] <- c(r_bact[i], rep(NA, los[2, i]-1))
         end_idx = end_idx + los[2, i]
     }
     
