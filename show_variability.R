@@ -43,16 +43,16 @@ if(model == "simple"){
         array_LOS_long[[i]] <- array_LOS_func(los_duration=abx.long[[i]][2])
         
         #Update values for every day
-        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact)
-        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact)
+        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact_R, prop_S_nonR, n.bed, n.days)
+        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact_R, prop_S_nonR, n.bed, n.days)
         
         #output
         colo_table_filled_short[[i]] <- nextDay(bed_table= abx.short[[i]][[1]], array_LOS=array_LOS_short[[i]], 
                                                 treat_table=abx.short[[i]][[3]], colo_table=array_StartBact_short[[i]], 
-                                                pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
+                                                pi_sr=pi_sr, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
         colo_table_filled_long[[i]] <- nextDay(bed_table= abx.long[[i]][[1]], array_LOS=array_LOS_long[[i]], 
                                                treat_table=abx.long[[i]][[3]], colo_table=array_StartBact_long[[i]], 
-                                               pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
+                                               pi_sr=pi_sr, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
         
         #increase overtime
         df.short <- colo_table_filled_short[[i]]

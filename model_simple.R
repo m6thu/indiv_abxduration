@@ -172,7 +172,7 @@ gen_StartBact <- function(los, prob_StartBact_R, prop_S_nonR, n.bed, n.days){
 }
 
 ####################4. Update values for every day  #####################
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear){
+nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_r, pi_s, pi_r, abx.clear){
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
@@ -200,9 +200,9 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_s, 
                     roll_select <- runif(1, 0, 1)
                     if(treat_table[i-1, j] > 0 & roll_clear < abx.clear){
                         colo_table[i, j] <- "N"
-                    }else if(roll_clear < mu_s){
-                        # roll for clearance
-                        colo_table[i, j] <- "N"
+                    # }else if(roll_clear < mu_s){
+                    #     # roll for clearance
+                    #     colo_table[i, j] <- "N"
                     }else if(roll_select < pi_sr){
                         # roll for selection
                         colo_table[i, j] <- "R"

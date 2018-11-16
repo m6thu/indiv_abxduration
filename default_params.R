@@ -36,7 +36,7 @@ repop.s2<- 0                          # probability of repopulation of sr to bec
 repop.s3<- 0.01                       # probability of repopulation of sR to become sr
 repop.r1<- 0                          # probability of repopulation of Sr to become sR 
 repop.r2<- 0                          # probability of repopulation of sr to become sR 
-bif1<- 0.2                             # bacterial interference factor - how much antibiotics selects for R
+#bif1<- 0.2                             # bacterial interference factor - how much antibiotics selects for R
 # repop.r3 <- repop.r2*bif1              # probability of repopulation of sr to become sR
 #                                        ( repop.r3 < repop.r2 if antibiotics increases selection for R )
 
@@ -68,7 +68,6 @@ pi_s <- 0.003                         # pi_s= probability of S transmitting to N
 pi_r <- 0.003                         # pi_r= probability of R transmitting to N 
 bif<- 0.002                               # bacterial interference factor 
 pi_sr <- pi_r * bif                   # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
-mu_s <- 0                             # mu_s= rate of clearance of S to become N
 mu_r <- 0                             # mu_r= rate of clearance of R to become S 
 abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 
 
