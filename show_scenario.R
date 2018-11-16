@@ -224,19 +224,17 @@ if(model == "simple"){
     array_LOS_short<-array_LOS_func(los_duration=abx.short[2])
     array_LOS_long<- array_LOS_func(los_duration=abx.long[2])
     
-    array_StartBact_short<-gen_StartBact(los=array_LOS_short, prob_StartBact)
-    array_StartBact_long<-gen_StartBact(los=array_LOS_long, prob_StartBact)
+    array_StartBact_short<-gen_StartBact(los=array_LOS_short, K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days)
+    array_StartBact_long<-gen_StartBact(los=array_LOS_long, K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days)
     
     colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, 
                                        treat_table=abx.short[[3]], colo_table=array_StartBact_short, 
-                                       pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                       repop.r1 = repop.r1, repop.r2 = repop.r2,
-                                       repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3, abx.r = abx.r, abx.s = abx.s)
+                                       pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                                       repop.r1, repop.r2, repop.r3, repop.s1, repop.s2)
     colo_table_filled_long <- nextDay(bed_table= abx.long[[1]], array_LOS=array_LOS_long, 
                                       treat_table=abx.long[[3]], colo_table=array_StartBact_long, 
-                                      pi_r1=pi_r1, mu1=mu1, mu2=mu2, pi_r2=pi_r2, 
-                                      repop.r1 = repop.r1, repop.r2 = repop.r2,
-                                      repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3, abx.r = abx.r, abx.s = abx.s)
+                                      pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                                      repop.r1, repop.r2, repop.r3, repop.s1, repop.s2)
     
     ####################6. Visualisation #####################
     
