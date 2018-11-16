@@ -5,7 +5,7 @@
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
-model <- "binary"
+model <- "frequency"
 
 source("default_params.R")
 source(paste0("model_", model,".R"))
@@ -20,8 +20,8 @@ if(model == "simple"){
     array_LOS_short <- array_LOS_func(los_duration=abx.short[2])
     array_LOS_long <- array_LOS_func(los_duration=abx.long[2])
     
-    array_StartBact_short <- gen_StartBact(los=array_LOS_short, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR, n.bed, n.days)
-    array_StartBact_long <- gen_StartBact(los=array_LOS_long, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR, n.bed, n.days)
+    array_StartBact_short <- gen_StartBact(los=array_LOS_short, prob_StartBact_R, prop_S_nonR, n.bed, n.days)
+    array_StartBact_long <- gen_StartBact(los=array_LOS_long, prob_StartBact_R, prop_S_nonR, n.bed, n.days)
     
     colo_table_filled_short <- nextDay(bed_table= abx.short[[1]], array_LOS=array_LOS_short, treat_table=abx.short[[3]], 
                                        colo_table=array_StartBact_short, pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
