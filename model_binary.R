@@ -260,24 +260,17 @@ array_LOS_func<- function(los_duration) {
 
 #################3. Generate baseline carriage status 
 
-gen_StartBact <- function(los, prob_StartBact_R, prob_abxprior, n.bed, n.days){
+gen_StartBact <- function(los, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR, n.bed, n.days){
     
-    prob_start_S <-  (1-prob_abxprior)*(1-prob_StartBact_R)
-    prob_start_s <-  prob_abxprior*(1-prob_StartBact_R)
-    prob_start_Sr <-  (1-prob_abxprior)* prob_StartBact_R
-    prob_start_sr <-  (prob_abxprior/2)* prob_StartBact_R
-    prob_start_sR <-  (prob_abxprior/2)* prob_StartBact_R
-    prob_StartBact_bi<- c(prob_start_S,prob_start_Sr,prob_start_sR,prob_start_sr)
+    prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+    prob_start_s <- 1-prob_start_S-prob_StartBact_R
+    prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+    prob_start_sr <- prop_sr_inR* prob_StartBact_R
+    prob_start_sR <- (1-prop_Sr_inR-prop_sr_inR)*prob_StartBact_R
+    prob_StartBact_bi <- c(prob_start_S,prob_start_Sr,prob_start_sR,prob_start_sr)
     
     stopifnot(sum(prob_StartBact_bi) < 1) # Assert all probabilities combined are less than 1
-    
-    #define probabilities of importing S, Sr, sR, sr, s
-    # prob_start_S <-  prob_StartBact[1]
-    # prob_start_Sr <- prob_StartBact[2]
-    # prob_start_sR <- prob_StartBact[3]
-    # prob_start_sr <- prob_StartBact[4]
-    # prob_start_s <- 1 - sum(prob_StartBact)
-    
+
     #Generating a vector of random status with runif (change for other distribution)
     number_of_patients <- dim(los)[2]
     Patient_unif <- runif(number_of_patients, 0, 1)
@@ -320,6 +313,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
             #print(paste("i:", i, "j:", j))
             #print(colo_table[i-1, j])
             if(is.na(colo_table[i, j])){
+                r_num <- sum(colo_table[i-1,] == "sR") #only R can be transmitted 
                 if(colo_table[i-1, j] == "S"){
                     #print("----case S")
                     # check antibiotic
@@ -341,7 +335,6 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                     #print("----case s")
                     # roll for transmission of r
                     roll_r <- runif(1, 0, 1)
-                    r_num <- sum(colo_table[i-1,] == "sR") #only R can be transmitted 
                     prob_r <- 1-((1-pi_r2)^r_num)
                     # roll for repopulation of s to become S
                     roll_s <- runif(1, 0, 1)
