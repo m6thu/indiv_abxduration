@@ -151,7 +151,7 @@ gen_StartBact <- function(los, prob_StartBact_R, prop_S_nonR, n.bed, n.days){
     number_of_patients <- dim(los)[2]
     Patient_unif <- runif(number_of_patients,0,1)
     Patient_StartBact <- rep(NA, number_of_patients)
-    Patient_StartBact[Patient_unif > (prob_start_S+prob_StartBact_R)] <- 'N'
+    Patient_StartBact[Patient_unif > (prob_start_S+prob_StartBact_R)] <- 's'
     Patient_StartBact[(Patient_unif <= prob_start_S+prob_StartBact_R) & (Patient_unif > prob_start_S)] <- 'R'
     Patient_StartBact[Patient_unif <= prob_start_S] <- 'S'
     
@@ -199,19 +199,19 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_r, 
                     roll_clear <- runif(1, 0, 1)
                     roll_select <- runif(1, 0, 1)
                     if(treat_table[i-1, j] > 0 & roll_clear < abx.clear){
-                        colo_table[i, j] <- "N"
+                        colo_table[i, j] <- "s"
                     # }else if(roll_clear < mu_s){
                     #     # roll for clearance
-                    #     colo_table[i, j] <- "N"
+                    #     colo_table[i, j] <- "s"
                     }else if(roll_select < pi_sr){
                         # roll for selection
                         colo_table[i, j] <- "R"
                     }else{
                         colo_table[i, j] <- "S"
                     }
-                    # case N
-                }else if(colo_table[i-1, j] == "N"){
-                    #print("----case N")
+                    # case s
+                }else if(colo_table[i-1, j] == "s"){
+                    #print("----case s")
                     # roll for transmission of R
                     roll_r <- runif(1, 0, 1)
                     r_num <- sum(colo_table[i-1,] == "R")
@@ -235,7 +235,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_r, 
                     }else if(!transmit_r & transmit_s& !treat_table[i-1,j]){
                         colo_table[i, j] <- "S"
                     }else{
-                        colo_table[i, j] <- "N"
+                        colo_table[i, j] <- "s"
                     }
                 }else{
                     print("error")
@@ -296,4 +296,5 @@ diff_prevalence <- function(n.bed, mean.max.los, p, prop_S_nonR,
 
 #diff_prevalence(n.bed =20, mean.max.los=3, p=0.1,prob_StartBact_R=0.4, prop_S_nonR=0.3,
 #                pi_sr=0.1, mu_r=0.1, pi_s=0.1, pi_r=0.1, abx.clear=0.1, short_dur = 4, long_dur = 10)
+
 

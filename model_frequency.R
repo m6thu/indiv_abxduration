@@ -295,7 +295,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                     pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                     repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
                     bact_slots, R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills){
-                    
+    
     S_table <- colo_table[[1]]
     R_table <- colo_table[[2]]
     
@@ -355,7 +355,10 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     n.days <- 30
     iterations <- 10
-    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    
+    iter_totalR.no <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalR.thres <- matrix(NA, nrow = n.days, ncol = iterations)
+    
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
@@ -371,14 +374,22 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                           pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                                           repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
                                           bact_slots = K, R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills)
-        #Summary
-        df <- data.frame(colo_table_filled_iter[[2]])
-        iter_totalsR[, iter] <- rowSums(df)
+        
+        #Summary 
+        #for total units of R bacteria on a day
+        df.R <- data.frame(colo_table_filled_iter[[2]])
+        iter_totalR.no[, iter] <- rowSums(df.R)
+        
+        #for number of people who reached R threshold on a day
+        iter_totalR.thres[, iter]<-rowSums(df.R>R_thres)
         #print("end iteration loop")
     }
-    totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
+    totalR_no_short <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
+    totalR_thres_short <- mean(rowSums(iter_totalR.thres)/iterations/n.bed)
     
-    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalR.no <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalR.thres <- matrix(NA, nrow = n.days, ncol = iterations)
+    
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
@@ -394,16 +405,20 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                           pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                                           repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
                                           bact_slots = K, R_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills)
-        #Summary
-        df <- data.frame(colo_table_filled_iter[[2]])
-        iter_totalsR[,iter] <- rowSums(df)
+
+        #Summary 
+        #for total units of R bacteria on a day
+        df.R <- data.frame(colo_table_filled_iter[[2]])
+        iter_totalR.no[, iter] <- rowSums(df.R)
+        
+        #for number of people who reached R threshold on a day
+        iter_totalR.thres[, iter]<-rowSums(df.R>R_thres)
         #print("end iteration loop")
     }
-    totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
+    totalR_no_long <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
+    totalR_thres_long <- mean(rowSums(iter_totalR.thres)/iterations/n.bed)
     
-    print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
-    
-    return(totalsR_long - totalsR_short)
+    return(list((totalR_no_long - totalR_no_short),(totalR_thres_long-totalR_thres_short)))
 }
 
 diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
