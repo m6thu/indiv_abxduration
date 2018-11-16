@@ -12,7 +12,7 @@ positive_norm_sample <- function(mean, sd){
 #allocate various duration of antibiotics for each patient
 
 abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
-    
+    #hello
     # generate a table of number of days we want to observe (rows) -
     # against number of beds in the ward (columns), filled in with patient id numbers
     
