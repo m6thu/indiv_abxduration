@@ -63,7 +63,7 @@ minDur<- 1                            # minDur=the min duration of antibiotic
 
 #variable parameters 
 ###epidemiological 
-p<-0.2                                # p=probability of receiving antibiotic
+p <- 0.2                                # p=probability of receiving antibiotic
 #prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
 
 ###biological 
@@ -74,3 +74,10 @@ pi_sr <- pi_r * bif                   # pi_sr= probability of R transmitting to 
 mu_s <- 0                             # mu_s= rate of clearance of S to become N
 mu_r <- 0                             # mu_r= rate of clearance of R to become S 
 abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 
+
+###gut parameters
+K <- 1000
+t_mean <- 4.0826
+t_sd <- 1.1218
+r_mean <- 1.7031
+r_sd <- 1.8921
