@@ -11,7 +11,7 @@
 #simulate inpatients with various lengths of stay
 #allocate various duration of antibiotics for each patient
 
-abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
+abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur) {
     #hello
     # generate a table of number of days we want to observe (rows) -
     # against number of beds in the ward (columns), filled in with patient id numbers
@@ -176,14 +176,14 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
             rand <- runif(1,0,1)
-            if (rand < p.r) {
+            if (rand < p.r.day1) {
                 matrix_AtbTrt.r[get1stdayofstay(i,j,patient.matrix), j] <-  2
             } else {
                 matrix_AtbTrt.r[get1stdayofstay(i,j,patient.matrix), j] <-  0
             }
         }
     }
-    # Initial treatment value derived from probability, p.r for antibiotic.r 
+    # Initial treatment value derived from probability, p.r.day1 for antibiotic.r 
     
     howmanydaysofabt<- function(m, i, j){ 
         n <- 0
@@ -207,11 +207,11 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
     # m <- c(0, 2, 2, 2, 2, 0, 2, 0, 0, 2, 2, 0, 2, 2, 2, 2, 2, 0)
     # dim(m) <- c(6, 3)
     # Check base case
-    # howmanydaysofabt(m, 2, 1) should return 1
-    # howmanydaysofabt(m, 2, 2) should return 1 < still problematic
+    # howmanydaysofabt(m, 2, 1) should return 2
+    # howmanydaysofabt(m, 2, 2) should return 2
     # Check cross over between patients
-    # howmanydaysofabt(m, 4, 1) should return 2
-    # howmanydaysofabt(m, 4, 3) should return 3
+    # howmanydaysofabt(m, 4, 1) should return 3
+    # howmanydaysofabt(m, 4, 3) should return 4
     
     
     for (i in 2:nrow(patient.matrix)){
@@ -222,7 +222,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r, meanDur) {
                 rand <- runif(1,0,1)
                 # case of no antibiotics for resistant organisms in the day before
                 if (matrix_AtbTrt.r[i-1, j] == 0) {
-                    if (rand < p.r) {
+                    if (rand < p.r.dayafter) {
                         matrix_AtbTrt.r [i,j] <- 2
                     } else {
                         matrix_AtbTrt.r [i,j] <- 0
@@ -402,25 +402,26 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     return(colo_table)
 }
 
-diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r,
-                            prob_StartBact_R, pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
+                            prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
                             repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
                             short_dur, long_dur){
-    n.days <- 300
-    prob_abxprior <- 0.2
-    iterations <- 100
+    n.days <- 30
+    iterations <- 10
     iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
     
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
         #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=short_dur)
+        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=short_dur)
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact_R=prob_StartBact_R, 
-                                              n.bed=n.bed, n.days=n.days, prob_abxprior=prob_abxprior)
+                                              prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, 
+                                              prop_sr_inR=prop_sr_inR, 
+                                              n.bed=n.bed, n.days=n.days)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
@@ -440,12 +441,13 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r,
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
         #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=long_dur)
+        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=long_dur)
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter,prob_StartBact_R=prob_StartBact_R, 
-                                              n.bed=n.bed, n.days=n.days, prob_abxprior=prob_abxprior)
+                                              prop_S_nonR=prop_S_nonR, prop_sr_inR=prop_sr_inR,
+                                              prop_Sr_inR=prop_Sr_inR, n.bed=n.bed, n.days=n.days)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
@@ -465,3 +467,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r,
     return(totalsR_long - totalsR_short)
 }
 
+diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.01,
+                prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1, pi_r1=0.1, pi_r2=0.1, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
+                repop.r1=.1, repop.r2=.1, repop.s1=.1, repop.s2=.1, repop.s3=.1,
+                short_dur=2, long_dur=10)

@@ -114,8 +114,8 @@ if(model == "simple"){
     acq.long<-plot(x,y.long, type='l', xlab="Time", ylab="Number of patients acquiring resistant organisms")
 
 }else if(model == "binary"){
-    abx.short <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
-    abx.long <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
+    abx.short <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=4)
+    abx.long <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=14)
     
     array_LOS_short <- array_LOS_func(los_duration=abx.short[2])
     array_LOS_long <- array_LOS_func(los_duration=abx.long[2])
@@ -218,8 +218,8 @@ if(model == "simple"){
 
 }else if(model == "frequency"){
     
-    abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=4)
-    abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=14)
+    abx.short<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=4)
+    abx.long<-abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=14)
     
     array_LOS_short<-array_LOS_func(los_duration=abx.short[2])
     array_LOS_long<- array_LOS_func(los_duration=abx.long[2])

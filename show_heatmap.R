@@ -62,11 +62,13 @@ for(y in y_seq){
             
             print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
             #Generate length of stay and antibiotic duration table
-            abx_iter[[iter]] <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r, meanDur=mean_dur)
+            abx_iter[[iter]] <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=long_dur)
             #Generate baseline carriage status
             array_LOS_iter[[iter]] <- array_LOS_func(los_duration=abx_iter[[iter]][2])
             #Update values for every day
-            array_StartBact_iter[[iter]] <- gen_StartBact(los=array_LOS_iter[[iter]], prob_StartBact)
+            array_StartBact_iter[[iter]] <- gen_StartBact(los=array_LOS_iter[[iter]],prob_StartBact_R=prob_StartBact_R, 
+                                                          prop_S_nonR=prop_S_nonR, prop_sr_inR=prop_sr_inR,
+                                                          prop_Sr_inR=prop_Sr_inR, n.bed=n.bed, n.days=n.days)
             #output
             colo_table_filled_iter[[iter]] <- nextDay(bed_table= abx_iter[[iter]][[1]], array_LOS=array_LOS_iter[[iter]], 
                                                       treat_table=abx_iter[[iter]][[3]], colo_table=array_StartBact_iter[[iter]], 
@@ -74,6 +76,7 @@ for(y in y_seq){
                                                       abx.r=abx.r,abx.s=abx.s,
                                                       repop.r1 = repop.r1, repop.r2 = repop.r2, 
                                                       repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
+            
             #Summary
             df <- colo_table_filled_iter[[iter]]
             iter_totalS[,iter] <- rowSums(df == "S")

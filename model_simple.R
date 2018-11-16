@@ -99,7 +99,7 @@ abx.table<- function(n.bed, n.days, mean.max.los, p, meanDur) {
             }
         }
     }
-    # Initial treatment value derived from probability, p.s for antibiotic.s 
+    # Initial treatment value derived from probability, p for narrow spectrum antibiotic
     
     for (i in 2:n.days){
         for (j in 1:n.bed){
@@ -248,10 +248,11 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table, pi_sr, mu_r, 
     return(colo_table)
 }
 
-diff_prevalence <- function(n.bed, n.days, mean.max.los, p,
-                            prob_StartBact, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear,
-                            iterations=10, short_dur, long_dur){
-    
+diff_prevalence <- function(n.bed, mean.max.los, p, prop_S_nonR, 
+                            prob_StartBact_R, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear,
+                            short_dur, long_dur){
+    n.days<-30
+    iterations<-10
     iter_totalR <- matrix(NA, nrow = n.days, ncol = iterations)
     for(iter in 1:iterations){
         
@@ -259,7 +260,7 @@ diff_prevalence <- function(n.bed, n.days, mean.max.los, p,
         
         array_LOS_iter<-array_LOS_func(los_duration=abx_iter[2])
         
-        array_StartBact_iter<-gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        array_StartBact_iter<-gen_StartBact(los=array_LOS_iter, prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR,n.days=n.days, n.bed=n.bed)
         
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, treat_table=abx_iter[[3]], 
                                            colo_table=array_StartBact_iter, pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
@@ -277,7 +278,7 @@ diff_prevalence <- function(n.bed, n.days, mean.max.los, p,
         
         array_LOS_iter<-array_LOS_func(los_duration=abx_iter[2])
         
-        array_StartBact_iter<-gen_StartBact(los=array_LOS_iter, prob_StartBact)
+        array_StartBact_iter<-gen_StartBact(los=array_LOS_iter, prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR, n.days=n.days, n.bed=n.bed)
         
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, treat_table=abx_iter[[3]], 
                                           colo_table=array_StartBact_iter, pi_sr=pi_sr, mu_s=mu_s, mu_r=mu_r, pi_s=pi_s, pi_r=pi_r, abx.clear=abx.clear)
@@ -293,6 +294,6 @@ diff_prevalence <- function(n.bed, n.days, mean.max.los, p,
     return(totalR_long - totalR_short)
 }
 
-# diff_prevalence(n.bed, n.days, mean.max.los, p,
-# prob_StartBact, pi_sr, mu_s, mu_r, pi_s, pi_r, abx.clear,
-# iterations=10, 4, 14)
+diff_prevalence(n.bed =20, mean.max.los=3, p=0.1,prob_StartBact_R=0.4, prop_S_nonR=0.3,
+                pi_sr=0.1, mu_s=0.2, mu_r=0.1, pi_s=0.1, pi_r=0.1, abx.clear=0.1, short_dur = 4, long_dur = 10)
+
