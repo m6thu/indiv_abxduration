@@ -8,12 +8,16 @@ mean.max.los<-20                      # mean.max.los= mean of max length of stay
 ###epidemiological 
 p.s<-0.5                              # p=probability of receiving antibiotic for sensitive organisms
 p.r<-0.1                              # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms 
-prob_StartBact_bi<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
+#prob_StartBact_bi<-c(0.5,0.2, 0.1, 0.05) # prob_StartBact= vector of probability of carrying c(S,Sr, sR, sr)
 #                                     # possible states: S- carry sensitive organism only 
 #                                                        Sr- carry largely sensitive organisms and small population of resistant organisms
 #                                                        sR- carry largely resistant organisms and small population of sensitive organisms
 #                                                        sr- carry small population of sensitive organisms and resistant organisms
 #                                                        s - carry small population of sensitive organisms 
+prob_StartBact_R <- 0.35
+prop_S_nonR <- 0.5                # Proportion of large S within non-resistant states (S+s)
+prop_Sr_inR <- 0.55                      # Proportion of large S within non-resistant states (S+s)
+prop_sr_inR <- 0.15                      # Proportion of large S within non-resistant states (S+s)
 
 ###biological 
 pi_r1 <- 0.003                        # pi_r1= probability of R transmitting to S to become Sr
@@ -57,7 +61,7 @@ minDur<- 1                            # minDur=the min duration of antibiotic
 #variable parameters 
 ###epidemiological 
 p<-0.2                                # p=probability of receiving antibiotic
-prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
+#prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
 
 ###biological 
 pi_s <- 0.003                         # pi_s= probability of S transmitting to N 

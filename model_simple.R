@@ -139,21 +139,20 @@ array_LOS_func<- function(los_duration) {
 
 #################3. Generate baseline carriage status ##################
 
-gen_StartBact <- function(los, prob_StartBact){
-    
-    stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
+gen_StartBact <- function(los, prob_StartBact_R, prop_S_nonR, n.bed, n.days){
     
     #define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or nothing (N)
-    prob_start_S <- prob_StartBact[1]
-    prob_start_R <- prob_StartBact[2]
-    prob_start_N <- 1-prob_start_S-prob_start_R
+    prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+    prob_StartBact <- c(prob_start_S,prob_StartBact_R)
+    
+    stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
     
     #Generating a vector of random status with runif (change for other distribution)
     number_of_patients <- dim(los)[2]
     Patient_unif <- runif(number_of_patients,0,1)
     Patient_StartBact <- rep(NA, number_of_patients)
-    Patient_StartBact[Patient_unif > (prob_start_S+prob_start_R)] <- 'N'
-    Patient_StartBact[(Patient_unif <= prob_start_S+prob_start_R) & (Patient_unif > prob_start_S)] <- 'R'
+    Patient_StartBact[Patient_unif > (prob_start_S+prob_StartBact_R)] <- 'N'
+    Patient_StartBact[(Patient_unif <= prob_start_S+prob_StartBact_R) & (Patient_unif > prob_start_S)] <- 'R'
     Patient_StartBact[Patient_unif <= prob_start_S] <- 'S'
     
     #Creating array for carriage status
