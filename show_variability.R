@@ -3,7 +3,7 @@
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
-model <- "simple"
+model <- "frequency"
 
 source("default_params.R")
 source(paste0("model_", model,".R"))
@@ -43,8 +43,8 @@ if(model == "simple"){
         array_LOS_long[[i]] <- array_LOS_func(los_duration=abx.long[[i]][2])
         
         #Update values for every day
-        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact)
-        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact)
+        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact_R, prop_S_nonR, n.bed, n.days)
+        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact_R, prop_S_nonR, n.bed, n.days)
         
         #output
         colo_table_filled_short[[i]] <- nextDay(bed_table= abx.short[[i]][[1]], array_LOS=array_LOS_short[[i]], 
@@ -116,8 +116,8 @@ if(model == "simple"){
         array_LOS_long[[i]] <- array_LOS_func(los_duration=abx.long[[i]][2])
         
         #Update values for every day
-        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact)
-        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact)
+        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR, n.bed, n.days)
+        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR, n.bed, n.days)
         
         #output
         colo_table_filled_short[[i]] <- nextDay(bed_table= abx.short[[i]][[1]], array_LOS=array_LOS_short[[i]], 
@@ -199,8 +199,8 @@ if(model == "simple"){
         array_LOS_long[[i]] <- array_LOS_func(los_duration=abx.long[[i]][2])
         
         #Update values for every day
-        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], prob_StartBact)
-        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], prob_StartBact)
+        array_StartBact_short[[i]] <- gen_StartBact(los=array_LOS_short[[i]], K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days)
+        array_StartBact_long[[i]] <- gen_StartBact(los=array_LOS_long[[i]], K, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.beds, n.days)
         
         #output
         colo_table_filled_short[[i]] <- nextDay(bed_table= abx.short[[i]][[1]], array_LOS=array_LOS_short[[i]], 
