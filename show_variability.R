@@ -108,8 +108,8 @@ if(model == "simple"){
         
         print(i)
         #Generate length of stay and antibiotic duration table
-        abx.short[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_short)
-        abx.long[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_long)
+        abx.short[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=mean_short)
+        abx.long[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=mean_long)
         
         #Generate baseline carriage status
         array_LOS_short[[i]] <- array_LOS_func(los_duration=abx.short[[i]][2])
@@ -191,8 +191,8 @@ if(model == "simple"){
         
         print(i)
         #Generate length of stay and antibiotic duration table
-        abx.short[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_short)
-        abx.long[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r, meanDur=mean_long)
+        abx.short[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=mean_short)
+        abx.long[[i]] <- abx.table(n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur=mean_long)
         
         #Generate baseline carriage status
         array_LOS_short[[i]] <- array_LOS_func(los_duration=abx.short[[i]][2])
