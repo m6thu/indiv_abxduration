@@ -471,3 +471,4 @@ diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.
                 prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1, pi_r1=0.1, pi_r2=0.1, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
                 repop.r1=.1, repop.r2=.1, repop.s1=.1, repop.s2=.1, repop.s3=.1,
                 short_dur=2, long_dur=10)
+
