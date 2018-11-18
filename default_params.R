@@ -1,4 +1,4 @@
-###########################1. Input parameters##########################
+############## Shared parameters ##################
 #fixed parameters 
 n.bed<-20                             # n.bed= number of beds in the ward
 n.days<- 100                          # n.days= number of days we want to observe
@@ -6,6 +6,19 @@ mean.max.los<-20                      # mean.max.los= mean of max length of stay
 short_dur<-4
 long_dur<-14
 
+############# Simple model #################
+p <- 0.2                                # p=probability of receiving antibiotic
+prob_StartBact_R <- 0.35             # Probability of being colonized with resistant strain on admission
+prop_S_nonR <- 0.5                # Proportion of large S within non-resistant states (S+s)
+
+pi_r <- 0.003                         # pi_r= probability of R transmitting to N 
+bif<- 0.002                               # bacterial interference factor 
+mu_r <- 0                             # mu_r= rate of clearance of R to become S 
+abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 
+
+############## Binary model ###################
+
+############# Frequency model #################
 #variable parameters 
 ###epidemiological 
 p.s<-0.5                              # p=probability of receiving antibiotic for sensitive organisms
@@ -17,8 +30,7 @@ p.r.dayafter<-0.1                     # p= daily probability of contracting HAI 
 #                                                        sR- carry largely resistant organisms and small population of sensitive organisms
 #                                                        sr- carry small population of sensitive organisms and resistant organisms
 #                                                        s - carry small population of sensitive organisms 
-prob_StartBact_R <- 0.35
-prop_S_nonR <- 0.5                # Proportion of large S within non-resistant states (S+s)
+
 prop_Sr_inR <- 0.55                      # Proportion of large S within non-resistant states (S+s)
 prop_sr_inR <- 0.15                      # Proportion of large S within non-resistant states (S+s)
 
@@ -53,28 +65,16 @@ abxs_kills <- 500                       # amount of s killed by narrow spectrum 
 r_trans <- 100                          # amount transmitted
 r_growth <- 2                           # growth constant for logistic growth
 
-mean_dur <- 4                           # antibiotic duration (days)
-
-# Simple model has prob_Start has less slots than others
-
-minDur<- 1                            # minDur=the min duration of antibiotic
-
-#variable parameters 
-###epidemiological 
-p <- 0.2                                # p=probability of receiving antibiotic
-#prob_StartBact<-c(0.4,0.58)           # prob_StartBact= vector of probability of carrying sensitive organism, resistant organism
-
-###biological 
-pi_s <- 0.003                         # pi_s= probability of S transmitting to N 
-pi_r <- 0.003                         # pi_r= probability of R transmitting to N 
-bif<- 0.002                               # bacterial interference factor 
-pi_sr <- pi_r * bif                   # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
-mu_r <- 0                             # mu_r= rate of clearance of R to become S 
-abx.clear<-0.2                        # probability of clearing S to become N under antibiotic treatment 
-
 ###gut parameters
 K <- 1000
 t_mean <- 4.0826
 t_sd <- 1.1218
 r_mean <- 1.7031
 r_sd <- 1.8921
+
+mean_dur <- 4                           # antibiotic duration (days)
+
+# Simple model has prob_Start has less slots than others
+minDur<- 1                            # minDur=the min duration of antibiotic
+
+
