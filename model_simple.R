@@ -296,7 +296,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p, prop_S_nonR,
     return(totalR_long - totalR_short)
 }
 
-diff_prevalence(n.bed =20, mean.max.los=3, p=0.1,prob_StartBact_R=0.4, prop_S_nonR=0.3,
-               bif=0.002, mu_r=0.1, pi_s=0.1, pi_r=0.1, abx.clear=0.1, short_dur = 4, long_dur = 10)
+# diff_prevalence(n.bed =20, mean.max.los=3, p=0.1,prob_StartBact_R=0.4, prop_S_nonR=0.3,
+#                bif=0.002, mu_r=0.1, pi_s=0.1, pi_r=0.1, abx.clear=0.1, short_dur = 4, long_dur = 10)
 
 
