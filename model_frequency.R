@@ -292,11 +292,8 @@ gen_StartBact <- function(los, K, t_mean, t_sd, r_mean, r_sd, n.beds, n.days){
 
 # 4. Update values for every day (define function)
 nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
-                    pi_r1, bif, mu1, mu2, abx.r, abx.s,
-                    repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
-                    K, r_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills){
-    
-    pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
+                    pi_r, K, r_thres, r_growth, r_trans, 
+                    abxr_killr, abxr_kills, abxs_kills){
     
     S_table <- colo_table[[1]]
     R_table <- colo_table[[2]]
@@ -306,7 +303,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
         # calculate how many people has R above transmission level
         r_num <- sum(R_table[i-1,] > r_thres)
         # from number of r, calculate probability of transmission
-        prob_r <- 1-((1-pi_r2)^r_num)
+        prob_r <- 1-((1-pi_r)^r_num)
         # roll for transmission
         roll <- runif(1, 0, 1)
         #for each person:
@@ -352,9 +349,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
 
 diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             K, t_mean, t_sd, r_mean, r_sd,
-                            r_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills,
-                            pi_r1, bif, mu1, mu2, abx.r, abx.s,
-                            repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
+                            pi_r, r_thres, r_growth, r_trans, 
+                            abxr_killr, abxr_kills, abxs_kills,
                             short_dur, long_dur){
     
     n.days <- 30
@@ -375,9 +371,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r1, bif, mu1, mu2, abx.r, abx.s,
-                                          repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
-                                          K = K, r_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills)
+                                          pi_r, K, r_thres, r_growth, r_trans, 
+                                          abxr_killr, abxr_kills, abxs_kills)
         
         #Summary 
         #for total units of R bacteria on a day
@@ -406,9 +401,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r1, bif, mu1, mu2, abx.r, abx.s,
-                                          repop.r1, repop.r2, repop.r3, repop.s1, repop.s2, 
-                                          K = K, r_thres, r_growth, r_trans, abxr_killr, abxr_kills, abxs_kills)
+                                          pi_r, K, r_thres, r_growth, r_trans, 
+                                          abxr_killr, abxr_kills, abxs_kills)
 
         #Summary 
         #for total units of R bacteria on a day
@@ -425,11 +419,10 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     return(list((totalR_no_long - totalR_no_short),(totalR_thres_long-totalR_thres_short)))
 }
 
-diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
-                K = 1000, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921, 
-                r_thres = 100, r_growth = 2, r_trans = 100, abxr_killr = 500, abxr_kills = 500, abxs_kills = 500,
-                pi_r1=0.1, bif=2, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
-                repop.r1=.1, repop.r2=.1, repop.s1=.1, repop.s2=.1, repop.s3=.1,
-                short_dur = 4, long_dur = 14)
+# diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
+#                 K = 1000, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921, 
+#                 pi_r=0.1, r_thres = 100, r_growth = 2, r_trans = 100,
+#                 abxr_killr = 500, abxr_kills = 500, abxs_kills = 500,
+#                 short_dur = 4, long_dur = 14)
 
 

@@ -40,7 +40,8 @@ abx.r<-0.3                            # probability of clearing R to become r un
 
 ############# Frequency model #################
 
-# Same as binary model with gut model parameters as below
+pi_r <- 0.06                             # p.t = daily probability of transmitting resistant E coli
+
 K <- 1000
 t_mean <- 4.0826
 t_sd <- 1.1218
