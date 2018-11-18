@@ -3,8 +3,7 @@
 n.bed<-20                             # n.bed= number of beds in the ward
 n.days<- 100                          # n.days= number of days we want to observe
 mean.max.los<-20                      # mean.max.los= mean of max length of stay (normal distribution)
-short_dur<-4
-long_dur<-14
+meanDur <- 7                          # meanDur = mean duration of antibiotics
 
 ############# Simple model #################
 p <- 0.2                                # p=probability of receiving antibiotic
@@ -40,26 +39,18 @@ abx.s<-0.2                            # probability of clearing S to become s un
 abx.r<-0.3                            # probability of clearing R to become r under antibiotic treatment (daily)
 
 ############# Frequency model #################
-### in-host gut (freq model only)
-bact_slots <- 1000                      # environmental carrying capacity
 
-R_thres <- 100                          # R threshold level for tranmissibility
-abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
-abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
-abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
-r_trans <- 100                          # amount transmitted
-r_growth <- 2                           # growth constant for logistic growth
-
-###gut parameters
+# Same as binary model with gut model parameters as below
 K <- 1000
 t_mean <- 4.0826
 t_sd <- 1.1218
 r_mean <- 1.7031
 r_sd <- 1.8921
 
-mean_dur <- 4                           # antibiotic duration (days)
-
-# Simple model has prob_Start has less slots than others
-minDur<- 1                            # minDur=the min duration of antibiotic
-
+r_thres <- 100                          # R threshold level for tranmissibility
+r_trans <- 100                          # amount transmitted
+r_growth <- 2                           # growth constant for logistic growth
+abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
+abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
+abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
 
