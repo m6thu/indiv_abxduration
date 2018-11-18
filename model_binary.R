@@ -12,31 +12,27 @@
 #allocate various duration of antibiotics for each patient
 
 abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur) {
-    #hello
     # generate a table of number of days we want to observe (rows) -
     # against number of beds in the ward (columns), filled in with patient id numbers
     
-    patient.matrix <- matrix(NA, nrow=n.days, ncol=n.bed)
     #make up a matrix of number of days we want to observe (rows) -
     #against number of beds in the ward (columns)
-    
-    n.patient <- n.bed*n.days 
+    patient.matrix <- matrix(NA, nrow=n.days, ncol=n.bed)
+   
     #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
     #number of days. This is to ensure there are enough total number of patients generated to fill table
+    n.patient <- n.bed*n.days 
     
-    patient.id <- c(1:n.patient)    
     #vectorise the patient id to be used for filling in the patient.matrix
+    patient.id <- c(1:n.patient)    
     
-    vector.los <- rep(0,n.days)
     #Generating a vector with 0s 
     #make up an empty vector for 0th column of matrix so that the next column starts with 
     #(last patient number of the previous column+i)
-    
-    # los is a normal function with mean of mean.max.los
-    # positive_norm_sample
-    
+    vector.los <- rep(0,n.days)
+
+    #for each column (representing different beds in the ward) in patient.matrix
     for (j in 1:n.bed) {
-        #for each column (representing different beds in the ward) in patient.matrix
         
         los <- c()
         final <- vector.los[n.days]
@@ -302,8 +298,10 @@ gen_StartBact <- function(los, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_
 
 ####################4. Update values for every day  
 nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
-                    pi_r1, pi_r2, mu1, mu2, repop.r1, repop.r2, 
-                    repop.s1, repop.s2,repop.s3, abx.r,abx.s){
+                    pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
+                    repop.s1, repop.s2,repop.s3, abx.r, abx.s){
+    
+    pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
     
     # For each day (first day should be filled)
     for(i in 2:nrow(bed_table)){
@@ -403,7 +401,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
 }
 
 diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
-                            prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,pi_r1, pi_r2, mu1, mu2, abx.r, abx.s,
+                            prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+                            pi_r1, bif, mu1, mu2, abx.r, abx.s,
                             repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
                             short_dur, long_dur){
     n.days <- 30
@@ -425,7 +424,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
+                                          pi_r1=pi_r1, bif=bif, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
@@ -451,7 +450,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r1=pi_r1, pi_r2= pi_r2, mu1=mu1, mu2=mu2, 
+                                          pi_r1=pi_r1, bif=bif, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3)
@@ -468,7 +467,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
 }
 
 # diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.01,
-#                 prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1, pi_r1=0.1, pi_r2=0.1, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
+#                 prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1, 
+#                 pi_r1=0.1, bif=2, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
 #                 repop.r1=.1, repop.r2=.1, repop.s1=.1, repop.s2=.1, repop.s3=.1,
 #                 short_dur=2, long_dur=10)
 
