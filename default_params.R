@@ -42,16 +42,17 @@ abx.r<-0.3                            # probability of clearing R to become r un
 
 pi_r <- 0.06                             # p.t = daily probability of transmitting resistant E coli
 
-K <- 1000
+# All parameters below are on log scale
+K <- 100                            # gut holding capacity
 t_mean <- 4.0826
 t_sd <- 1.1218
 r_mean <- 1.7031
 r_sd <- 1.8921
 
-r_thres <- 100                          # R threshold level for tranmissibility
-r_trans <- 100                          # amount transmitted
 r_growth <- 2                           # growth constant for logistic growth
-abxr_killr <- 500                       # amount of r killed by broad spectrum abx r
-abxr_kills <- 500                       # amount of s killed by broad spectrum abx r
-abxs_kills <- 500                       # amount of s killed by narrow spectrum abx s
+r_thres <- 10                          # R threshold level for tranmissibility
+r_trans <- 10                          # amount transmitted
+abxr_killr <- 5                       # amount of r killed by broad spectrum abx r
+abxr_kills <- 5                       # amount of s killed by broad spectrum abx r
+abxs_kills <- 5                       # amount of s killed by narrow spectrum abx s
 

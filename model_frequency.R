@@ -302,40 +302,50 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
         r_num <- sum(R_table[i-1,] > r_thres)
         # from number of r, calculate probability of transmission
         prob_r <- 1-((1-pi_r)^r_num)
-        # roll for transmission
-        roll <- runif(1, 0, 1)
+        
+        ###### Convert all log scale parameters into normal scale for addition, then convert back to log
         #for each person:
         for(j in 1:ncol(bed_table)){
             if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
+                # roll for transmission
+                roll <- runif(1, 0, 1)
                 # calculate effect of R logistic bacteria growth 
-                R_grow = r_growth*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
+                R_grow <- exp(r_growth)*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # add effect of transmission if roll pass prob check and if previous R level is 0
-                R_trans = r_trans*((roll > prob_r) & !R_table[i-1, j])
+                R_trans <- exp(r_trans)*((roll < prob_r) & !R_table[i-1, j])
                 # add effect of abx death if treat_table is r abx (== 2)
-                R_abx = -(treat_table[i-1, j] > 1)*abxr_killr
+                R_abx <- -(treat_table[i-1, j] > 1)*exp(abxr_killr)
                 # apply effects to current table
-                R_table[i, j] = R_table[i-1, j] + R_grow + R_trans + R_abx
+                R_table[i, j] <- exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
-                if(R_table[i, j] > K){
-                    R_table[i, j] = K
+                if(R_table[i, j] > exp(K)){
+                    R_table[i, j] <- exp(K)
                 }
                 if(R_table[i, j] < 0){
-                    R_table[i, j] = 0
+                    R_table[i, j] <- 0
+                }
+                R_table[i, j] <- log(R_table[i, j])
+                if(R_table[i, j] < 0){
+                    R_table[i, j] <- 0
                 }
                 
                 # calculate effect of S logistic bacteria growth 
-                S_grow = r_growth*S_table[i-1, j]*(1 - (R_table[i-1, j] + S_table[i-1, j])/K)
+                S_grow <- exp(r_growth)*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # calculate effect of death antibiotics R and effect of death by abx S
-                S_abx_s = -(treat_table[i-1, j] == 1)*abxs_kills
-                S_abx_r = -(treat_table[i-1, j] > 1)*abxr_kills
+                S_abx_s <- -(treat_table[i-1, j] == 1)*exp(abxs_kills)
+                S_abx_r <- -(treat_table[i-1, j] > 1)*exp(abxr_kills)
                 # apply effects
-                S_table[i, j] = S_table[i-1, j] + R_grow + S_abx_s + S_abx_r
+                S_table[i, j] <- exp(S_table[i-1, j]) + R_grow + S_abx_s + S_abx_r
                 # trim range
-                if(S_table[i, j] > K){
-                    S_table[i, j] = K
+                if(S_table[i, j] > exp(K)){
+                    S_table[i, j] <- exp(K)
                 }
                 if(S_table[i, j] < 0){
-                    S_table[i, j] = 0
+                    S_table[i, j] <- 0
+                }
+                S_table[i, j] <- log(S_table[i, j])
+                if(S_table[i, j] < 0){
+                    S_table[i, j] <- 0
                 }
             }
         }
@@ -414,13 +424,13 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     totalR_no_long <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
     totalR_thres_long <- mean(rowSums(iter_totalR.thres)/iterations/n.bed)
     
-    return(list((totalR_no_long - totalR_no_short),(totalR_thres_long-totalR_thres_short)))
+    return(list((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short)))
 }
 
-# diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
-#                 K = 1000, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921, 
-#                 pi_r=0.1, r_thres = 100, r_growth = 2, r_trans = 100,
-#                 abxr_killr = 500, abxr_kills = 500, abxs_kills = 500,
-#                 short_dur = 4, long_dur = 14)
+diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
+                K = 100, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921,
+                pi_r=0.1, r_thres = 10, r_growth = 2, r_trans = 10,
+                abxr_killr = 5, abxr_kills = 5, abxs_kills = 5,
+                short_dur = 4, long_dur = 14)
 
 
