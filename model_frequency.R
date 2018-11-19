@@ -255,9 +255,7 @@ array_LOS_func<- function(los_duration) {
 #3. Generate baseline carriage status (define function)
 
 # Defaults from Rene's data ini_16S_log
-gen_StartBact <- function(los, K, t_mean, t_sd, r_mean, r_sd, n.beds, n.days){
-
-    # Perhaps add check here to make sure the K is somewhat sane?
+gen_StartBact <- function(los, t_mean, t_sd, r_mean, r_sd, n.beds, n.days){
     
     number_of_patients <- dim(los)[2]
     # Unit test example: mean(t_mean), sd(t_sd)
@@ -310,7 +308,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
         for(j in 1:ncol(bed_table)){
             if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
                 # calculate effect of R logistic bacteria growth 
-                R_grow = r_growth*R_table[i-1, j]*(1 - (R_table[i-1, j] + S_table[i-1, j])/K)
+                R_grow = r_growth*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # add effect of transmission if roll pass prob check and if previous R level is 0
                 R_trans = r_trans*((roll > prob_r) & !R_table[i-1, j])
                 # add effect of abx death if treat_table is r abx (== 2)
@@ -367,15 +365,15 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, K=K , t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.days)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.days)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
                                           pi_r, K, r_thres, r_growth, r_trans, 
                                           abxr_killr, abxr_kills, abxs_kills)
         
-        #Summary 
-        #for total units of R bacteria on a day
+        # Summary
+        # for total units of R bacteria on a day
         df.R <- data.frame(colo_table_filled_iter[[2]])
         iter_totalR.no[, iter] <- rowSums(df.R)
         
@@ -397,7 +395,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, K=K , t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.days)
+        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.days)
         #output
         colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
