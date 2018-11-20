@@ -19,15 +19,25 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
     patient.matrix <- matrix(NA, nrow=ceiling(n.day*timestep), ncol=n.bed)
     idx <- 1
     for(j in 1:n.bed){
-        #print(j)
-        los_idx <- max(which(sum_los < n.day*timestep))
-        #print(los_idx)
-        los <- all_los[1:los_idx]
-        #print(idx:(idx+length(los)))
-        patient.matrix[, j] <- rep(idx:(idx+length(los)), c(los, n.day*timestep-sum(los)))
-        #print(patient.matrix[, j])
-        idx <- idx+length(los)+1
-        all_los <- all_los[-(1:(los_idx+1))]
+        los_idx <- suppressWarnings(max(which(sum_los < n.day*timestep))) #It's okay if this gives a warning (I think)
+        # Handle case where first patient stays the whole observation duration
+        if(los_idx == -Inf){
+            los_idx <- 1
+            #print(idx:(idx+length(los)))
+            patient.matrix[, j] <- rep(idx, n.day*timestep)
+            #print('pat')
+            #print(patient.matrix[, j])
+            idx <- idx++1
+            all_los <- all_los[-(1)]
+        }else{
+            los <- all_los[1:los_idx]
+            #print(idx:(idx+length(los)))
+            patient.matrix[, j] <- rep(idx:(idx+length(los)), c(los, n.day*timestep-sum(los)))
+            #print('pat')
+            #print(patient.matrix[, j])
+            idx <- idx+length(los)+1
+            all_los <- all_los[-(1:(los_idx+1))]
+        }
         sum_los <- cumsum(all_los)
     }
 
@@ -92,19 +102,21 @@ abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
 
 colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR){
     
-    #define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or low levels of sensitive (ss)
+    # TODO: adjust probabilities based on timestep
+    
+    # define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or low levels of sensitive (ss)
     prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
     prob_StartBact <- c(prob_start_S,prob_StartBact_R)
     
-    stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
+    stopifnot(sum(prob_StartBact) <= 1) # Assert all probabilities combined are less than 1
     
     #Generating a vector of random status with runif (change for other distribution)
     number_of_patients <- dim(los.array)[2]
     Patient_unif <- runif(number_of_patients,0,1)
     Patient_StartBact <- rep(NA, number_of_patients)
     Patient_StartBact[Patient_unif > (prob_start_S+prob_StartBact_R)] <- 'ss'
-    Patient_StartBact[(Patient_unif <= prob_start_S+prob_StartBact_R) & (Patient_unif > prob_start_S)] <- 'R'
-    Patient_StartBact[Patient_unif <= prob_start_S] <- 'S'
+    Patient_StartBact[(Patient_unif <= (prob_start_S+prob_StartBact_R)) & (Patient_unif > prob_StartBact_R)] <- 'S'
+    Patient_StartBact[Patient_unif <= prob_StartBact_R] <- 'R'
     
     #Creating array for carriage status
     array_StartBact <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
@@ -123,6 +135,8 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR)
 # should we enforce at least 1 seeding of R?????? no would mess with probabilities
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
                     bif, pi_ssr, repop.s1, mu_r, abx.clear){
+    
+    # TODO: adjust probabilities based on timestep
     
     # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
     pi_Sr <- pi_ssr - (bif*pi_ssr)
@@ -188,15 +202,15 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         if(length(ss)){
             # roll for transmission of R
             prob_r <- 1-((1-pi_ssr)^r_num)
-            # roll for transmission of S
-            prob_s <- 1-((1-repop.s1)^s_num)
+            # roll for repop of S
+            prob_s <- repop.s1
             
             # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
-            stopifnot(prob_r+prob_s < 1)
+            stopifnot((prob_r+prob_s) < 1)
             
             roll <- runif(length(ss), 0, 1)
             r_idx <- ss[roll < prob_r]
-            s_idx <- ss[roll < (prob_s+prob_r) & roll > prob_r & !abx.matrix[i-1, ss]]
+            s_idx <- ss[(roll >= prob_r) & (roll < (prob_s+prob_r)) & !abx.matrix[i, ss]]
             same_idx <- ss[roll >= (prob_s+prob_r)]
             
             colo.matrix[i, s_idx] <- "S"
