@@ -90,18 +90,16 @@ abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
     return(abx.matrix)
 }
 
-#################3. Generate baseline carriage status ##################
-
-colo.table <- function(patient.matrix, los, prob_StartBact_R, prop_S_nonR){
+colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR){
     
-    #define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or nothing (N)
+    #define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or low levels of sensitive (ss)
     prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
     prob_StartBact <- c(prob_start_S,prob_StartBact_R)
     
     stopifnot(sum(prob_StartBact) < 1) # Assert all probabilities combined are less than 1
     
     #Generating a vector of random status with runif (change for other distribution)
-    number_of_patients <- dim(los)[2]
+    number_of_patients <- dim(los.array)[2]
     Patient_unif <- runif(number_of_patients,0,1)
     Patient_StartBact <- rep(NA, number_of_patients)
     Patient_StartBact[Patient_unif > (prob_start_S+prob_StartBact_R)] <- 'ss'
@@ -111,21 +109,18 @@ colo.table <- function(patient.matrix, los, prob_StartBact_R, prop_S_nonR){
     #Creating array for carriage status
     array_StartBact <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
     
+    # Fill generated bacterial in the first day of each patient entering the ward
     end_idx <- 1
     for(i in 1:number_of_patients){
-        # print(i)
-        # print(paste(end_idx, end_idx + los[2, i] - 1))
-        # print(c(Patient_StartBact[i], rep(NA, los[2, i]-1)))
-        # print(length(c(Patient_StartBact[i], rep(NA, los[2, i]-1))))
-        array_StartBact[end_idx:(end_idx + los[2, i] - 1)] <- c(Patient_StartBact[i], rep(NA, los[2, i]-1))
-        end_idx = end_idx + los[2, i]
+        array_StartBact[end_idx:(end_idx + los.array[2, i] - 1)] <- c(Patient_StartBact[i], rep(NA, los.array[2, i]-1))
+        end_idx = end_idx + los.array[2, i]
     }
-    #print(dim(array_StartBact))
     
     return(array_StartBact)
 }
 
 ####################4. Update values for every day  #####################
+# should we enforce at least 1 seeding of R?????? no would mess with probabilities
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
                     bif, pi_ssr, repop.s1, mu_r, abx.clear){
     
@@ -134,33 +129,55 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     
     # For each day (first day should be filled)
     for(i in 2:nrow(patient.matrix)){
+        # Get the previous row subset of the entire matrix which represents previous day or timestep
         prev_step <- colo.matrix[i-1, ]
+        # Get the indices which are already filled by a patient entering the ward for exclusion
         already_filled <- which(!is.na(colo.matrix[i, ]))
         
         # Update R
+        # Get the column indices which contain R in the previous day
         R <- which(prev_step == "R")
+        # Remove column indices that already have a starting bacterial state filled in
         R <- R[!(R %in% already_filled)]
+        # count if there are any R on the previous day
         r_num <- length(R)
+        # if there is any R (number of R > 0) in the previous day
         if(r_num){
+            # Roll a random number for each R on the previous day
             roll <- runif(r_num, 0, 1)
+            # All column indices which roll < mu_r (decolonization parameter) are saved to fill in as S
             decolo_idx <- R[roll < mu_r]
+            # All the remaining column indices are saved to fill in as staying R the next day
             same_idx <- R[roll >= mu_r]
+            # Fill in saved column as S
             colo.matrix[i, decolo_idx] <- "S"
+            # Fill in saved column as R
             colo.matrix[i, same_idx] <- "R"
         }
         
         # Update S
+        # Get the column indices which contain S in the previous day
         S <- which(prev_step == "S")
+        # Remove column indices that already have a starting bacterial state filled in
         S <- S[!(S %in% already_filled)]
+        # count if there are any S on the previous day
         s_num <- length(S)
+        # if there is any S (number of S > 0) in the previous day
         if(s_num){
+            # roll for transmission of R
+            prob_r <- 1-((1-pi_Sr)^r_num)
+            # Roll a random number for each R on the previous day for clearance
             roll_clear <- runif(s_num, 0, 1)
+            # All column indices which roll < probability of clearance AND there is antibiotic used on that patient-timestep
             clear_idx <- S[(abx.matrix[i-1, S] > 0) & (roll_clear > abx.clear)]
+            # Clear those that pass roll and use abx to ss
             colo.matrix[i, clear_idx] <- "ss"
+            # Removed those that have been cleared by abx from list of S indices
             S <- S[!(S %in% clear_idx)]
-            roll_select <- runif(length(S), 0, 1)
-            r_idx <- S[roll_select < pi_Sr]
-            same_idx <- S[roll_select >= pi_Sr]
+            # Roll a random number for each remaining S for chance of selection to
+            roll_trans <- runif(length(S), 0, 1)
+            r_idx <- S[roll_trans < prob_r]
+            same_idx <- S[roll_trans >= prob_r]
             colo.matrix[i, r_idx] <- "R"
             colo.matrix[i, same_idx] <- "S"
         }

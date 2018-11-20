@@ -13,6 +13,29 @@ source(paste0("model_", model,".R"))
 ####################6. Visualisation #####################
 
 if(model == "simple"){
+    
+    short_dur <- 4
+    long_dur <- 10
+    
+    patient.matrix.s <- patient.table(n.bed, n.day, mean.max.los, timestep=1)
+    los.array.s <- summary.los(patient.matrix)
+    abx.matrix.s <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p, meanDur=short_dur, sdDur=sdDur)
+    colo.matrix.s <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+                              prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+    
+    colo_table_filled.s <- nextDay(patient.matrix=patient.matrix, los.array=los.array, 
+                                      abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                      bif, pi_ssr, repop.s1, mu_r, abx.clear)
+    
+    patient.matrix.l <- patient.table(n.bed, n.day, mean.max.los, timestep=1)
+    los.array.l <- summary.los(patient.matrix)
+    abx.matrix.l <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p, meanDur=long_dur, sdDur=sdDur)
+    colo.matrix.l <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+                              prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+    
+    colo_table_filled.l <- nextDay(patient.matrix=patient.matrix, los.array=los.array, 
+                                      abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                      bif, pi_ssr, repop.s1, mu_r, abx.clear)
                 
     abx.short <- abx.table(n.bed, n.days, mean.max.los, p, meanDur = 4)
     abx.long <- abx.table(n.bed, n.days, mean.max.los, p, meanDur = 14)
@@ -36,7 +59,7 @@ if(model == "simple"){
     abx.mat.short<- as.matrix(abx.short[[3]])
     abx.mat.long<- as.matrix(abx.long[[3]])
     cols.a<-c('0'='grey', '1'='orange')
-    (abx_img.short<-image(1:nrow(abx.mat.short),1:ncol(abx.mat.short),abx.mat.short,col=cols.a, xlab='Time', ylab='Bed No.', main="Short duration of antibiotics"))
+    (abx_img.short<-image(1:nrow(abx.matrix.s),1:ncol(abx.matrix.s),abx.matrix.s,col=cols.a, xlab='Time', ylab='Bed No.', main="Short duration of antibiotics"))
     (abx_img.long<-image(1:nrow(abx.mat.long),1:ncol(abx.mat.long),abx.mat.long,col=cols.a, xlab='Time', ylab='Bed No.', main="Long duration of antibiotics"))
     
     #carriage pixel
