@@ -12,6 +12,7 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
     patient.id <- 1:n.patient
     
     all_los <- ceiling(rexp(n.patient, 1/(mean.max.los*timestep)))
+    all_los[all_los>5*mean.max.los] <- 1
     sum_los <- cumsum(all_los)
     
     #make up a matrix of number of days we want to observe (rows) -
@@ -208,11 +209,12 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     return(colo.matrix)
 }
 
-diff_prevalence <- function(n.bed, mean.max.los, timestep=1,
+diff_prevalence <- function(n.bed, mean.max.los, 
                             prob_StartBact_R, prop_S_nonR, 
                             bif, pi_ssr, repop.s1, mu_r, abx.clear,
                             p, short_dur, long_dur, sdDur){
-    n.day <- 30
+    timestep=1
+    n.day <- 300
     iterations <- 10
     iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)
     for(iter in 1:iterations){
@@ -259,3 +261,5 @@ diff_prevalence <- function(n.bed, mean.max.los, timestep=1,
     return(totalR_long - totalR_short)
 }
 
+parameters_simple<- c("n.bed", "mean.max.los", "prob_StartBact_R", "prop_S_nonR", 
+               "bif", "pi_ssr", "repop.s1", "mu_r", "abx.clear", "p", "short_dur", "long_dur", "sdDur")

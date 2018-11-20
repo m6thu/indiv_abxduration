@@ -6,78 +6,47 @@
 # load libraries 
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
+require (msm) #for truncated normal distribution of antibiotic days
 
 # model can be "simple", "binary", or "frequency"
-model <- "binary"
+model <- "simple"
 
 source(paste0("model_", model,".R"))
 
 #list parameters, the probability density functions from which the parameter values will be calculated, and what are the arguments to these functions
-factors <- c(             #list parameters in an array 
-    "n.bed",              #number of beds in the ward
-    #"n.days",             #number of days of observation 
-    "mean.max.los",       #mean of length of stay (normal distribution)
-    "p.s",                #probability of being prescribed narrow spectrum antibiotic
-    "p.r",                #probability of being prescribed broad spectrum antibiotic
-    "prob_StartBact_R",   #probability of initial carriage of resistant organisms
-    "pi_r1",              #probability of being transmitted r to S (S—> Sr)
-    "pi_r2",              #probability of being transmitted r to s (s—>sr)
-    "mu1",                #probability of being decolonised to S (Sr—> S) 
-    "mu2",                #probability of being decolonised to S (sr—> s) 
-    "abx.r",              #probability of clearing R to become r
-    "abx.s",              #probability of clearing S to become s
-    "repop.r1",           #probability of transmission of r to S (s—> Sr) 
-    "repop.r2",           #probability of regrowth of s (sR—> sr)
-    "repop.s1",           #probability of regrowth of S  (s—>S)
-    "repop.s2",           #probability of regrowth of S  (sr—>Sr)
-    "repop.s3",           #probability of transmission of r to S (s—> Sr) 
-    #"bif",               #bacterial interference factor (pi_r2 = pi_r1 * bif )
-    #"bif1",              #bacterial interference factor 1 (repop.r3=repop.r2*bif1)
-    "short_dur",          #mean short duration of antibiotics (normal distribution) 
-    "long_dur"            #mean long duration of antibiotics (normal distribution) 
-)  
-q <- c(                   #distributions of parameters 
-    "qunif",              # "n.bed", number of beds in the ward
-    #"qunif",              # "n.days" number of days of observation 
-    "qunif",              # "mean.max.los", mean of length of stay (normal distribution)
-    "qunif",              # "p.s", probability of being prescribed narrow spectrum antibiotic
-    "qunif",              # "p.r", probability of being prescribed broad spectrum antibiotic
-    "qunif",              # "prob_StartBact_R",probability of initial carriage of resistant organisms
-    "qunif",              # "pi_r1" probability of being transmitted r to S (S—> Sr)
-    "qunif",              # "pi_r2",probability of being transmitted r to s (s—>sr)
-    "qunif",              # "mu1" probability of being decolonised to S (Sr—> S) 
-    "qunif",              # "mu2",probability of being decolonised to S (sr—> s) 
-    "qunif",              # "abx.r", probability of clearing R to become r
-    "qunif",              # "abx.s", probability of clearing S to become s
-    "qunif",              # "repop.r1", probability of transmission of r to S (s—> Sr) 
-    "qunif",              # "repop.r2", probability of regrowth of s (sR—> sr)
-    "qunif",              # "repop.s1", probability of regrowth of S  (s—>S)
-    "qunif",              # "repop.s2", probability of regrowth of S  (sr—>Sr)
-    "qunif",              # "repop.s3",probability of transmission of r to S (s—> Sr) 
-    "qunif",              #"short_dur", mean short duration of antibiotics (normal distribution) 
-    "qunif"               #"long_dur", mean long duration of antibiotics (normal distribution)  
-) 
+factors <- parameters_simple
+
+q<- c( 
+    "qunif", #"n.bed", number of beds in the ward
+    "qunif", #"mean.max.los", mean of length of stay 
+    "qunif", #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    "qunif", #"prop_S_nonR", proportion of S in the population of S and ss 
+    "qunif", #"bif", bacterial interference factor 
+    "qunif", # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
+    "qunif", # "repop.s1" probability of ss repopulated to S 
+    "qunif", # "mu_r", probability of decolonisation 
+    "qunif", # "abx.clear", probability of S becoming ss after being on antibiotics
+    "qunif", # "p", probability of being prescribed antibiotics
+    "qunif", # "short_dur", mean short duration of antibiotics (normal distribution)
+    "qunif", # "long_dur", mean long duration of antibiotics (normal distribution)
+    "qunif"  # "sdDur", standard deviation of duration of antibiotics 
+    )
 
 q.arg <- list(            #set limits of parameters 
-    list(min=10, max=20),                # "n.bed", number of beds in the ward
-    #list(min=10, max=20),                # "n.days" number of days of observation 
-    list(min=5, max=10),                 # "mean.max.los", mean of length of stay (normal distribution)
-    list(min=0.1, max=0.9),              # "p.s", probability of being prescribed narrow spectrum antibiotic
-    list(min=0.1, max=0.9),              # "p.r", probability of being prescribed broad spectrum antibiotic
-    list(min=0.1, max=0.7),              # "prob_StartBact_R",probability of initial carriage of resistant organisms
-    list(min=0.1, max=0.9),              # "pi_r1" probability of being transmitted r to S (S—> Sr)
-    list(min=0.1, max=0.9),              # "pi_r2",probability of being transmitted r to s (s—>sr)
-    list(min=0.1, max=0.9),              # "mu1" probability of being decolonised to S (Sr—> S) 
-    list(min=0.1, max=0.9),              # "mu2",probability of being decolonised to S (sr—> s) 
-    list(min=0.1, max=0.9),              # "abx.r", probability of clearing R to become r
-    list(min=0.1, max=0.9),              # "abx.s", probability of clearing S to become s
-    list(min=0.1, max=0.9),              # "repop.r1", probability of transmission of r to S (s—> Sr) 
-    list(min=0.1, max=0.9),              # "repop.r2", probability of regrowth of s (sR—> sr)
-    list(min=0.1, max=0.9),              # "repop.s1", probability of regrowth of S  (s—>S)
-    list(min=0.1, max=0.9),              # "repop.s2", probability of regrowth of S  (sr—>Sr)
-    list(min=0.1, max=0.9),              # "repop.s3",probability of transmission of r to S (s—> Sr) 
-    list(min=4, max=10),                 #"short_dur", mean short duration of antibiotics (normal distribution) 
-    list(min=14, max=20)                 #"long_dur", mean long duration of antibiotics (normal distribution)  
+    list(min=5, max=50), #"n.bed", number of beds in the ward
+    list(min=3, max=5), #"mean.max.los", mean of length of stay 
+    list(min=0.01, max=0.99), #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    list(min=0.01, max=0.99), #"prop_S_nonR", proportion of S in the population of S and ss 
+    list(min=0, max=1), #"bif", bacterial interference factor 
+    list(min=0.0001, max=0.1), # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
+    list(min=0, max=0.03), # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
+    list(min=0, max=0.03), # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, 
+                             #decreasing colonization rates from 76.7% (95% CI = 69.3%–82.8%) at 1 month to 35.2% (95% CI = 28.2%–42.9%) at 12 months of follow-up)
+    list(min=0.01, max=0.9), # "abx.clear", probability of S becoming ss after being on antibiotics
+    list(min=0.1, max=0.9), # "p", probability of being prescribed antibiotics
+    list(min=3, max=7), # "short_dur", mean short duration of antibiotics (normal distribution)
+    list(min=10, max=21), # "long_dur", mean long duration of antibiotics (normal distribution)
+    list(min=1, max=5)  # "sdDur", standard deviation of duration of antibiotics 
 )
 
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
@@ -86,8 +55,7 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
                   data.df[,4], data.df[,5], data.df[,6], 
                   data.df[,7], data.df[,8], data.df[,9], 
                   data.df[,10], data.df[,11], data.df[,12], 
-                  data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16], data.df[,17], data.df[,18]
+                  data.df[,13]
     ))
 }
 
