@@ -107,8 +107,6 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR)
     prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
     prob_StartBact <- c(prob_start_S,prob_StartBact_R)
     
-    stopifnot(sum(prob_StartBact) <= 1) # Assert all probabilities combined are less than 1
-    
     #Generating a vector of random status with runif (change for other distribution)
     number_of_patients <- dim(los.array)[2]
     Patient_unif <- runif(number_of_patients,0,1)
@@ -133,6 +131,7 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR)
 ####################4. Update values for every day  #####################
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
                     bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep=1){
+
     
     # TODO: adjust probabilities based on timestep
     

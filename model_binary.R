@@ -11,14 +11,115 @@
 #simulate inpatients with various lengths of stay
 #allocate various duration of antibiotics for each patient
 
-abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, meanDur) {
+# generate a table of number of days we want to observe (rows) -
+# against number of beds in the ward (columns), filled in with patient id numbers
+patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
+    
+    #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
+    #number of days. This is to ensure there are enough total number of patients generated to fill table 
+    n.patient <- n.bed*n.day 
+    
+    #vectorise the patient id to be used for filling in the patient.matrix
+    patient.id <- 1:n.patient
+    
+    all_los <- ceiling(rexp(n.patient, 1/(mean.max.los*timestep)))
+    all_los[all_los > 5*mean.max.los*timestep] <- 1
+    sum_los <- cumsum(all_los)
+    
+    #make up a matrix of number of days we want to observe (rows) -
+    #against number of beds in the ward (columns)
+    patient.matrix <- matrix(NA, nrow=ceiling(n.day*timestep), ncol=n.bed)
+    idx <- 1
+    for(j in 1:n.bed){
+        los_idx <- suppressWarnings(max(which(sum_los < n.day*timestep))) #Suppress warning that it creates -Inf
+        # Handle case where first patient stays the whole observation duration
+        if(los_idx == -Inf){
+            los_idx <- 1
+            #print(idx:(idx+length(los)))
+            patient.matrix[, j] <- rep(idx, n.day*timestep)
+            #print('pat')
+            #print(patient.matrix[, j])
+            idx <- idx+1
+            all_los <- all_los[-(1)]
+        }else{
+            los <- all_los[1:los_idx]
+            #print(idx:(idx+length(los)))
+            patient.matrix[, j] <- rep(idx:(idx+length(los)), c(los, n.day*timestep-sum(los)))
+            #print('pat')
+            #print(patient.matrix[, j])
+            idx <- idx+length(los)+1
+            all_los <- all_los[-(1:(los_idx+1))]
+        }
+        sum_los <- cumsum(all_los)
+    }
+    
+    return(patient.matrix)
+}
+
+#frequency summary of patient.matrix - patient id against number of days of stay for each patient
+summary.los <- function(patient.matrix){    
+    
+    # Summarize how often each patient.id is encountered to get days for each id
+    los.dur <- table(patient.matrix)
+    los_duration <- array(dim = c(2, length(los.dur)))
+    # Attach patient ID on 1st row
+    los_duration[1,] <- 1:length(los.dur)
+    # Put summary of days on 2nd row
+    los_duration[2,] <- los.dur
+    
+    return(los_duration)
+}
+
+abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
+    
+    #generate antibiotic use table
+    #number of days of antibiotic is randomly drawn from a truncated normal distribution
+    abx_days <- round(rtnorm(ncol(los.array), mean=meanDur*timestep, sd=sdDur*timestep, lower=0))
+    # Unit test - check distribution of abx distribution
+    # hist(abx_days, breaks=20)
+    # Unit test - compare cases that will enter padding if-else
+    # abx_days > los.array[2, ]
+    
+    # abx.matrix should be same size as patient.matrix
+    abx.matrix <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+    idx_end <- 1
+    # For each patient
+    for(i in 1:ncol(los.array)){
+        
+        # maxiumum number of days for a particular patient from los vector
+        max_days <- los.array[2, i]
+        # number of abx days for that particular patient from generated number
+        abx_person <- abx_days[i]
+        # Initial treatment value derived from probability, p
+        rand <- runif(1, 0, 1)
+        if (rand < p){
+            if(abx_person > max_days){
+                # if the number of generated abx is longer than the los of that person
+                # have them take abx everyday for their stay
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(1, max_days)
+            }else{
+                # else take abx for abx days and pad to fit max_days
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(1, abx_person), rep(0, max_days-abx_person))
+            }
+        }else{
+            # no abx taken for that person
+            abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
+        }
+        # move starting position to end of previous patient
+        idx_end <- idx_end+max_days
+    }
+    
+    return(abx.matrix)
+}
+
+abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, p.s, p.r.day1, p.r.dayafter, meanDur) {
     # generate a table of number of days we want to observe (rows) -
     # against number of beds in the ward (columns), filled in with patient id numbers
     
     #make up a matrix of number of days we want to observe (rows) -
     #against number of beds in the ward (columns)
     patient.matrix <- matrix(NA, nrow=n.days, ncol=n.bed)
-   
+    
     #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
     #number of days. This is to ensure there are enough total number of patients generated to fill table
     n.patient <- n.bed*n.days 
@@ -30,7 +131,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, 
     #make up an empty vector for 0th column of matrix so that the next column starts with 
     #(last patient number of the previous column+i)
     vector.los <- rep(0,n.days)
-
+    
     #for each column (representing different beds in the ward) in patient.matrix
     for (j in 1:n.bed) {
         
@@ -195,21 +296,7 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, 
         }
         return (n)
     }
-    # function to check how many days the patient has been on antibiotics 
-    
-    # Unit test for function howmanydaysofabt
-    # patient.matrix <- c(1, 1, 2, 2, 3, 3, 4, 4, 4, 5, 5, 5, 6, 7, 7, 7, 7, 7)
-    # dim(patient.matrix) <- c(6, 3)
-    # m <- c(0, 2, 2, 2, 2, 0, 2, 0, 0, 2, 2, 0, 2, 2, 2, 2, 2, 0)
-    # dim(m) <- c(6, 3)
-    # Check base case
-    # howmanydaysofabt(m, 2, 1) should return 2
-    # howmanydaysofabt(m, 2, 2) should return 2
-    # Check cross over between patients
-    # howmanydaysofabt(m, 4, 1) should return 3
-    # howmanydaysofabt(m, 4, 3) should return 4
-    
-    
+
     for (i in 2:nrow(patient.matrix)){
         for (j in 1:n.bed){
             #print(paste("i", i, "j", j))
@@ -244,160 +331,142 @@ abx.table<- function (n.bed, n.days, mean.max.los, p.s, p.r.day1, p.r.dayafter, 
     return(list(patient.matrix, los_duration, matrix_AtbTrt3))
 }
 
-array_LOS_func<- function(los_duration) {
-    los.dur<-as.vector(table(los_duration))
-    array_LOS<-array(dim=c(2,length(los.dur)))
-    array_LOS[1,]<-c(1:length(los.dur))
-    array_LOS[2,]<-los.dur
-    
-    return(array_LOS)
-}
-
-
 #################3. Generate baseline carriage status 
 
-gen_StartBact <- function(los, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR, n.bed, n.days){
+colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR){
     
     prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-    prob_start_s <- 1-prob_start_S-prob_StartBact_R
+    prob_start_ss <- 1-prob_start_S-prob_StartBact_R
     prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-    prob_start_sr <- prop_sr_inR* prob_StartBact_R
-    prob_start_sR <- (1-prop_Sr_inR-prop_sr_inR)*prob_StartBact_R
+    prob_start_sr <- prop_sr_inR*prob_StartBact_R
+    prob_start_sR <- prob_StartBact_R-prob_start_Sr-prob_start_sr
     prob_StartBact_bi <- c(prob_start_S,prob_start_Sr,prob_start_sR,prob_start_sr)
-    
-    stopifnot(sum(prob_StartBact_bi) < 1) # Assert all probabilities combined are less than 1
 
     #Generating a vector of random status with runif (change for other distribution)
-    number_of_patients <- dim(los)[2]
-    Patient_unif <- runif(number_of_patients, 0, 1)
+    number_of_patients <- dim(los.array)[2]
+    Patient_unif <- runif(number_of_patients,0,1)
     Patient_StartBact <- rep(NA, number_of_patients)
-    Patient_StartBact[Patient_unif > sum(prob_StartBact_bi)] <- 's'
+    Patient_StartBact[Patient_unif > sum(prob_StartBact_bi)] <- 'ss'
     Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1:3])) & (Patient_unif <= sum(prob_StartBact_bi))] <- 'sr'
     Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1:2])) & (Patient_unif <= sum(prob_StartBact_bi[1:3]))] <- 'sR'
     Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1])) & (Patient_unif <= sum(prob_StartBact_bi[1:2]))] <- 'Sr'
     Patient_StartBact[Patient_unif <= sum(prob_StartBact_bi[1])] <- 'S'
     
-    #Creating matrix for carriage status
-    array_StartBact <- matrix(NA, n.days, n.bed)
+    #Creating array for carriage status
+    array_StartBact <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
     
+    # Fill generated bacterial in the first day of each patient entering the ward
     end_idx <- 1
     for(i in 1:number_of_patients){
-        # print(i)
-        # print(paste(end_idx, end_idx + los[2, i] - 1))
-        # print(c(Patient_StartBact[i], rep(NA, los[2, i]-1)))
-        # print(length(c(Patient_StartBact[i], rep(NA, los[2, i]-1))))
-        array_StartBact[end_idx:(end_idx + los[2, i] - 1)] <- c(Patient_StartBact[i], rep(NA, los[2, i]-1))
-        end_idx = end_idx + los[2, i]
+        array_StartBact[end_idx:(end_idx + los.array[2, i] - 1)] <- c(Patient_StartBact[i], rep(NA, los.array[2, i]-1))
+        end_idx = end_idx + los.array[2, i]
     }
     
-    #print('gen bact complete')
     return(array_StartBact)
 }
 
-
-
 ####################4. Update values for every day  
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
+nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
                     pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
                     repop.s1, repop.s2,repop.s3, abx.r, abx.s){
     
     pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
     
     # For each day (first day should be filled)
-    for(i in 2:nrow(bed_table)){
+    for(i in 2:nrow(patient.matrix)){
         # For each bed
-        for(j in 1:ncol(bed_table)){
+        for(j in 1:ncol(patient.matrix)){
             #case S
             #print(paste("i:", i, "j:", j))
-            #print(colo_table[i-1, j])
-            if(is.na(colo_table[i, j])){
-                r_num <- sum(colo_table[i-1,] == "sR") #only R can be transmitted 
-                if(colo_table[i-1, j] == "S"){
+            #print(colo.matrix[i-1, j])
+            if(is.na(colo.matrix[i, j])){
+                r_num <- sum(colo.matrix[i-1,] == "sR") #only R can be transmitted 
+                if(colo.matrix[i-1, j] == "S"){
                     #print("----case S")
                     # check antibiotic
                     roll_clear <- runif(1, 0, 1)
                     roll_transmit <- runif(1, 0, 1)
                     prob_r <- 1-((1-pi_r1)^r_num)
-                    if (treat_table[i-1, j] == 1 & roll_clear < abx.s){
-                        colo_table[i, j] <- "s"
-                    } else if (treat_table[i-1, j] > 1 & roll_clear < abx.r){
-                        colo_table[i, j] <- "s"
+                    if (abx.matrix[i-1, j] == 1 & roll_clear < abx.s){
+                        colo.matrix[i, j] <- "ss"
+                    } else if (abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
+                        colo.matrix[i, j] <- "ss"
                     } else if (roll_transmit < prob_r){ 
-                        colo_table[i, j] <- "Sr"
+                        colo.matrix[i, j] <- "Sr"
                     }else {
-                        colo_table[i, j] <- "S"
+                        colo.matrix[i, j] <- "S"
                     }
                     
-                    # case s
-                }else if(colo_table[i-1, j] == "s"){
+                    # case ss
+                }else if(colo.matrix[i-1, j] == "ss"){
                     #print("----case s")
                     # roll for transmission of r
                     roll_r <- runif(1, 0, 1)
                     prob_r <- 1-((1-pi_r2)^r_num)
                     # roll for repopulation of s to become S
-                    roll_s <- runif(1, 0, 1)
+                    roll_ss <- runif(1, 0, 1)
                     if (roll_r < prob_r) { 
-                        colo_table[i,j]<-"sr" 
-                    } else if ( roll_s < repop.s1) {
-                        colo_table[i,j]<-"S" 
+                        colo.matrix[i,j]<-"sr" 
+                    } else if ( roll_ss < repop.s1) {
+                        colo.matrix[i,j]<-"S" 
                     } else{
-                        colo_table[i, j] <- "s"
+                        colo.matrix[i, j] <- "ss"
                     }
                     
                     # case Sr
-                }else if(colo_table[i-1, j] == "Sr"){
+                }else if(colo.matrix[i-1, j] == "Sr"){
                     #print("----case Sr")
                     # check antibiotics 
                     roll_clear <- runif(1, 0, 1)
                     roll_decolonise <- runif(1, 0, 1)
-                    if(treat_table[i-1, j] ==1 & roll_clear < abx.s){
-                        colo_table[i, j] <- "sr"
-                    } else if (treat_table[i-1, j] >1 & roll_clear < abx.r ) {
-                        colo_table[i, j] <- "sr"
+                    if(abx.matrix[i-1, j] ==1 & roll_clear < abx.s){
+                        colo.matrix[i, j] <- "sr"
+                    } else if (abx.matrix[i-1, j] >1 & roll_clear < abx.r ) {
+                        colo.matrix[i, j] <- "sr"
                     } else if(roll_decolonise < mu1){ 
-                        colo_table[i, j] <- "S"
+                        colo.matrix[i, j] <- "S"
                     }else {
-                        colo_table[i, j] <- "Sr"
+                        colo.matrix[i, j] <- "Sr"
                     }
                     
                     # case sr
-                }else if(colo_table[i-1, j] == "sr"){
+                }else if(colo.matrix[i-1, j] == "sr"){
                     #print("----case sr")
                     roll_repop <- runif(1, 0, 1)
                     roll_decolonise <- runif(1, 0, 1)
                     # check antibiotics
-                    if(treat_table[i-1, j] == 1 & roll_repop < repop.r2){
-                        colo_table[i, j] <- "sR"
-                    }else if(treat_table[i-1, j] == 0 & roll_repop < repop.s2){
-                        colo_table[i, j] <- "Sr"
-                        # }else if(treat_table[i-1, j] == 0 & roll_repop < repop.r3){
-                        #     colo_table[i, j] <- "sR"
+                    if(abx.matrix[i-1, j] == 1 & roll_repop < repop.r2){
+                        colo.matrix[i, j] <- "sR"
+                    }else if(abx.matrix[i-1, j] == 0 & roll_repop < repop.s2){
+                        colo.matrix[i, j] <- "Sr"
+                        # }else if(abx.matrix[i-1, j] == 0 & roll_repop < repop.r3){
+                        #     colo.matrix[i, j] <- "sR"
                     }else if (roll_decolonise < mu2){
-                        colo_table[i, j] <- "s"
+                        colo.matrix[i, j] <- "ss"
                     }else {
-                        colo_table[i, j] <- "sr"
+                        colo.matrix[i, j] <- "sr"
                     }
                     
                     # case sR
-                }else if(colo_table[i-1, j] == "sR"){
+                }else if(colo.matrix[i-1, j] == "sR"){
                     #print("----case sR")
                     roll_clear <- runif(1, 0, 1)
-                    if(treat_table[i-1, j] > 1 & roll_clear < abx.r){
-                        colo_table[i, j] <- "sr"
-                    }else if (treat_table[i-1, j] == 0 & roll_clear < repop.s3){
-                        colo_table[i, j] <- "sr"
+                    if(abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
+                        colo.matrix[i, j] <- "sr"
+                    }else if (abx.matrix[i-1, j] == 0 & roll_clear < repop.s3){
+                        colo.matrix[i, j] <- "sr"
                     }else {
-                        colo_table[i, j] <- "sR"
+                        colo.matrix[i, j] <- "sR"
                     }
                 }else{
                     print("error")
-                    colo_table[i, j] <- "E"
+                    colo.matrix[i, j] <- "E"
                 }
             } # if 0
         }  # for j
     } # for i
     
-    return(colo_table)
+    return(colo.matrix)
 }
 
 diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
@@ -422,14 +491,14 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                               prop_sr_inR=prop_sr_inR, 
                                               n.bed=n.bed, n.days=n.days)
         #output
-        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
-                                          treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
+        colo.matrix_filled_iter <- nextDay(patient.matrix= abx_iter[[1]], array_LOS=array_LOS_iter, 
+                                          abx.matrix=abx_iter[[3]], colo.matrix=array_StartBact_iter, 
                                           pi_r1=pi_r1, bif=bif, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2,repop.s3 = repop.s3)
         #Summary
-        df <- data.frame(colo_table_filled_iter)
+        df <- data.frame(colo.matrix_filled_iter)
         iter_totalsR[, iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
@@ -448,14 +517,14 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                               prop_S_nonR=prop_S_nonR, prop_sr_inR=prop_sr_inR,
                                               prop_Sr_inR=prop_Sr_inR, n.bed=n.bed, n.days=n.days)
         #output
-        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
-                                          treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
+        colo.matrix_filled_iter <- nextDay(patient.matrix= abx_iter[[1]], array_LOS=array_LOS_iter, 
+                                          abx.matrix=abx_iter[[3]], colo.matrix=array_StartBact_iter, 
                                           pi_r1=pi_r1, bif=bif, mu1=mu1, mu2=mu2, 
                                           abx.r=abx.r,abx.s=abx.s,
                                           repop.r1 = repop.r1, repop.r2 = repop.r2,
                                           repop.s1 = repop.s1, repop.s2 = repop.s2, repop.s3 = repop.s3)
         #Summary
-        df <- data.frame(colo_table_filled_iter)
+        df <- data.frame(colo.matrix_filled_iter)
         iter_totalsR[,iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }

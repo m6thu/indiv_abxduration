@@ -35,7 +35,7 @@ q<- c(
 q.arg <- list(            #set limits of parameters 
     list(min=5, max=50), #"n.bed", number of beds in the ward
     list(min=3, max=5), #"mean.max.los", mean of length of stay 
-    list(min=0.01, max=0.7), #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    list(min=0.01, max=0.99), #"prob_StartBact_R",probability of initial carriage of resistant organisms
     list(min=0.01, max=0.99), #"prop_S_nonR", proportion of S in the population of S and ss 
     list(min=0, max=1), #"bif", bacterial interference factor 
     list(min=0.0001, max=0.05), # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
@@ -46,7 +46,7 @@ q.arg <- list(            #set limits of parameters
     list(min=0.1, max=0.9), # "p", probability of being prescribed antibiotics
     list(min=3, max=7), # "short_dur", mean short duration of antibiotics (normal distribution)
     list(min=10, max=21), # "long_dur", mean long duration of antibiotics (normal distribution)
-    list(min=1, max=2)  # "sdDur", standard deviation of duration of antibiotics 
+    list(min=1, max=5)  # "sdDur", standard deviation of duration of antibiotics 
 )
 
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
