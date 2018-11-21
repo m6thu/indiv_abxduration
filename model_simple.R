@@ -212,7 +212,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             roll <- runif(length(ss), 0, 1)
             r_idx <- ss[roll < prob_r]
             s_idx <- ss[(roll >= prob_r) & (roll < (prob_s+prob_r)) & !abx.matrix[i, ss]]
-            same_idx <- ss[roll >= (prob_s+prob_r)]
+            same_idx <- ss[!(ss %in% c(r_idx, s_idx))]
             
             colo.matrix[i, s_idx] <- "S"
             colo.matrix[i, r_idx] <- "R"
@@ -227,7 +227,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
                             prob_StartBact_R, prop_S_nonR, 
                             bif, pi_ssr, repop.s1, mu_r, abx.clear,
                             p, short_dur, long_dur, sdDur){
-    timestep=1
+    timestep <- 1
     n.day <- 300
     iterations <- 10
     iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)

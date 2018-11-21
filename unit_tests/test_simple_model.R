@@ -221,15 +221,15 @@ ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count o
 # Expect output:
 stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability ss -> S holds (repop.s1)
 
+
 # update probability S -> ss holds (p*abx.clear)
-# abx.clear = 1, meanDur lot longer than mean.max abx in all slots
+# abx.clear = 1, all patients have the same length of stay, each antibiotic given based on flat probability
+# remove effect of patient exponential distribution and abx truncated norm distribution, to check only update works
 tolerance <- 0.02
-p <- 0.6
-#patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los=5, timestep=1)
+p <- 0.3
 # generate patient matrix where each person is equally given 3 days
 patient.matrix <- matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
 los.array <- summary.los(patient.matrix)
-#abx.matrix <- abx.table(patient.matrix, los.array, p=p, meanDur=100, sdDur=1, timestep=1)
 roll <- runif(100*30*1, 0, 1)
 abx.matrix <- matrix(as.numeric(roll < p), nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
 # sum(abx.matrix == 1)/length(abx.matrix) # Check abx gives correct probability
@@ -249,10 +249,36 @@ num_update[update == "S"] <- 1
 parse_list <- split(num_update, patient.matrix)
 ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count only S not at the end of each patient
 # Expect output:
-state_change/ss_count
-stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability S -> ss holds (p*abx.clear)
+stopifnot(abs(state_change/ss_count - p) < tolerance) # update probability S -> ss holds (p*abx.clear)
 
-# abx.clear = 0.36
+# abx.clear = 0.36, check abx.clear augments p of getting abx correctly
+tolerance <- 0.02
+p <- 0.3
+abx.clear <- 0.36
+# generate patient matrix where each person is equally given 3 days
+patient.matrix <- matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
+los.array <- summary.los(patient.matrix)
+roll <- runif(100*30*1, 0, 1)
+abx.matrix <- matrix(as.numeric(roll < p), nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+# sum(abx.matrix == 1)/length(abx.matrix) # Check abx gives correct probability
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0, prop_S_nonR=1)
+update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
+                  bif=0, pi_ssr=0, repop.s1=0, mu_r=0, abx.clear)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 6
+num_update[update == "R"] <- 0
+num_update[update == "S"] <- 5
+parse_list <- split(num_update, patient.matrix) 
+state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 0
+num_update[update == "R"] <- 0
+num_update[update == "S"] <- 1
+parse_list <- split(num_update, patient.matrix)
+ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count only S not at the end of each patient
+# Expect output:
+stopifnot(abs(state_change/ss_count - p*abx.clear) < tolerance) 
+
 
 # update probability ss -> R holds (pi_ssr)
 tolerance <- 0.02
@@ -271,6 +297,7 @@ parse_list <- split(num_update, patient.matrix)
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
 colo_idx <- which(colo.matrix == "ss")
 state_change/(sum(update == "ss"))
+# Expected output:
 stopifnot(abs(state_change/length(colo.matrix == "ss") - pi_ssr) < tolerance) # update probability ss -> R holds (pi_ssr)
 
 # No abx, no starting R, get probability of transmission from S to R, (pi_Sr)
@@ -299,10 +326,10 @@ state_change/(length(colo.matrix) - length(colo_idx))
 
 ############################################ Integration tests ##################################################
 # Test diff_prevalence
-diff_prevalence(n.bed=20, mean.max.los=3, timestep=1,
-                prob_StartBact_R=0.4, prop_S_nonR=0.3,
-                bif=0.003, pi_ssr=0.03, repop.s1=0, mu_r=0, abx.clear=0.1,
-                p=0.1, short_dur=4, long_dur=10, sdDur = 5)
+diff_prevalence(n.bed=20, mean.max.los=3,
+                prob_StartBact_R=0.2, prop_S_nonR=0.1,
+                bif=0, pi_ssr=0.02, repop.s1=0.01, mu_r=0.01, abx.clear=0.3,
+                p=0.4, short_dur=4, long_dur=10, sdDur = 5)
 
 # Case: At no transmission and no abx
 # Expected output: base level of starting Rs generated
