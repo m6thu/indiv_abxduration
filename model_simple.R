@@ -103,8 +103,6 @@ abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
 
 colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR){
     
-    # TODO: adjust probabilities based on timestep
-    
     # define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or low levels of sensitive (ss)
     prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
     prob_StartBact <- c(prob_start_S,prob_StartBact_R)
@@ -133,9 +131,8 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR)
 }
 
 ####################4. Update values for every day  #####################
-# should we enforce at least 1 seeding of R?????? no would mess with probabilities
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    bif, pi_ssr, repop.s1, mu_r, abx.clear){
+                    bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep=1){
     
     # TODO: adjust probabilities based on timestep
     

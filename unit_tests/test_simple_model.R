@@ -5,8 +5,33 @@ source("model_simple.R") # Load model for testing
 # Please add as appropriate, be as pendantic as much as possible
 # Cleanest way to run. Source above, select only block of test case, try running
 
+# Generates an artificial patient table where each patient stays an equal number of days "each"
+# matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
+patient.table.equal <- function(n.bed, n.day, each){
+    # cases where n.day is not divisible by each is not tested
+    stopifnot(n.day %% each == 0)
+    vec <- rep(rep(1:(n.day/each), rep(each, n.day/each)), n.bed) + rep((0:(n.bed-1))*(n.day/each), rep(n.day, n.bed))
+    mat <- matrix(vec, ncol=n.bed, nrow=n.day)
+    return(mat)
+}
+
+# Generates and artificial colonization starting table that uses probability as fixed proportion instead
+# meant to be used with patient.table.equal(... , each=2)
+colo.table.prop <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR){
+    
+    each <- ncol(patient.matrix)
+    r_num <- round(each*prob_StartBact_R)
+    s_num <- round(each*prop_S_nonR*(1-prob_StartBact_R))
+    ss_num <- each - r_num - s_num
+    vec <- c(rep("R", r_num), rep("S", s_num), rep("ss", ss_num))
+    colo.matrix <- t(matrix(rep(c(vec, rep(NA, each)), nrow(patient.matrix)/2), 
+                          ncol=nrow(patient.matrix), nrow=ncol(patient.matrix)))
+    return(colo.matrix)
+}
+
+
 ############################################# Function tests ##################################################
-########### Test patient matrix generation
+#################################### Test patient matrix generation ####################################
 
 # Cases: Single time step
 test_mean <- 5
@@ -25,8 +50,7 @@ hist(table(patient_mat.m)) # eyeball that this looks like an exponential distrib
 stopifnot(abs(mean(table(patient_mat.m)) - test_mean*3) < tolerance) # Make sure gives correct mean
 stopifnot(dim(patient_mat.m) == c(270, 100)) # Make sure dimensions are correct
 
-
-########### Test los.array summary
+#################################### Test los.array summary ####################################
 
 # Cases: Single time step
 los_duration.s <- summary.los(patient_mat.s)
@@ -42,8 +66,7 @@ hist(los_duration.m[2, ]) # check distribution of length of stay, should be expo
 hist(table(patient_mat.m)) # chould be the same as input, los.array should = table(patient.table.output)
 stopifnot(max(patient_mat.m) == max(los_duration.m)) # highest number from array should be exactly the same as highest id in patient.matrix
 
-
-########### Test abx matrix generation
+#################################### Test abx matrix generation ####################################
 
 # Cases: Single time step
 test_p <- 0.3
@@ -120,7 +143,7 @@ stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_los_mean*2) < tole
 stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
 
 
-########### Test starting bacteria generation
+#################################### Test starting bacteria generation ####################################
 
 # Cases: Single time step
 prob_StartBact_R <- 0.2
@@ -155,7 +178,7 @@ patient_idx <- cumsum(c(1, los.array[2,]))
 stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])) == 0) # starts on same position as patient id
 
 
-########### Test daily updates
+#################################### Test daily updates ####################################
 
 # Cases: Single time step
 tolerance <- 0.02
@@ -228,7 +251,7 @@ stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probabilit
 tolerance <- 0.02
 p <- 0.3
 # generate patient matrix where each person is equally given 3 days
-patient.matrix <- matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
+patient.matrix <- patient.table.equal(20, 300, 3)
 los.array <- summary.los(patient.matrix)
 roll <- runif(100*30*1, 0, 1)
 abx.matrix <- matrix(as.numeric(roll < p), nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
@@ -256,7 +279,7 @@ tolerance <- 0.02
 p <- 0.3
 abx.clear <- 0.36
 # generate patient matrix where each person is equally given 3 days
-patient.matrix <- matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
+patient.matrix <- patient.table.equal(20, 300, 3)
 los.array <- summary.los(patient.matrix)
 roll <- runif(100*30*1, 0, 1)
 abx.matrix <- matrix(as.numeric(roll < p), nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
@@ -281,45 +304,33 @@ stopifnot(abs(state_change/ss_count - p*abx.clear) < tolerance)
 
 # update probability ss -> R holds (pi_ssr)
 tolerance <- 0.02
-pi_ssr <- 0.1
-patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los = 3, timestep=1)
+pi_ssr <- 0.3
+r_prop <- 0.2
+prob_r <- 1-(1-pi_ssr)^(r_prop*200)
+# each patient has 2 days, enforce number of starting Rs for each slot to ensure prob_r is the same daily
+patient.matrix <- patient.table.equal(20, 1000, 2)
 los.array <- summary.los(patient.matrix)
-abx.matrix <- abx.table(patient.matrix, los.array, p=0.3, meanDur=5, sdDur=1, timestep=1)
-colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.1, prop_S_nonR=0.5)
+abx.matrix <- matrix(0, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+colo.matrix <- colo.table.prop(patient.matrix, los.array, prob_StartBact_R=r_prop, prop_S_nonR=0)
 update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
                   bif=1, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
-
-
-
 num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
 num_update[update == "ss"] <- 5
 num_update[update == "R"] <- 6
-num_update[update == "S"] <- 1
+num_update[update == "S"] <- 0
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-
+count_update[update[, -(1:(r_prop*20))] == "ss"] <- 1
+count_update[update[, -(1:(r_prop*20))] == "R"] <- 0
+count_update[update[, -(1:(r_prop*20))] == "S"] <- 0
+parse_list <- split(count_update, patient.matrix[, -(1:(r_prop*20))])
+ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))
 # Expected output:
+state_change/ss_count
 stopifnot(abs(state_change/length(colo.matrix == "ss") - pi_ssr) < tolerance) # update probability ss -> R holds (pi_ssr)
 
+
 # No abx, no starting R, get probability of transmission from S to R, (pi_Sr)
-tolerance <- 0.02
-pi_ssr <- 0.5 # bif = 1, therefore pi_Sr = pi_ssr
-patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los=3, timestep=1)
-los.array <- summary.los(patient.matrix)
-abx.matrix <- abx.table(patient.matrix, los.array, p=0, meanDur=5, sdDur=1, timestep=1)
-colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.1, prop_S_nonR=0.5)
-update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
-                  bif=1, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 0
-num_update[update == "S"] <- 5
-num_update[update == "R"] <- 6
-parse_list <- split(num_update, patient.matrix) 
-state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-colo_idx <- which(!is.na(colo.matrix))
-# Expected output:
-state_change/sum(colo.matrix == "S")
-state_change/(length(colo.matrix) - length(colo_idx))
 #stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - pi_ssr) < tolerance) # update probability S -> R holds (pi_Sr)
 
 
