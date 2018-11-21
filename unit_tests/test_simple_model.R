@@ -1,5 +1,6 @@
 # Regression testing for simple model
-source("model_simple.R")
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
 
 # Please add as appropriate, be as pendantic as much as possible
 # Cleanest way to run. Source above, select only block of test case, try running
@@ -10,7 +11,7 @@ source("model_simple.R")
 # Cases: Single time step
 test_mean <- 5
 tolerance <- 1
-patient_mat.s <- patient.table(n.bed = 20, n.day = 10, mean.max.los = test_mean, timestep=1)
+patient_mat.s <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
 # Expected output: At high points, patient table should give exponential distribution with mean given within tolerance
 hist(table(patient_mat.s)) # eyeball that this looks like an exponential distribution and that maximum value at tail makes sense
 stopifnot(abs(mean(table(patient_mat.s)) - test_mean) < tolerance) # Make sure gives correct mean
@@ -93,7 +94,7 @@ abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_
 # 100% effectiveness, no clipping of antibiotics
 test_p <- 1
 test_mean <- 10
-tolerance <- 1
+tolerance <- 1*2
 patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = 100, timestep=2) # have days long enough to not create clipping
 los_duration.s <- summary.los(patient_mat.s)
 abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=2)
@@ -108,7 +109,7 @@ stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patie
 test_p <- 1
 test_mean <- 10
 test_los_mean <- 5 
-tolerance <- 1
+tolerance <- 1*2
 patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = test_los_mean, timestep=2) # have days short to create clipping
 los_duration.s <- summary.los(patient_mat.s)
 abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=2)
@@ -218,36 +219,40 @@ num_update[update == "S"] <- 0
 parse_list <- split(num_update, patient.matrix)
 ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count only ss not at the end of each patient
 # Expect output:
-state_change/ss_count
 stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability ss -> S holds (repop.s1)
 
 # update probability S -> ss holds (p*abx.clear)
-# abx.clear = 1
+# abx.clear = 1, meanDur lot longer than mean.max abx in all slots
 tolerance <- 0.02
-p <- 0.2
-patient.matrix <- patient.table(n.bed = 20, n.day = 3000, mean.max.los=3, timestep=1)
+p <- 0.6
+#patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los=5, timestep=1)
+# generate patient matrix where each person is equally given 3 days
+patient.matrix <- matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
 los.array <- summary.los(patient.matrix)
-abx.matrix <- abx.table(patient.matrix, los.array, p=p, meanDur=5, sdDur=1, timestep=1)
-colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.2, prop_S_nonR=0.5)
+#abx.matrix <- abx.table(patient.matrix, los.array, p=p, meanDur=100, sdDur=1, timestep=1)
+roll <- runif(100*30*1, 0, 1)
+abx.matrix <- matrix(as.numeric(roll < p), nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+# sum(abx.matrix == 1)/length(abx.matrix) # Check abx gives correct probability
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0, prop_S_nonR=1)
 update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
-                  bif=0, pi_ssr=0, repop.s1, mu_r=0, abx.clear=1)
+                  bif=0, pi_ssr=0, repop.s1=0, mu_r=0, abx.clear=1)
 num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 5
+num_update[update == "ss"] <- 6
 num_update[update == "R"] <- 0
-num_update[update == "S"] <- 6
+num_update[update == "S"] <- 5
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
 num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 1
+num_update[update == "ss"] <- 0
 num_update[update == "R"] <- 0
-num_update[update == "S"] <- 0
+num_update[update == "S"] <- 1
 parse_list <- split(num_update, patient.matrix)
 ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count only S not at the end of each patient
 # Expect output:
 state_change/ss_count
 stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability S -> ss holds (p*abx.clear)
 
-# abx.clear = 0.6
+# abx.clear = 0.36
 
 # update probability ss -> R holds (pi_ssr)
 tolerance <- 0.02
@@ -289,6 +294,8 @@ state_change/sum(colo.matrix == "S")
 state_change/(length(colo.matrix) - length(colo_idx))
 #stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - pi_ssr) < tolerance) # update probability S -> R holds (pi_Sr)
 
+
+# Cases: Multiple time steps
 
 ############################################ Integration tests ##################################################
 # Test diff_prevalence
