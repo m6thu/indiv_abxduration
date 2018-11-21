@@ -12,7 +12,7 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
     patient.id <- 1:n.patient
     
     all_los <- ceiling(rexp(n.patient, 1/(mean.max.los*timestep)))
-    all_los[all_los>5*mean.max.los] <- 1 #max los allowed is 5 times of mean.max.los
+    all_los[all_los > 5*mean.max.los*timestep] <- 1
     sum_los <- cumsum(all_los)
     
     #make up a matrix of number of days we want to observe (rows) -
@@ -20,7 +20,7 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
     patient.matrix <- matrix(NA, nrow=ceiling(n.day*timestep), ncol=n.bed)
     idx <- 1
     for(j in 1:n.bed){
-        los_idx <- suppressWarnings(max(which(sum_los < n.day*timestep))) #It's okay if this gives a warning (I think)
+        los_idx <- suppressWarnings(max(which(sum_los < n.day*timestep))) #Suppress warning that it creates -Inf
         # Handle case where first patient stays the whole observation duration
         if(los_idx == -Inf){
             los_idx <- 1
@@ -28,7 +28,7 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
             patient.matrix[, j] <- rep(idx, n.day*timestep)
             #print('pat')
             #print(patient.matrix[, j])
-            idx <- idx++1
+            idx <- idx+1
             all_los <- all_los[-(1)]
         }else{
             los <- all_los[1:los_idx]
@@ -184,7 +184,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             # Roll a random number for each R on the previous day for clearance
             roll_clear <- runif(s_num, 0, 1)
             # All column indices which roll < probability of clearance AND there is antibiotic used on that patient-timestep
-            clear_idx <- S[(abx.matrix[i-1, S] > 0) & (roll_clear > abx.clear)]
+            clear_idx <- S[abx.matrix[i, S] & (roll_clear < abx.clear)]
             # Clear those that pass roll and use abx to ss
             colo.matrix[i, clear_idx] <- "ss"
             # Removed those that have been cleared by abx from list of S indices
