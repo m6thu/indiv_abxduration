@@ -119,3 +119,146 @@ hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx durati
 stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_los_mean*2) < tolerance) # mean of abx duration is mean of los instead
 stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
 
+#colo.table 
+test.patient.table <- patient.table(n.bed=50, n.day=50, mean.max.los=3, timestep=1)
+test.los.array <-summary.los(patient.matrix=test.patient.table)
+test.colo.table <- colo.table(patient.matrix=test.patient.table, los.array=test.los.array, prob_StartBact_R=0.5, 
+                              prop_S_nonR=0.4, prop_Sr_inR=0.1, prop_sr_inR=0.2) #
+number_of_patients <- dim(test.los.array)[2]
+length(which(test.colo.table=="sr"|test.colo.table=="Sr"|test.colo.table=="sR"))/number_of_patients # get back prob_StartBact_R
+length(which(test.colo.table=="S"))/length(which(test.colo.table=="ss"|test.colo.table=="S")) # get back prop_S_nonR
+
+#next day 
+nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
+                    pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
+                    repop.s1, repop.s2,repop.s3, abx.r, abx.s){
+    
+    pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
+    
+    # For each day (first day should be filled)
+    for(i in 2:nrow(patient.matrix)){
+        # For each bed
+        for(j in 1:ncol(patient.matrix)){
+            #case S
+            #print(paste("i:", i, "j:", j))
+            #print(colo.matrix[i-1, j])
+            if(is.na(colo.matrix[i, j])){
+                r_num <- 5 #sum(colo.matrix[i-1,] == "sR") #only R can be transmitted 
+                if(colo.matrix[i-1, j] == "S"){
+                    #print("----case S")
+                    # check antibiotic
+                    roll_clear <- runif(1, 0, 1)
+                    roll_transmit <- runif(1, 0, 1)
+                    prob_r <- 1-((1-pi_r1)^r_num)
+                    if (abx.matrix[i-1, j] == 1 & roll_clear < abx.s){
+                        colo.matrix[i, j] <- "ss"
+                    } else if (abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
+                        colo.matrix[i, j] <- "ss"
+                    } else if (roll_transmit < prob_r){ 
+                        colo.matrix[i, j] <- "Sr"
+                    }else {
+                        colo.matrix[i, j] <- "S"
+                    }
+                    
+                    # case ss
+                }else if(colo.matrix[i-1, j] == "ss"){
+                    #print("----case s")
+                    # roll for transmission of r
+                    roll_r <- runif(1, 0, 1)
+                    prob_r <- 1-((1-pi_r2)^r_num)
+                    # roll for repopulation of s to become S
+                    roll_ss <- runif(1, 0, 1)
+                    if (roll_r < prob_r) { 
+                        colo.matrix[i,j]<-"sr" 
+                    } else if ( roll_ss < repop.s1) {
+                        colo.matrix[i,j]<-"S" 
+                    } else{
+                        colo.matrix[i, j] <- "ss"
+                    }
+                    
+                    # case Sr
+                }else if(colo.matrix[i-1, j] == "Sr"){
+                    #print("----case Sr")
+                    # check antibiotics 
+                    roll_clear <- runif(1, 0, 1)
+                    roll_decolonise <- runif(1, 0, 1)
+                    if(abx.matrix[i-1, j] ==1 & roll_clear < abx.s){
+                        colo.matrix[i, j] <- "sr"
+                    } else if (abx.matrix[i-1, j] >1 & roll_clear < abx.r ) {
+                        colo.matrix[i, j] <- "sr"
+                    } else if(roll_decolonise < mu1){ 
+                        colo.matrix[i, j] <- "S"
+                    }else {
+                        colo.matrix[i, j] <- "Sr"
+                    }
+                    
+                    # case sr
+                }else if(colo.matrix[i-1, j] == "sr"){
+                    #print("----case sr")
+                    roll_repop <- runif(1, 0, 1)
+                    roll_decolonise <- runif(1, 0, 1)
+                    # check antibiotics
+                    if(abx.matrix[i-1, j] == 1 & roll_repop < repop.r2){
+                        colo.matrix[i, j] <- "sR"
+                    }else if(abx.matrix[i-1, j] == 0 & roll_repop < repop.s2){
+                        colo.matrix[i, j] <- "Sr"
+                        # }else if(abx.matrix[i-1, j] == 0 & roll_repop < repop.r3){
+                        #     colo.matrix[i, j] <- "sR"
+                    }else if (roll_decolonise < mu2){
+                        colo.matrix[i, j] <- "ss"
+                    }else {
+                        colo.matrix[i, j] <- "sr"
+                    }
+                    
+                    # case sR
+                }else if(colo.matrix[i-1, j] == "sR"){
+                    #print("----case sR")
+                    roll_clear <- runif(1, 0, 1)
+                    if(abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
+                        colo.matrix[i, j] <- "sr"
+                    }else if (abx.matrix[i-1, j] == 0 & roll_clear < repop.s3){
+                        colo.matrix[i, j] <- "sr"
+                    }else {
+                        colo.matrix[i, j] <- "sR"
+                    }
+                }else{
+                    print("error")
+                    colo.matrix[i, j] <- "E"
+                }
+            } # if 0
+        }  # for j
+    } # for i
+    
+    return(colo.matrix)
+}
+test.abx.table<-abx.table(patient.matrix=test.patient.table, los.array=test.los.array, p=0.5, meanDur=4, sdDur=2, timestep=1)
+test.table<-nextDay(patient.matrix=test.patient.table, abx.matrix=test.abx.table, colo.matrix=test.colo.table, 
+                    pi_r1=0.5, bif=0, mu1=0, mu2=0, repop.r1=0, repop.r2=0, 
+                    repop.s1=0, repop.s2=0,repop.s3=0, abx.r=0, abx.s=0)
+#check pi_r1
+check_pi_r1<- 0
+for (i in 2:nrow(test.table)) {
+    for (j in 1:ncol(test.table)) {
+        if (test.table[i,j]=="Sr" & test.table[i-1,j]=="S" & is.na(test.colo.table[i,j])) {
+            check_pi_r1<- check_pi_r1+1
+        }
+    }
+}
+check_abx<-0
+for (i in 2:nrow(test.table)) {
+    for (j in 1:ncol(test.table)) {
+        if (test.table[i,j]=="ss" & test.table[i-1,j]=="S" & is.na(test.colo.table[i,j])) {
+            check_abx<- check_abx+1
+        }
+    }
+}
+check_S<-0
+for (i in 2:nrow(test.table)) {
+    for (j in 1:ncol(test.table)) {
+        if (test.table[i,j]=="S" & test.table[i-1,j]=="S" & is.na(test.colo.table[i,j])) {
+            check_S<- check_S+1
+        }
+    }
+}
+test.pi_r1<-check_pi_r1/sum(check_abx,check_S,check_pi_r1) #get pi_r1
+1-((1-test.pi_r1)^1/5)
