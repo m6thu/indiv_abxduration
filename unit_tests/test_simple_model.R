@@ -2,6 +2,7 @@
 source("model_simple.R")
 
 # Please add as appropriate, be as pendantic as much as possible
+# Cleanest way to run. Source above, select only block of test case, try running
 
 ############################################# Function tests ##################################################
 ########### Test patient matrix generation
@@ -9,7 +10,7 @@ source("model_simple.R")
 # Cases: Single time step
 test_mean <- 5
 tolerance <- 1
-patient_mat.s <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
+patient_mat.s <- patient.table(n.bed = 20, n.day = 10, mean.max.los = test_mean, timestep=1)
 # Expected output: At high points, patient table should give exponential distribution with mean given within tolerance
 hist(table(patient_mat.s)) # eyeball that this looks like an exponential distribution and that maximum value at tail makes sense
 stopifnot(abs(mean(table(patient_mat.s)) - test_mean) < tolerance) # Make sure gives correct mean
@@ -170,55 +171,124 @@ stopifnot(sum(!(update == "R" | update == "S" | update == "ss")) == 0) # all day
 colo_idx <- which(!is.na(colo.matrix))
 stopifnot(sum(!colo.matrix[colo_idx] == update[colo_idx]) == 0) # starting conditions on colo.matrix was not overwritten
 
-
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 1
-num_update[update == "S"] <- 0
-num_update[update == "R"] <- 2
-parse_list <- split(num_update, patient.matrix) 
-state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - pi_ssr) < tolerance) # update probability ss -> R holds (pi_ssr)
-
-# No abx, no starting R, get probability of selection from S to R
-tolerance <- 0.02
-pi_ssr <- 0.05
-bif <- 0
-patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los=3, timestep=1)
-los.array <- summary.los(patient.matrix)
-abx.matrix <- abx.table(patient.matrix, los.array, p=0, meanDur=5, sdDur=1, timestep=1)
-colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.5, prop_S_nonR=0.5)
-update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
-                  bif, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 0
-num_update[update == "S"] <- 1
-num_update[update == "R"] <- 2
-parse_list <- split(num_update, patient.matrix) 
-state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-state_change/(length(colo.matrix) - length(colo_idx))
-stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - pi_ssr) < tolerance) # update probability S -> R holds (pi_Sr)
-
 # update probability R -> S holds (mu_r)
+# No abx, no transmission, 
 tolerance <- 0.02
-mu_r <- 0.1
-patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los=3, timestep=1)
+mu_r <- 0.7
+patient.matrix <- patient.table(n.bed = 20, n.day = 3000, mean.max.los=3, timestep=1)
 los.array <- summary.los(patient.matrix)
 abx.matrix <- abx.table(patient.matrix, los.array, p=0, meanDur=5, sdDur=1, timestep=1)
-colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=1, prop_S_nonR=0)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.6, prop_S_nonR=0)
 update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
                   bif=0, pi_ssr=0, repop.s1=0, mu_r, abx.clear=1)
 num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
 num_update[update == "ss"] <- 0
-num_update[update == "S"] <- 2
-num_update[update == "R"] <- 1
+num_update[update == "R"] <- 5
+num_update[update == "S"] <- 6
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-state_change/(length(colo.matrix) - length(colo_idx))
-stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - mu_r) < tolerance) # update probability R -> S holds (mu_r)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 0
+num_update[update == "R"] <- 1
+num_update[update == "S"] <- 0
+parse_list <- split(num_update, patient.matrix)
+r_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count only R not at the end of each patient
+# Expect output:
+stopifnot(abs(state_change/r_count - mu_r) < tolerance) # update probability R -> S holds (mu_r)
 
-# update probability ss -> R holds (repop.s1)
+# update probability ss -> S holds (repop.s1)
+tolerance <- 0.02
+repop.s1 <- 0.5
+patient.matrix <- patient.table(n.bed = 20, n.day = 3000, mean.max.los=3, timestep=1)
+los.array <- summary.los(patient.matrix)
+abx.matrix <- abx.table(patient.matrix, los.array, p=0, meanDur=5, sdDur=1, timestep=1)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.2, prop_S_nonR=0.5)
+update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
+                  bif=0, pi_ssr=0, repop.s1, mu_r=0, abx.clear=1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 5
+num_update[update == "R"] <- 0
+num_update[update == "S"] <- 6
+parse_list <- split(num_update, patient.matrix) 
+state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 1
+num_update[update == "R"] <- 0
+num_update[update == "S"] <- 0
+parse_list <- split(num_update, patient.matrix)
+ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count only ss not at the end of each patient
+# Expect output:
+state_change/ss_count
+stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability ss -> S holds (repop.s1)
 
 # update probability S -> ss holds (p*abx.clear)
+# abx.clear = 1
+tolerance <- 0.02
+p <- 0.2
+patient.matrix <- patient.table(n.bed = 20, n.day = 3000, mean.max.los=3, timestep=1)
+los.array <- summary.los(patient.matrix)
+abx.matrix <- abx.table(patient.matrix, los.array, p=p, meanDur=5, sdDur=1, timestep=1)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.2, prop_S_nonR=0.5)
+update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
+                  bif=0, pi_ssr=0, repop.s1, mu_r=0, abx.clear=1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 5
+num_update[update == "R"] <- 0
+num_update[update == "S"] <- 6
+parse_list <- split(num_update, patient.matrix) 
+state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 1
+num_update[update == "R"] <- 0
+num_update[update == "S"] <- 0
+parse_list <- split(num_update, patient.matrix)
+ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count only S not at the end of each patient
+# Expect output:
+state_change/ss_count
+stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability S -> ss holds (p*abx.clear)
+
+# abx.clear = 0.6
+
+# update probability ss -> R holds (pi_ssr)
+tolerance <- 0.02
+pi_ssr <- 0.1
+patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los = 3, timestep=1)
+los.array <- summary.los(patient.matrix)
+abx.matrix <- abx.table(patient.matrix, los.array, p=0.3, meanDur=5, sdDur=1, timestep=1)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.1, prop_S_nonR=0.5)
+update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
+                  bif=1, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 5
+num_update[update == "R"] <- 6
+num_update[update == "S"] <- 1
+parse_list <- split(num_update, patient.matrix) 
+state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
+colo_idx <- which(colo.matrix == "ss")
+state_change/(sum(update == "ss"))
+stopifnot(abs(state_change/length(colo.matrix == "ss") - pi_ssr) < tolerance) # update probability ss -> R holds (pi_ssr)
+
+# No abx, no starting R, get probability of transmission from S to R, (pi_Sr)
+tolerance <- 0.02
+pi_ssr <- 0.5 # bif = 1, therefore pi_Sr = pi_ssr
+patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los=3, timestep=1)
+los.array <- summary.los(patient.matrix)
+abx.matrix <- abx.table(patient.matrix, los.array, p=0, meanDur=5, sdDur=1, timestep=1)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.1, prop_S_nonR=0.5)
+update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix,
+                  bif=1, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
+num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+num_update[update == "ss"] <- 0
+num_update[update == "S"] <- 5
+num_update[update == "R"] <- 6
+parse_list <- split(num_update, patient.matrix) 
+state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
+colo_idx <- which(!is.na(colo.matrix))
+# Expected output:
+state_change/sum(colo.matrix == "S")
+state_change/(length(colo.matrix) - length(colo_idx))
+#stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - pi_ssr) < tolerance) # update probability S -> R holds (pi_Sr)
+
 
 ############################################ Integration tests ##################################################
 # Test diff_prevalence
