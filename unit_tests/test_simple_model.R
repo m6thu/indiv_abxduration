@@ -188,11 +188,11 @@ num_update[update == "R"] <- 5
 num_update[update == "S"] <- 6
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 0
-num_update[update == "R"] <- 1
-num_update[update == "S"] <- 0
-parse_list <- split(num_update, patient.matrix)
+count_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+count_update[update == "ss"] <- 0
+count_update[update == "R"] <- 1
+count_update[update == "S"] <- 0
+parse_list <- split(count_update, patient.matrix)
 r_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count only R not at the end of each patient
 # Expect output:
 stopifnot(abs(state_change/r_count - mu_r) < tolerance) # update probability R -> S holds (mu_r)
@@ -212,11 +212,11 @@ num_update[update == "R"] <- 0
 num_update[update == "S"] <- 6
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 1
-num_update[update == "R"] <- 0
-num_update[update == "S"] <- 0
-parse_list <- split(num_update, patient.matrix)
+count_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+count_update[update == "ss"] <- 1
+count_update[update == "R"] <- 0
+count_update[update == "S"] <- 0
+parse_list <- split(count_update, patient.matrix)
 ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count only ss not at the end of each patient
 # Expect output:
 stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability ss -> S holds (repop.s1)
@@ -242,11 +242,11 @@ num_update[update == "R"] <- 0
 num_update[update == "S"] <- 5
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 0
-num_update[update == "R"] <- 0
-num_update[update == "S"] <- 1
-parse_list <- split(num_update, patient.matrix)
+count_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+count_update[update == "ss"] <- 0
+count_update[update == "R"] <- 0
+count_update[update == "S"] <- 1
+parse_list <- split(count_update, patient.matrix)
 ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count only S not at the end of each patient
 # Expect output:
 stopifnot(abs(state_change/ss_count - p) < tolerance) # update probability S -> ss holds (p*abx.clear)
@@ -270,15 +270,14 @@ num_update[update == "R"] <- 0
 num_update[update == "S"] <- 5
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
-num_update[update == "ss"] <- 0
-num_update[update == "R"] <- 0
-num_update[update == "S"] <- 1
-parse_list <- split(num_update, patient.matrix)
+count_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
+count_update[update == "ss"] <- 0
+count_update[update == "R"] <- 0
+count_update[update == "S"] <- 1
+parse_list <- split(count_update, patient.matrix)
 ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count only S not at the end of each patient
 # Expect output:
 stopifnot(abs(state_change/ss_count - p*abx.clear) < tolerance) 
-
 
 # update probability ss -> R holds (pi_ssr)
 tolerance <- 0.02
@@ -289,14 +288,16 @@ abx.matrix <- abx.table(patient.matrix, los.array, p=0.3, meanDur=5, sdDur=1, ti
 colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R=0.1, prop_S_nonR=0.5)
 update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
                   bif=1, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
+
+
+
 num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
 num_update[update == "ss"] <- 5
 num_update[update == "R"] <- 6
 num_update[update == "S"] <- 1
 parse_list <- split(num_update, patient.matrix) 
 state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
-colo_idx <- which(colo.matrix == "ss")
-state_change/(sum(update == "ss"))
+
 # Expected output:
 stopifnot(abs(state_change/length(colo.matrix == "ss") - pi_ssr) < tolerance) # update probability ss -> R holds (pi_ssr)
 
