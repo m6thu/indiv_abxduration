@@ -304,22 +304,66 @@ stopifnot(abs(state_change/ss_count - p*abx.clear) < tolerance)
 
 # update probability ss -> R holds (pi_ssr)
 tolerance <- 0.02
+patient.matrix<-patient.table(n.bed=20, n.day=50, mean.max.los=5, timestep=1)
+los.array<- summary.los(patient.matrix=patient.matrix)
+abx.matrix<- abx.table(patient.matrix=patient.matrix, los.array=los.array, p=0.2, meanDur=3, sdDur=1, timestep=1)
+colo.matrix<- colo.table(patient.matrix=patient.matrix, los.array=los.array, prob_StartBact_R=0.5, prop_S_nonR=0.3)
+bif=1
+repop.s1=0
+mu_r=0
+abx.clear=0.5 
+timestep=1
 pi_ssr <- 0.3
-r_prop <- 0.2
-prob_r <- 1-(1-pi_ssr)^(r_prop*200)
-# each patient has 2 days, enforce number of starting Rs for each slot to ensure prob_r is the same daily
-patient.matrix <- patient.table.equal(20, 1000, 2)
-los.array <- summary.los(patient.matrix)
-abx.matrix <- matrix(0, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
-colo.matrix <- colo.table.prop(patient.matrix, los.array, prob_StartBact_R=r_prop, prop_S_nonR=0)
-update <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                  bif=1, pi_ssr, repop.s1=0, mu_r=0, abx.clear=1)
+pi_Sr <- pi_ssr - (bif*pi_ssr)
+
+#Check S (pi_Sr)
+for(i in 2:nrow(patient.matrix)){
+# Get the previous row subset of the entire matrix which represents previous day or timestep
+prev_step <- colo.matrix[i-1, ]
+# Get the indices which are already filled by a patient entering the ward for exclusion
+already_filled <- which(!is.na(colo.matrix[i, ]))
+# Get the column indices which contain S in the previous day
+S <- which(prev_step == "S")
+# Remove column indices that already have a starting bacterial state filled in
+S <- S[!(S %in% already_filled)]
+# count if there are any S on the previous day
+s_num <- length(S)
+# if there is any S (number of S > 0) in the previous day
+r_num<-5
+if(s_num){
+    # roll for transmission of R
+    prob_r <- 1-((1-pi_Sr)^r_num)
+    # Roll a random number for each R on the previous day for clearance
+    roll_clear <- runif(s_num, 0, 1)
+    # All column indices which roll < probability of clearance AND there is antibiotic used on that patient-timestep
+    clear_idx <- S[abx.matrix[i, S] & (roll_clear < abx.clear)]
+    # Clear those that pass roll and use abx to ss
+    colo.matrix[i, clear_idx] <- "ss"
+    # Removed those that have been cleared by abx from list of S indices
+    S <- S[!(S %in% clear_idx)]
+    # Roll a random number for each remaining S for chance of selection to
+    roll_trans <- runif(length(S), 0, 1)
+    r_idx <- S[roll_trans < prob_r]
+    same_idx <- S[roll_trans >= prob_r]
+    colo.matrix[i, r_idx] <- "R"
+    colo.matrix[i, same_idx] <- "S"
+}
+}
+
+update <- colo.matrix
 num_update <- matrix(NA, nrow=nrow(update), ncol=ncol(update))
 num_update[update == "ss"] <- 5
 num_update[update == "R"] <- 6
 num_update[update == "S"] <- 0
 parse_list <- split(num_update, patient.matrix) 
-state_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 1)
+state_change_R <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 6, na.rm = T)
+state_no_change <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 0, na.rm = T)
+state_change_ss <- sum(unlist(lapply(parse_list, function(x) diff(x))) == 5, na.rm = T)
+state_change_ss/sum(state_no_change,state_change_ss, state_change_R)
+prob.r<-state_change_R/sum(state_no_change,state_change_ss, state_change_R)
+1-(1-prob.r)^1/5
+
+
 count_update[update[, -(1:(r_prop*20))] == "ss"] <- 1
 count_update[update[, -(1:(r_prop*20))] == "R"] <- 0
 count_update[update[, -(1:(r_prop*20))] == "S"] <- 0
