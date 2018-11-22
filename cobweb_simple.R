@@ -91,10 +91,30 @@ for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that p
             outcome.df$top5[i] <-1
         }
 }
-require(MASS) #load MASS package
-colors<- c("#E69F00", "#009E73") #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+require(plotrix) #load MASS package
+colour1<-alpha("#E69F00", alpha=0.3)
+colors<- c(colour1, "#009E73") #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
-parcoord(outcome.df[,c(1:length(factors))] , col= colors[outcome.df$top5],var.label=T)
+parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
+{
+    df <- as.data.frame(x)
+    pr <- lapply(df, pretty)
+    rx <- lapply(pr, range, na.rm = TRUE)
+    x <- mapply(function(x,r) {
+        (x-r[1])/(r[2]-r[1])
+    },
+    df, rx)
+    matplot(1L:ncol(x), t(x), type = "l", col = col, lty = lty, 
+            xlab = "", ylab = "", axes = FALSE,...)
+    axis(1, at = 1L:ncol(x), labels = c(colnames(x)), las = 2)
+    for (i in 1L:ncol(x)) {
+        lines(c(i, i), c(0, 1), col = "grey")
+        text(c(i, i), seq(0,1,length.out=length(pr[[i]])), labels = pr[[i]], 
+             xpd = NA, col=lblcol, cex=0.5)
+    }
+    invisible()
+}
+parcoordlabel(outcome.df[,c(1:length(factors))], col = colors[outcome.df$top5])
 
 #5. Check agreement between runs to decide if our sample size for adequate 
 # Symmetric Blest Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.
