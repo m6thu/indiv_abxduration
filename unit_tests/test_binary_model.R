@@ -5,8 +5,33 @@ source("model_binary.R") # Load model for testing
 # Please add as appropriate, be as pendantic as much as possible
 # Cleanest way to run. Source above, select only block of test case, try running
 
+# Generates an artificial patient table where each patient stays an equal number of days "each"
+# matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
+patient.table.equal <- function(n.bed, n.day, each){
+    # cases where n.day is not divisible by each is not tested
+    stopifnot(n.day %% each == 0)
+    vec <- rep(rep(1:(n.day/each), rep(each, n.day/each)), n.bed) + rep((0:(n.bed-1))*(n.day/each), rep(n.day, n.bed))
+    mat <- matrix(vec, ncol=n.bed, nrow=n.day)
+    return(mat)
+}
+
+# Generates and artificial colonization starting table that uses probability as fixed proportion instead
+# meant to be used with patient.table.equal(... , each=2)
+colo.table.prop <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR){
+    
+    each <- ncol(patient.matrix)
+    r_num <- round(each*prob_StartBact_R)
+    s_num <- round(each*prop_S_nonR*(1-prob_StartBact_R))
+    ss_num <- each - r_num - s_num
+    vec <- c(rep("R", r_num), rep("S", s_num), rep("ss", ss_num))
+    colo.matrix <- t(matrix(rep(c(vec, rep(NA, each)), nrow(patient.matrix)/2), 
+                            ncol=nrow(patient.matrix), nrow=ncol(patient.matrix)))
+    return(colo.matrix)
+}
+
+
 ############################################# Function tests ##################################################
-########### Test patient matrix generation
+#################################### Test patient matrix generation ####################################
 
 # Cases: Single time step
 test_mean <- 5
@@ -25,8 +50,7 @@ hist(table(patient_mat.m)) # eyeball that this looks like an exponential distrib
 stopifnot(abs(mean(table(patient_mat.m)) - test_mean*3) < tolerance) # Make sure gives correct mean
 stopifnot(dim(patient_mat.m) == c(270, 100)) # Make sure dimensions are correct
 
-
-########### Test los.array summary
+#################################### Test los.array summary ####################################
 
 # Cases: Single time step
 los_duration.s <- summary.los(patient_mat.s)
@@ -42,8 +66,7 @@ hist(los_duration.m[2, ]) # check distribution of length of stay, should be expo
 hist(table(patient_mat.m)) # chould be the same as input, los.array should = table(patient.table.output)
 stopifnot(max(patient_mat.m) == max(los_duration.m)) # highest number from array should be exactly the same as highest id in patient.matrix
 
-
-########### Test abx matrix generation
+#################################### Test abx matrix generation ####################################
 
 # Cases: Single time step
 test_p <- 0.3
@@ -119,6 +142,7 @@ hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx durati
 stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_los_mean*2) < tolerance) # mean of abx duration is mean of los instead
 stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
 
+#################################### Test starting bacteria generation ####################################
 #colo.table 
 test.patient.table <- patient.table(n.bed=50, n.day=50, mean.max.los=3, timestep=1)
 test.los.array <-summary.los(patient.matrix=test.patient.table)

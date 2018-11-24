@@ -1,12 +1,3 @@
-# ######## Functions ########
-# positive_norm_sample <- function(mean, sd){                      
-#     v<-round(rnorm(1, mean=mean, sd=sd))
-#     if (v < 0) {
-#         v<-v*-1
-#     }
-#     return(v)
-# }
-#########2. Generate length of stay and antibiotic duration table
 #(1 for short duration and 1 for long duration) 
 #simulate inpatients with various lengths of stay
 #allocate various duration of antibiotics for each patient
@@ -70,11 +61,16 @@ summary.los <- function(patient.matrix){
     return(los_duration)
 }
 
-abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
+abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter, 
+                      meanDur.s, meanDur.r, sdDur, timestep=1){
+    
+    stopifnot(p.s+p.r.day1 <= 1)
     
     #generate antibiotic use table
-    #number of days of antibiotic is randomly drawn from a truncated normal distribution
-    abx_days <- round(rtnorm(ncol(los.array), mean=meanDur*timestep, sd=sdDur*timestep, lower=0))
+    #number of days of s antibiotic is randomly drawn from a truncated normal distribution
+    abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=0))
+    #number of days of r antibiotic is drawn from the distribution of accumulated probability
+    abx_days.r <- p.r.dayafter
     # Unit test - check distribution of abx distribution
     # hist(abx_days, breaks=20)
     # Unit test - compare cases that will enter padding if-else
@@ -89,10 +85,11 @@ abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
         # maxiumum number of days for a particular patient from los vector
         max_days <- los.array[2, i]
         # number of abx days for that particular patient from generated number
-        abx_person <- abx_days[i]
-        # Initial treatment value derived from probability, p
+        abx_s <- abx_days.s[i]
+        abx_r <- abx_days.r[i]
+        # Initial treatment value derived from probability
         rand <- runif(1, 0, 1)
-        if (rand < p){
+        if (rand < p.s){
             if(abx_person > max_days){
                 # if the number of generated abx is longer than the los of that person
                 # have them take abx everyday for their stay
