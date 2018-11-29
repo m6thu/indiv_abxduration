@@ -61,110 +61,63 @@ summary.los <- function(patient.matrix){
     return(los_duration)
 }
 
-abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter, 
-                      meanDur.s, meanDur.r, sdDur, timestep=1){
-    
-    stopifnot(p.s+p.r.day1 <= 1)
-    
-    #generate antibiotic use table
-    #number of days of s antibiotic is randomly drawn from a truncated normal distribution
-    abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=0))
-    #number of days of r antibiotic is drawn from the distribution of accumulated probability
-    abx_days.r <- p.r.dayafter
-    # Unit test - check distribution of abx distribution
-    # hist(abx_days, breaks=20)
-    # Unit test - compare cases that will enter padding if-else
-    # abx_days > los.array[2, ]
-    
-    # abx.matrix should be same size as patient.matrix
-    abx.matrix <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
-    idx_end <- 1
-    # For each patient
-    for(i in 1:ncol(los.array)){
-        
-        # maxiumum number of days for a particular patient from los vector
-        max_days <- los.array[2, i]
-        # number of abx days for that particular patient from generated number
-        abx_s <- abx_days.s[i]
-        abx_r <- abx_days.r[i]
-        # Initial treatment value derived from probability
-        rand <- runif(1, 0, 1)
-        if (rand < p.s){
-            if(abx_person > max_days){
-                # if the number of generated abx is longer than the los of that person
-                # have them take abx everyday for their stay
-                abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(1, max_days)
-            }else{
-                # else take abx for abx days and pad to fit max_days
-                abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(1, abx_person), rep(0, max_days-abx_person))
-            }
-        }else{
-            # no abx taken for that person
-            abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
-        }
-        # move starting position to end of previous patient
-        idx_end <- idx_end+max_days
-    }
-    
-    return(abx.matrix)
-}
+# abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter, 
+#                       meanDur.s, meanDur.r, sdDur, timestep=1){
+#     
+#     stopifnot(p.s+p.r.day1 <= 1)
+#     
+#     #generate antibiotic use table
+#     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
+#     abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=0))
+#     #number of days of r antibiotic is drawn from the distribution of accumulated probability
+#     abx_days.r <- p.r.dayafter
+#     # Unit test - check distribution of abx distribution
+#     # hist(abx_days, breaks=20)
+#     # Unit test - compare cases that will enter padding if-else
+#     # abx_days > los.array[2, ]
+#     
+#     # abx.matrix should be same size as patient.matrix
+#     abx.matrix <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+#     idx_end <- 1
+#     # For each patient
+#     for(i in 1:ncol(los.array)){
+#         
+#         # maxiumum number of days for a particular patient from los vector
+#         max_days <- los.array[2, i]
+#         # number of abx days for that particular patient from generated number
+#         abx_s <- abx_days.s[i]
+#         abx_r <- abx_days.r[i]
+#         # Initial treatment value derived from probability
+#         rand <- runif(1, 0, 1)
+#         if (rand < p.s){
+#             if(abx_person > max_days){
+#                 # if the number of generated abx is longer than the los of that person
+#                 # have them take abx everyday for their stay
+#                 abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(1, max_days)
+#             }else{
+#                 # else take abx for abx days and pad to fit max_days
+#                 abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(1, abx_person), rep(0, max_days-abx_person))
+#             }
+#         }else{
+#             # no abx taken for that person
+#             abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
+#         }
+#         # move starting position to end of previous patient
+#         idx_end <- idx_end+max_days
+#     }
+#     
+#     return(abx.matrix)
+# }
 
-abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, p.s, p.r.day1, p.r.dayafter, meanDur) {
-    # generate a table of number of days we want to observe (rows) -
-    # against number of beds in the ward (columns), filled in with patient id numbers
-    
-    #make up a matrix of number of days we want to observe (rows) -
-    #against number of beds in the ward (columns)
-    patient.matrix <- matrix(NA, nrow=n.days, ncol=n.bed)
-    
-    #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
-    #number of days. This is to ensure there are enough total number of patients generated to fill table
-    n.patient <- n.bed*n.days 
-    
-    #vectorise the patient id to be used for filling in the patient.matrix
-    patient.id <- c(1:n.patient)    
-    
-    #Generating a vector with 0s 
-    #make up an empty vector for 0th column of matrix so that the next column starts with 
-    #(last patient number of the previous column+i)
-    vector.los <- rep(0,n.days)
-    
-    #for each column (representing different beds in the ward) in patient.matrix
-    for (j in 1:n.bed) {
-        
-        los <- c()
-        final <- vector.los[n.days]
-        #last patient number in previous column
-        
-        for (i in 1:n.days) {
-            #for each row (representing number of days we want to observe)
-            
-            los <- rep(patient.id[i+final], as.integer(rexp(1, 1/mean.max.los)))
-            #repeat the (last patient number of the previous column+i) random number of times
-            
-            vector.los <- c(vector.los, los)
-            #combine 0th column (los0) and subsequent columns (los) into one vector
-        }
-        
-        vector.los<- vector.los[-(1:n.days)]
-        #remove 0th column from patient.matrix
-        
-        if (length(vector.los) > n.days) {                     
-            vector.los<-vector.los[1:n.days]
-        }
-        #ensure each column is of the same length as number of days we are observing 
-        #(number of rows)
-        
-        patient.matrix[,j] <- vector.los
-        #fill the columns (different beds in the ward) with length of stay vector generated
-    }
-    
-    los_duration<-as.vector(patient.matrix)
-    #frequency summary of patient.matrix - patient id against number of days of stay for each patient
+abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
+                      meanDur.s, meanDur.r, sdDur, timestep=1){
+
+    n.day <- nrow(patient.matrix)
+    n.bed <- ncol(patient.matrix)
     
     #generate antibiotic use table
     ## antibiotics to treat sensitive organisms 
-    matrix_DuraDay <- matrix(NA, nrow=n.days, ncol=n.bed)
+    matrix_DuraDay <- matrix(NA, nrow=n.day, ncol=n.bed)
     #matrix_DuraDay is the matrix with number of days of antibiotics.s for every patient in patient.matrix
     
     get1stdayofstay <- function(patientnumber,bednumber, bedoccmat){
@@ -180,12 +133,12 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
-            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j] <- abs(round(rnorm(1, mean=meanDur, sd=5)))
+            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j] <- abs(round(rnorm(1, mean=meanDur.s*timestep, sd=sdDur*timestep)))
         }
     }
     #number of days of antibiotic.s is randomly drawn from a normal dist
     
-    for (i in 2:n.days){
+    for (i in 2:n.day){
         for (j in 1:n.bed){
             if(is.na(matrix_DuraDay[i,j])){
                 matrix_DuraDay[i, j] <- matrix_DuraDay[i-1,j]
@@ -196,7 +149,7 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     }
     #Fill the matrix for antibiotics.s with same dimension as patient.matrix
     
-    matrix_AtbTrt <- matrix(NA, nrow=n.days, ncol=n.bed) 
+    matrix_AtbTrt <- matrix(NA, nrow=n.day, ncol=n.bed) 
     # #matrix_AtbTrt to count the cummulative length of stay for treated patients in the same dimension as patient.matrix
     
     for (i in 1:max(patient.matrix)){
@@ -212,7 +165,7 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     # Initial treatment value derived from probability, p.s for antibiotic.s 
     
     
-    for (i in 2:n.days){
+    for (i in 2:n.day){
         for (j in 1:n.bed){
             if(is.na(matrix_AtbTrt[i,j]) & (matrix_AtbTrt[i-1,j] != 0)){
                 matrix_AtbTrt[i, j] <-  matrix_AtbTrt[i-1,j] + 1
@@ -228,8 +181,8 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     #Case3 (all other patients i.e. without antibiotic or value=0): 0
     #Complete the matrix of cummulative length of stay for treated patients
     
-    matrix_AtbTrt2 <- matrix(NA, nrow=n.days, ncol=n.bed)
-    for (i in 1:n.days){
+    matrix_AtbTrt2 <- matrix(NA, nrow=n.day, ncol=n.bed)
+    for (i in 1:n.day){
         for (j in 1:n.bed){
             if(matrix_DuraDay[i,j]>=matrix_AtbTrt[i,j] & matrix_AtbTrt[i,j]!=0){
                 matrix_AtbTrt2[i, j] <-  1
@@ -243,17 +196,17 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     #Output matrix matrix_AtbTrt2 containing binary variable (treated vs not treated) for any bed on any particular day
     
     ## antibiotics to treat resistant organisms 
-    matrix_DuraDay2 <- matrix(NA, nrow=n.days, ncol=n.bed)
+    matrix_DuraDay2 <- matrix(NA, nrow=n.day, ncol=n.bed)
     #matrix_DuraDay is the matrix with number of days of antibiotics.r for every patient in patient.matrix
     
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
-            matrix_DuraDay2[get1stdayofstay(i,j,patient.matrix), j]<-abs(round(rnorm(1, mean=meanDur, sd=5)))
+            matrix_DuraDay2[get1stdayofstay(i,j,patient.matrix), j]<-abs(round(rnorm(1, mean=meanDur.r*timestep, sd=sdDur*timestep)))
         }
     }
     #number of days of antibiotic.r is randomly drawn from a normal dist
     
-    for (i in 2:n.days){
+    for (i in 2:n.day){
         for (j in 1:n.bed){
             if(is.na(matrix_DuraDay2[i,j])){
                 matrix_DuraDay2[i, j] <- matrix_DuraDay2[i-1,j]
@@ -264,7 +217,7 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     }
     #Fill the matrix for antibiotics.r with same dimension as patient.matrix
     
-    matrix_AtbTrt.r <- matrix(NA, nrow=n.days, ncol=n.bed) 
+    matrix_AtbTrt.r <- matrix(NA, nrow=n.day, ncol=n.bed) 
     # #matrix_AtbTrt.r to count the cummulative length of stay for treated patients in the same dimension as patient.matrix
     
     for (i in 1:max(patient.matrix)){
@@ -325,7 +278,7 @@ abx.table<- function (patient.matrix, los.array, p, meanDur, sdDur, timestep=1, 
     matrix_AtbTrt3<- matrix_AtbTrt2+matrix_AtbTrt.r
     #print('gen abx complete')
     
-    return(list(patient.matrix, los_duration, matrix_AtbTrt3))
+    return(matrix_AtbTrt3)
 }
 
 #################3. Generate baseline carriage status 
@@ -471,22 +424,22 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             pi_r1, bif, mu1, mu2, abx.r, abx.s,
                             repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
                             short_dur, long_dur){
-    n.days <- 30
+    n.day <- 30
     iterations <- 10
-    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
         #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=short_dur)
+        abx_iter <- abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=short_dur)
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, prob_StartBact_R=prob_StartBact_R, 
                                               prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, 
                                               prop_sr_inR=prop_sr_inR, 
-                                              n.bed=n.bed, n.days=n.days)
+                                              n.bed=n.bed, n.day=n.day)
         #output
         colo.matrix_filled_iter <- nextDay(patient.matrix= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           abx.matrix=abx_iter[[3]], colo.matrix=array_StartBact_iter, 
@@ -499,20 +452,20 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         iter_totalsR[, iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
-    totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
+    totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
-    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
     for(iter in 1:iterations){
         
         #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
         #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.days=n.days, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=long_dur)
+        abx_iter <- abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur=long_dur)
         #Generate baseline carriage status
         array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
         #Update values for every day
         array_StartBact_iter <- gen_StartBact(los=array_LOS_iter,prob_StartBact_R=prob_StartBact_R, 
                                               prop_S_nonR=prop_S_nonR, prop_sr_inR=prop_sr_inR,
-                                              prop_Sr_inR=prop_Sr_inR, n.bed=n.bed, n.days=n.days)
+                                              prop_Sr_inR=prop_Sr_inR, n.bed=n.bed, n.day=n.day)
         #output
         colo.matrix_filled_iter <- nextDay(patient.matrix= abx_iter[[1]], array_LOS=array_LOS_iter, 
                                           abx.matrix=abx_iter[[3]], colo.matrix=array_StartBact_iter, 
@@ -525,7 +478,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         iter_totalsR[,iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
-    totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
+    totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
     #print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
     

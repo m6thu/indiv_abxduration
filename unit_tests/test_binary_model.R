@@ -72,7 +72,9 @@ stopifnot(max(patient_mat.m) == max(los_duration.m)) # highest number from array
 test_p <- 0.3
 test_mean <- 10
 tolerance <- 1
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep = 1)
+# Should be equivalent to simple_model test
+abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
+                          meanDur.s=test_p, meanDur.r=0, sdDur=1, timestep=1)
 # Expected output: 
 # To use commented test below, need to edit code: c(rep(1, abx_person), rep(0, max_days-abx_person)) to c(rep(1, abx_person), rep(1, max_days-abx_person))
 # stopifnot(abs(sum(abx.matrix.s > 0)/length(abx.matrix.s) - test_p) < tolerance) # overall number of 1s approx. probability
@@ -81,9 +83,10 @@ abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_
 test_p <- 1
 test_mean <- 10
 tolerance <- 1
-patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = 100, timestep=1) # have days long enough to not create clipping
+patient_mat.s <- patient.table(n.bed = 10, n.day = 3000, mean.max.los = 100, timestep=1) # have days long enough to not create clipping
 los_duration.s <- summary.los(patient_mat.s)
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=1)
+abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
+                          meanDur.s=test_mean, meanDur.r=0, sdDur=1, timestep=1)
 abx_summary <- table(abx.matrix.s*patient_mat.s)
 # Expected output: 
 hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx duration shape should be truncated norm as used
@@ -96,9 +99,10 @@ test_p <- 1
 test_mean <- 10
 test_los_mean <- 5 
 tolerance <- 1
-patient_mat.s <- patient.table(n.bed = 20, n.day = 30000, mean.max.los = test_los_mean, timestep=1) # have days short to create clipping
+patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = test_los_mean, timestep=1) # have days short to create clipping
 los_duration.s <- summary.los(patient_mat.s)
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=1)
+abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
+                          meanDur.s=test_mean, meanDur.r=0, sdDur=1, timestep=1)
 abx_summary <- table(abx.matrix.s*patient_mat.s)
 # Expected output: 
 hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx duration shape should be exponential function, small bump at test_mean for "lucky hits"
@@ -109,7 +113,8 @@ stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patie
 test_p <- 0.3
 test_mean <- 10
 tolerance <- 1
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep = 1)
+abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
+                          meanDur.s=test_mean, meanDur.r=0, sdDur=1, timestep=2)
 # Expected output: 
 # To use commented test below, need to edit code: c(rep(1, abx_person), rep(0, max_days-abx_person)) to c(rep(1, abx_person), rep(1, max_days-abx_person))
 # stopifnot(abs(sum(abx.matrix.s > 0)/length(abx.matrix.s) - test_p) < tolerance) # overall number of 1s approx. probability
@@ -120,7 +125,8 @@ test_mean <- 10
 tolerance <- 1*2
 patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = 100, timestep=2) # have days long enough to not create clipping
 los_duration.s <- summary.los(patient_mat.s)
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=2)
+abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
+                          meanDur.s=test_mean, meanDur.r=0, sdDur=1, timestep=2)
 abx_summary <- table(abx.matrix.s*patient_mat.s)
 # Expected output: 
 hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx duration shape should be truncated norm as used
@@ -135,12 +141,18 @@ test_los_mean <- 5
 tolerance <- 1*2
 patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = test_los_mean, timestep=2) # have days short to create clipping
 los_duration.s <- summary.los(patient_mat.s)
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=2)
+abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
+                          meanDur.s=test_mean, meanDur.r=0, sdDur=1, timestep=2)
 abx_summary <- table(abx.matrix.s*patient_mat.s)
 # Expected output: 
 hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx duration shape should be exponential function, small bump at test_mean for "lucky hits"
 stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_los_mean*2) < tolerance) # mean of abx duration is mean of los instead
 stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
+
+# Case: Single timestep, multiple abx prob
+# Case: Multiple timestep, multiple abx prob
+# Case: Single timestep, check prob of starting abx per day
+# Case: Multiple timestep, check prob of starting abx per day
 
 #################################### Test starting bacteria generation ####################################
 #colo.table 
