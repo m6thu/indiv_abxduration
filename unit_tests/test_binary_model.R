@@ -155,14 +155,55 @@ stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patie
 # Case: Multiple timestep, check prob of starting abx per day
 
 #################################### Test starting bacteria generation ####################################
-#colo.table 
-test.patient.table <- patient.table(n.bed=50, n.day=50, mean.max.los=3, timestep=1)
-test.los.array <-summary.los(patient.matrix=test.patient.table)
-test.colo.table <- colo.table(patient.matrix=test.patient.table, los.array=test.los.array, prob_StartBact_R=0.5, 
-                              prop_S_nonR=0.4, prop_Sr_inR=0.1, prop_sr_inR=0.2) #
-number_of_patients <- dim(test.los.array)[2]
-length(which(test.colo.table=="sr"|test.colo.table=="Sr"|test.colo.table=="sR"))/number_of_patients # get back prob_StartBact_R
-length(which(test.colo.table=="S"))/length(which(test.colo.table=="ss"|test.colo.table=="S")) # get back prop_S_nonR
+
+# Cases: Single time step
+#prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR
+prob_StartBact_R <- 0.2
+prop_S_nonR <- 0.3
+prop_Sr_inR <- 0.5
+prop_sr_inR <- 0.5
+tolerance <- 0.1
+prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+prob_start_sr <- prop_sr_inR*prob_StartBact_R
+patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los = 5, timestep=1)
+los.array <- summary.los(patient.matrix)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
+# Expected output: 
+stopifnot(abs(sum(colo.matrix == "S", na.rm=TRUE)/sum(!is.na(colo.matrix)) - prop_S_nonR*(1-prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "ss", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (1-prob_start_S-prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "Sr", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (prop_Sr_inR*prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "sr", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (prop_sr_inR*prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "sR", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (prob_StartBact_R-prob_start_Sr-prob_start_sr)) < tolerance) # generated R probs is correct
+stopifnot(sum(is.na(colo.matrix[1, ])) == 0) # Top row is fully initialized
+stopifnot(dim(colo.matrix) == dim(patient.matrix)) # dimension must equal patient.matrix
+patient_idx <- cumsum(c(1, los.array[2,]))
+stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])) == 0) # starts on same position as patient id
+
+# Cases: Multiple time step
+prob_StartBact_R <- 0.2
+prop_S_nonR <- 0.3
+prop_Sr_inR <- 0.5
+prop_sr_inR <- 0.5
+tolerance <- 0.1
+prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+prob_start_sr <- prop_sr_inR*prob_StartBact_R
+patient.matrix <- patient.table(n.bed = 20, n.day = 300, mean.max.los = 5, timestep=3)
+los.array <- summary.los(patient.matrix)
+colo.matrix <- colo.table(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
+# Expected output: 
+stopifnot(abs(sum(colo.matrix == "S", na.rm=TRUE)/sum(!is.na(colo.matrix)) - prop_S_nonR*(1-prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "ss", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (1-prob_start_S-prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "Sr", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (prop_Sr_inR*prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "sr", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (prop_sr_inR*prob_StartBact_R)) < tolerance) # generated R probs is correct
+stopifnot(abs(sum(colo.matrix == "sR", na.rm=TRUE)/sum(!is.na(colo.matrix)) - (prob_StartBact_R-prob_start_Sr-prob_start_sr)) < tolerance) # generated R probs is correct
+stopifnot(sum(is.na(colo.matrix[1, ])) == 0) # Top row is fully initialized
+stopifnot(dim(colo.matrix) == dim(patient.matrix)) # dimension must equal patient.matrix
+patient_idx <- cumsum(c(1, los.array[2,]))
+stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])) == 0) # starts on same position as patient id
+
+##################################### Test daily updates ####################################
 
 #next day 
 nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
