@@ -133,7 +133,11 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                     bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep=1){
 
     
-    # TODO: adjust probabilities based on timestep
+    # adjust probabilities based on timestep
+    pi_ssr <- pi_ssr/timestep
+    repop.s1 <- repop.s1/timestep
+    mu_r <- mu_r/timestep
+    abx.clear <- abx.clear/timestep
     
     # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
     pi_Sr <- pi_ssr - (bif*pi_ssr)

@@ -320,7 +320,17 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
                     pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
                     repop.s1, repop.s2,repop.s3, abx.r, abx.s, timestep=1){
     
-    # TODO: adjust probabilities based on timestep
+    # adjust probabilities based on timestep
+    pi_r1 <- pi_r1/timestep
+    mu1 <- mu1/timestep
+    mu2 <- mu2/timestep
+    repop.r1 <- repop.r1/timestep
+    repop.r2 <- repop.r2/timestep
+    repop.s1 <- repop.s1/timestep
+    repop.s2 <- repop.s2/timestep
+    repop.s3 <- repop.s3/timestep
+    abx.r <- abx.r/timestep
+    abx.s <- abx.s/timestep
     
     pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
     
