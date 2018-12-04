@@ -172,4 +172,28 @@ stopifnot(sum(!(which(!is.na(colo.matrix[[1]])) == patient_idx[-length(patient_i
 patient_idx <- cumsum(c(1, los_duration.s[2,]))
 stopifnot(sum(!(which(!is.na(colo.matrix[[2]])) == patient_idx[-length(patient_idx)])) == 0) # starts on same position as patient id, R
 
+############################################ Integration tests ##################################################
+# Test diff_prevalence
+diff_prevalence(n.bed=20, mean.max.los=5, p.s=0.10, p.r.day1=0.10, p.r.dayafter=0.10,
+                K=1000, t_mean=4.0826, t_sd=1.1218, r_mean=1.7031, r_sd=1.8921,
+                pi_r=0.1, r_thres=10, r_growth=2, r_trans=10, 
+                abxr_killr=5, abxr_kills=5, abxs_kills=5,
+                short_dur.s=4, long_dur.s=14, short_dur.r = 2, long_dur.r = 5, sdDur = 5)
 
+# Case: At no transmission and no abx
+# Expected output: base level of starting Rs generated
+
+# Case: No transmission with abx
+# Expected output:
+
+# Case: Transmission with no abx
+# Expected output: 
+
+
+# Test scenario
+
+# Case: Abx on everyone
+# Expected output: No S at all
+
+# Case: High transmission
+# Expected output: ?
