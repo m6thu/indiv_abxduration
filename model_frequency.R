@@ -271,9 +271,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                     pi_r, K, r_thres, r_growth, r_trans, 
                     abxr_killr, abxr_kills, abxs_kills, timestep=1){
     
-    
+    # K: loading capacity, and r_thres:threshold for infectiousness does not change with time
     pi_r <- pi_r/timestep
-    r_thres <- r_thres/timestep
     r_growth <- r_growth/timestep
     r_trans <- r_trans/timestep
     abxr_killr <- abxr_killr/timestep
