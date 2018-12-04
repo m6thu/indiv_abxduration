@@ -60,7 +60,7 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 }
 
 # Use the LHD function to generate a hypercube 
-LHS.simple<- LHS(modelRun.simple, factors, N=2000, q, q.arg, nboot=20) #N is the size of the hypercube
+LHS.simple<- LHS(modelRun.simple, factors, N=100, q, q.arg, nboot=20) #N is the size of the hypercube
 results.simple<- get.results(LHS.simple)
 
 # Save run to disk
