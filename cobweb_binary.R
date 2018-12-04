@@ -111,7 +111,7 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 }
 
 # Use the LHD function to generate a hypercube 
-LHS.binary<- LHS(modelRun.binary, factors, 100, q, q.arg, nboot=20)
+LHS.binary<- LHS(modelRun.binary, factors, 50, q, q.arg, nboot=10)
 results.binary<-get.results(LHS.binary)
 
 # Save run to disk
