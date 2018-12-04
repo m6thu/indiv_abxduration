@@ -269,7 +269,15 @@ colo.table <- function(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd){
 # 4. Update values for every day (define function)
 nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
                     pi_r, K, r_thres, r_growth, r_trans, 
-                    abxr_killr, abxr_kills, abxs_kills){
+                    abxr_killr, abxr_kills, abxs_kills, timestep=1){
+    
+    
+    pi_r <- pi_r/timestep
+    r_thres <- r_thres/timestep
+    r_growth <- r_growth/timestep
+    r_trans <- r_trans/timestep
+    abxr_killr <- abxr_killr/timestep
+    abxr_kills <- abxr_kills/timestep
     
     S_table <- colo_table[[1]]
     R_table <- colo_table[[2]]
@@ -337,7 +345,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             K, t_mean, t_sd, r_mean, r_sd,
                             pi_r, r_thres, r_growth, r_trans, 
                             abxr_killr, abxr_kills, abxs_kills,
-                            short_dur, long_dur){
+                            short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
     
     n.day <- 30
     iterations <- 10
