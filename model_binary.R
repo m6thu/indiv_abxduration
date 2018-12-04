@@ -324,7 +324,7 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR,
 ####################4. Update values for every day  
 nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
                     pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
-                    repop.s1, repop.s2,repop.s3, abx.r, abx.s, timestep=1){
+                    repop.s1, repop.s2,depop.r, abx.r, abx.s, timestep=1){
     
     # adjust probabilities based on timestep
     pi_r1 <- pi_r1/timestep
@@ -334,7 +334,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     repop.r2 <- repop.r2/timestep
     repop.s1 <- repop.s1/timestep
     repop.s2 <- repop.s2/timestep
-    repop.s3 <- repop.s3/timestep
+    depop.r <- depop.r/timestep
     abx.r <- abx.r/timestep
     abx.s <- abx.s/timestep
     
@@ -421,7 +421,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
                     roll_clear <- runif(1, 0, 1)
                     if(abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
                         colo.matrix[i, j] <- "sr"
-                    }else if (abx.matrix[i-1, j] == 0 & roll_clear < repop.s3){
+                    }else if (abx.matrix[i-1, j] == 0 & roll_clear < depop.r){
                         colo.matrix[i, j] <- "sr"
                     }else {
                         colo.matrix[i, j] <- "sR"
@@ -440,7 +440,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
 diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
                             pi_r1, bif, mu1, mu2, abx.r, abx.s,
-                            repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
+                            repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
                             short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
     timestep <- 1
     n.day <- 500
@@ -457,7 +457,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         
         colo.matrix_filled_iter <- nextDay(patient.matrix, abx.matrix, colo.matrix, 
                                           pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
-                                          repop.s1, repop.s2, repop.s3, abx.r, abx.s, timestep)
+                                          repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep)
         #Summary
         df <- data.frame(colo.matrix)
         iter_totalsR[, iter] <- rowSums(df == "sR")
@@ -476,7 +476,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         
         colo.matrix_filled_iter <- nextDay(patient.matrix, abx.matrix, colo.matrix, 
                                           pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
-                                          repop.s1, repop.s2, repop.s3, abx.r, abx.s, timestep)
+                                          repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep)
         #Summary
         df <- data.frame(colo.matrix)
         iter_totalsR[,iter] <- rowSums(df == "sR")
@@ -492,5 +492,5 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
 parameters_binary <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
                       "prob_StartBact_R", "prop_S_nonR", "prop_Sr_inR", "prop_sr_inR",
                       "pi_r1", "bif", "mu1", "mu2", "abx.r", "abx.s",
-                      "repop.r1", "repop.r2", "repop.s1", "repop.s2", "repop.s3",
+                      "repop.r1", "repop.r2", "repop.s1", "repop.s2", "depop.r",
                       "short_dur.s", "long_dur.s", "short_dur.r", "long_dur.r", "sdDur")
