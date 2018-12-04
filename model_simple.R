@@ -235,8 +235,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
-                                meanDur.s=test_mean, meanDur.r=meanDur.r, sdDur=sdDur, timestep=timestep)
+        abx.matrix <- abx.table(patient.matrix, los.array, p, meanDur=short_dur, sdDur, timestep)
         colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
                                      prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
         
@@ -278,3 +277,4 @@ diff_prevalence <- function(n.bed, mean.max.los,
 
 parameters_simple<- c("n.bed", "mean.max.los", "prob_StartBact_R", "prop_S_nonR", 
                "bif", "pi_ssr", "repop.s1", "mu_r", "abx.clear", "p", "short_dur", "long_dur", "sdDur")
+
