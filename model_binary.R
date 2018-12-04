@@ -443,8 +443,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
                             short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
     timestep <- 1
-    n.day <- 50
-    iterations <- 10
+    n.day <- 500
+    iterations <- 100
     iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
@@ -494,9 +494,3 @@ parameters_binary <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter
                       "pi_r1", "bif", "mu1", "mu2", "abx.r", "abx.s",
                       "repop.r1", "repop.r2", "repop.s1", "repop.s2", "depop.r",
                       "short_dur.s", "long_dur.s", "short_dur.r", "long_dur.r", "sdDur")
-
-diff_prevalence(n.bed=10, mean.max.los=10, p.s=0.1, p.r.day1=0.1, p.r.dayafter=0.1,
-                            prob_StartBact_R=0.1, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1,
-                            pi_r1=0.1, bif=0.1, mu1=0.1, mu2=0.1, abx.r=0.1, abx.s=0.1,
-                            repop.r1=0.1, repop.r2=0.1, repop.s1=0.1, repop.s2=0.1, depop.r=0.1,
-                            short_dur.s=2, long_dur.s=10, short_dur.r=2, long_dur.r=10, sdDur=2)
