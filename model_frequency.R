@@ -267,7 +267,7 @@ colo.table <- function(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd){
 }
 
 # 4. Update values for every day (define function)
-nextDay <- function(bed_table, array_LOS, treat_table, colo_table, 
+nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
                     pi_r, K, r_thres, r_growth, r_trans, 
                     abxr_killr, abxr_kills, abxs_kills, timestep=1){
     
@@ -278,11 +278,11 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
     abxr_killr <- abxr_killr/timestep
     abxr_kills <- abxr_kills/timestep
     
-    S_table <- colo_table[[1]]
-    R_table <- colo_table[[2]]
+    S_table <- colo.matrix[[1]]
+    R_table <- colo.matrix[[2]]
     
     # For each day (first day should be filled)
-    for(i in 2:nrow(bed_table)){
+    for(i in 2:nrow(patient.matrix)){
         # calculate how many people has R above transmission level
         r_num <- sum(R_table[i-1,] > r_thres)
         # from number of r, calculate probability of transmission
@@ -290,7 +290,7 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
         
         ###### Convert all log scale parameters into normal scale for addition, then convert back to log
         #for each person:
-        for(j in 1:ncol(bed_table)){
+        for(j in 1:ncol(patient.matrix)){
             if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
                 # roll for transmission
                 roll <- runif(1, 0, 1)
@@ -298,8 +298,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                 R_grow <- exp(r_growth)*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # add effect of transmission if roll pass prob check and if previous R level is 0
                 R_trans <- exp(r_trans)*((roll < prob_r) & !R_table[i-1, j])
-                # add effect of abx death if treat_table is r abx (== 2)
-                R_abx <- -(treat_table[i-1, j] > 1)*exp(abxr_killr)
+                # add effect of abx death if abx.matrix is r abx (== 2)
+                R_abx <- -(abx.matrix[i-1, j] > 1)*exp(abxr_killr)
                 # apply effects to current table
                 R_table[i, j] <- exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
@@ -317,8 +317,8 @@ nextDay <- function(bed_table, array_LOS, treat_table, colo_table,
                 # calculate effect of S logistic bacteria growth 
                 S_grow <- exp(r_growth)*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # calculate effect of death antibiotics R and effect of death by abx S
-                S_abx_s <- -(treat_table[i-1, j] == 1)*exp(abxs_kills)
-                S_abx_r <- -(treat_table[i-1, j] > 1)*exp(abxr_kills)
+                S_abx_s <- -(abx.matrix[i-1, j] == 1)*exp(abxs_kills)
+                S_abx_r <- -(abx.matrix[i-1, j] > 1)*exp(abxr_kills)
                 # apply effects
                 S_table[i, j] <- exp(S_table[i-1, j]) + R_grow + S_abx_s + S_abx_r
                 # trim range
@@ -346,7 +346,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             abxr_killr, abxr_kills, abxs_kills,
                             short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
     
-    n.day <- 30
+    timestep <- 1
+    n.day <- 500
     iterations <- 10
     
     iter_totalR.no <- matrix(NA, nrow = n.day, ncol = iterations)
@@ -354,22 +355,17 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     for(iter in 1:iterations){
         
-        #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
-        #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, p.s=p.s, p.r=p.r.day1, p.r.dayafter = p.r.dayafter, meanDur=short_dur)
-        #Generate baseline carriage status
-        array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
-        #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.day)
-        #output
-        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
-                                          treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r, K, r_thres, r_growth, r_trans, 
-                                          abxr_killr, abxr_kills, abxs_kills)
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
+        los.array <- summary.los(patient.matrix)
+        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+                                meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
+        colo.matrix <- colo.table(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd)
         
+        colo.matrix_filled_iter <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
+                                           pi_r, K, r_thres, r_growth, r_trans, 
+                                           abxr_killr, abxr_kills, abxs_kills, timestep)
         # Summary
-        # for total units of R bacteria on a day
-        df.R <- data.frame(colo_table_filled_iter[[2]])
+        df.R <- data.frame(colo.matrix_filled_iter[[2]])
         iter_totalR.no[, iter] <- rowSums(df.R)
         
         #for number of people who reached R threshold on a day
@@ -384,22 +380,18 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     for(iter in 1:iterations){
         
-        #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
-        #Generate length of stay and antibiotic duration table
-        abx_iter <- abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter = p.r.dayafter, meanDur=long_dur)
-        #Generate baseline carriage status
-        array_LOS_iter <- array_LOS_func(los_duration=abx_iter[[2]])
-        #Update values for every day
-        array_StartBact_iter <- gen_StartBact(los=array_LOS_iter, t_mean = 4.0826, t_sd = 1.1218, r_mean =1.7031, r_sd = 1.8921, n.bed, n.day)
-        #output
-        colo_table_filled_iter <- nextDay(bed_table= abx_iter[[1]], array_LOS=array_LOS_iter, 
-                                          treat_table=abx_iter[[3]], colo_table=array_StartBact_iter, 
-                                          pi_r, K, r_thres, r_growth, r_trans, 
-                                          abxr_killr, abxr_kills, abxs_kills)
+        los.array <- summary.los(patient.matrix)
+        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+                                meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
+        colo.matrix <- colo.table(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd)
+        
+        colo.matrix_filled_iter <- nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
+                                           pi_r, K, r_thres, r_growth, r_trans, 
+                                           abxr_killr, abxr_kills, abxs_kills, timestep)
 
         #Summary 
         #for total units of R bacteria on a day
-        df.R <- data.frame(colo_table_filled_iter[[2]])
+        df.R <- data.frame(colo.matrix_filled_iter[[2]])
         iter_totalR.no[, iter] <- rowSums(df.R)
         
         #for number of people who reached R threshold on a day
@@ -412,10 +404,9 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     return(list((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short)))
 }
 
-diff_prevalence(n.bed = 20, mean.max.los = 5, p.s = 0.10, p.r.day1 = 0.10, p.r.dayafter = 0.10,
-                K = 100, t_mean = 4.0826, t_sd = 1.1218, r_mean = 1.7031, r_sd = 1.8921,
-                pi_r=0.1, r_thres = 10, r_growth = 2, r_trans = 10,
-                abxr_killr = 5, abxr_kills = 5, abxs_kills = 5,
-                short_dur = 4, long_dur = 14)
-
+parameters_frequency <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
+                          "K", "t_mean", "t_sd", "r_mean", "r_sd",
+                          "pi_r", "r_thres", "r_growth", "r_trans",
+                          "abxr_killr", "abxr_kills", "abxs_kills",
+                          "short_dur.s", "long_dur.s", "short_dur.r", "long_dur.r", "sdDur")
 
