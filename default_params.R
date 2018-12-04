@@ -24,6 +24,9 @@ abx.clear <- 0.1  # probability of clearing S to become N under antibiotic treat
 p.s<-0.5                              # p=probability of receiving antibiotic for sensitive organisms
 p.r.day1<-0.1                         # p= probability of receiving antibiotic for resistant organisms on day 1 admission 
 p.r.dayafter<-0.1                     # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms
+meanDur.r <- 2
+meanDur.s <- 5
+sdDur <- 5
 
 prob_StartBact_R <- 0.35             # Probability of being colonized with resistant strain on admission
 prop_S_nonR <- 0.5                # Proportion of large S within non-resistant states (S+s)

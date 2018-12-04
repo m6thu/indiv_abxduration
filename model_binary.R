@@ -1,12 +1,3 @@
-# ######## Functions ########
-# positive_norm_sample <- function(mean, sd){                      
-#     v<-round(rnorm(1, mean=mean, sd=sd))
-#     if (v < 0) {
-#         v<-v*-1
-#     }
-#     return(v)
-# }
-#########2. Generate length of stay and antibiotic duration table
 #(1 for short duration and 1 for long duration) 
 #simulate inpatients with various lengths of stay
 #allocate various duration of antibiotics for each patient
@@ -70,11 +61,17 @@ summary.los <- function(patient.matrix){
     return(los_duration)
 }
 
-# abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
+
+# abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter, 
+#                       meanDur.s, meanDur.r, sdDur, timestep=1){
+#     
+#     stopifnot(p.s+p.r.day1 <= 1)
 #     
 #     #generate antibiotic use table
-#     #number of days of antibiotic is randomly drawn from a truncated normal distribution
-#     abx_days <- round(rtnorm(ncol(los.array), mean=meanDur*timestep, sd=sdDur*timestep, lower=0))
+#     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
+#     abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=0))
+#     #number of days of r antibiotic is drawn from the distribution of accumulated probability
+#     abx_days.r <- p.r.dayafter
 #     # Unit test - check distribution of abx distribution
 #     # hist(abx_days, breaks=20)
 #     # Unit test - compare cases that will enter padding if-else
@@ -89,10 +86,11 @@ summary.los <- function(patient.matrix){
 #         # maxiumum number of days for a particular patient from los vector
 #         max_days <- los.array[2, i]
 #         # number of abx days for that particular patient from generated number
-#         abx_person <- abx_days[i]
-#         # Initial treatment value derived from probability, p
+#         abx_s <- abx_days.s[i]
+#         abx_r <- abx_days.r[i]
+#         # Initial treatment value derived from probability
 #         rand <- runif(1, 0, 1)
-#         if (rand < p){
+#         if (rand < p.s){
 #             if(abx_person > max_days){
 #                 # if the number of generated abx is longer than the los of that person
 #                 # have them take abx everyday for their stay
@@ -112,11 +110,15 @@ summary.los <- function(patient.matrix){
 #     return(abx.matrix)
 # }
 
-abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayafter, meanDur.r) {
+abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
+                      meanDur.s, meanDur.r, sdDur, timestep=1){
 
+    n.day <- nrow(patient.matrix)
+    n.bed <- ncol(patient.matrix)
+    
     #generate antibiotic use table
     ## antibiotics to treat sensitive organisms 
-    matrix_DuraDay <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+    matrix_DuraDay <- matrix(NA, nrow=n.day, ncol=n.bed)
     #matrix_DuraDay is the matrix with number of days of antibiotics.s for every patient in patient.matrix
     
     get1stdayofstay <- function(patientnumber,bednumber, bedoccmat){
@@ -132,12 +134,12 @@ abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayaf
     
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
-            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j] <- abs(round(rnorm(1, mean=meanDur.s, sd=sdDur)))
+            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j] <- abs(round(rnorm(1, mean=meanDur.s*timestep, sd=sdDur*timestep)))
         }
     }
     #number of days of antibiotic.s is randomly drawn from a normal dist
     
-    for (i in 2:n.days){
+    for (i in 2:n.day){
         for (j in 1:n.bed){
             if(is.na(matrix_DuraDay[i,j])){
                 matrix_DuraDay[i, j] <- matrix_DuraDay[i-1,j]
@@ -147,8 +149,9 @@ abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayaf
         }
     }
     #Fill the matrix for antibiotics.s with same dimension as patient.matrix
-    
-    matrix_AtbTrt <- matrix(NA, nrow=dim(patient.matrix)[1], ncol=dim(patient.matrix)[2]) 
+
+    matrix_AtbTrt <- matrix(NA, nrow=n.day, ncol=n.bed) 
+
     # #matrix_AtbTrt to count the cummulative length of stay for treated patients in the same dimension as patient.matrix
     
     for (i in 1:max(patient.matrix)){
@@ -164,7 +167,7 @@ abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayaf
     # Initial treatment value derived from probability, p.s for antibiotic.s 
     
     
-    for (i in 2:n.days){
+    for (i in 2:n.day){
         for (j in 1:n.bed){
             if(is.na(matrix_AtbTrt[i,j]) & (matrix_AtbTrt[i-1,j] != 0)){
                 matrix_AtbTrt[i, j] <-  matrix_AtbTrt[i-1,j] + 1
@@ -180,8 +183,9 @@ abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayaf
     #Case3 (all other patients i.e. without antibiotic or value=0): 0
     #Complete the matrix of cummulative length of stay for treated patients
     
-    matrix_AtbTrt2 <- matrix(NA, nrow=dim(patient.matrix)[1], ncol=dim(patient.matrix)[2])
-    for (i in 1:n.days){
+
+    matrix_AtbTrt2 <- matrix(NA, nrow=n.day, ncol=n.bed)
+    for (i in 1:n.day){
         for (j in 1:n.bed){
             if(matrix_DuraDay[i,j]>=matrix_AtbTrt[i,j] & matrix_AtbTrt[i,j]!=0){
                 matrix_AtbTrt2[i, j] <-  1
@@ -195,17 +199,20 @@ abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayaf
     #Output matrix matrix_AtbTrt2 containing binary variable (treated vs not treated) for any bed on any particular day
     
     ## antibiotics to treat resistant organisms 
-    matrix_DuraDay2 <- matrix(NA, nrow=dim(patient.matrix)[1], ncol=dim(patient.matrix)[2])
+
+    matrix_DuraDay2 <- matrix(NA, nrow=n.day, ncol=n.bed)
     #matrix_DuraDay is the matrix with number of days of antibiotics.r for every patient in patient.matrix
     
     for (i in 1:max(patient.matrix)){
         for (j in 1:n.bed){
-            matrix_DuraDay2[get1stdayofstay(i,j,patient.matrix), j]<-abs(round(rnorm(1, mean=meanDur.r, sd=sdDur)))
+
+            matrix_DuraDay2[get1stdayofstay(i,j,patient.matrix), j]<-abs(round(rnorm(1, mean=meanDur.r*timestep, sd=sdDur*timestep)))
+
         }
     }
     #number of days of antibiotic.r is randomly drawn from a normal dist
     
-    for (i in 2:n.days){
+    for (i in 2:n.day){
         for (j in 1:n.bed){
             if(is.na(matrix_DuraDay2[i,j])){
                 matrix_DuraDay2[i, j] <- matrix_DuraDay2[i-1,j]
@@ -215,8 +222,8 @@ abx.table<- function (patient.matrix, meanDur.s, sdDur, p.s, p.r.day1, p.r.dayaf
         }
     }
     #Fill the matrix for antibiotics.r with same dimension as patient.matrix
-    
-    matrix_AtbTrt.r <- matrix(NA, nrow=dim(patient.matrix)[1], ncol=dim(patient.matrix)[2]) 
+    matrix_AtbTrt.r <- matrix(NA, nrow=n.day, ncol=n.bed) 
+
     # #matrix_AtbTrt.r to count the cummulative length of stay for treated patients in the same dimension as patient.matrix
     
     for (i in 1:max(patient.matrix)){
@@ -317,7 +324,19 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR,
 ####################4. Update values for every day  
 nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
                     pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
-                    repop.s1, repop.s2,repop.s3, abx.r, abx.s){
+                    repop.s1, repop.s2,repop.s3, abx.r, abx.s, timestep=1){
+    
+    # adjust probabilities based on timestep
+    pi_r1 <- pi_r1/timestep
+    mu1 <- mu1/timestep
+    mu2 <- mu2/timestep
+    repop.r1 <- repop.r1/timestep
+    repop.r2 <- repop.r2/timestep
+    repop.s1 <- repop.s1/timestep
+    repop.s2 <- repop.s2/timestep
+    repop.s3 <- repop.s3/timestep
+    abx.r <- abx.r/timestep
+    abx.s <- abx.s/timestep
     
     pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
     
@@ -357,7 +376,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
                     if (roll_r < prob_r) { 
                         colo.matrix[i,j]<-"sr" 
                     } else if ( roll_ss < repop.s1) {
-                        colo.matrix[i,j]<-"S" 
+                        colo.matrix[i,j]<-"S"
                     } else{
                         colo.matrix[i, j] <- "ss"
                     }
@@ -422,64 +441,56 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
                             pi_r1, bif, mu1, mu2, abx.r, abx.s,
                             repop.r1, repop.r2, repop.s1, repop.s2, repop.s3,
-                            short_dur.s, long_dur.s,short_dur.l, long_dur.l,sdDur){
-    n.days <- 300
+                            short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
+    timestep <- 1
+    n.day <- 500
     iterations <- 10
-    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
+        los.array <- summary.los(patient.matrix)
+        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+                                meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
+        colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+                                  prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
         
-        #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
-        patient.matrix<- patient.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=1)
-        los.array<-summary.los (patient.matrix)
-        #Generate length of stay and antibiotic duration table
-        abx.matrix <- abx.table(patient.matrix, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur.s=short_dur.s, meanDur.r = long_dur.s,sdDur=sdDur )
-        #Update values for every day
-        array_StartBact <- colo.table(patient.matrix=patient.matrix, los.array=los.array, 
-                                           prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
-        #output
-        colo.matrix <- nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=array_StartBact, 
-                                pi_r1=pi_r1, bif=bif, mu1=mu1, mu2=mu2, repop.r1=repop.r1, repop.r2=repop.r2, 
-                                repop.s1=repop.s1, repop.s2=repop.s2,repop.s3=repop.s3, abx.r=abx.r, abx.s=abx.s) 
-        
+        colo.matrix_filled_iter <- nextDay(patient.matrix, abx.matrix, colo.matrix, 
+                                          pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
+                                          repop.s1, repop.s2, repop.s3, abx.r, abx.s, timestep)
         #Summary
         df <- data.frame(colo.matrix)
         iter_totalsR[, iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
-    totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
+    totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
-    iter_totalsR <- matrix(NA, nrow = n.days, ncol = iterations)
+    iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
     for(iter in 1:iterations){
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
+        los.array <- summary.los(patient.matrix)
+        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+                                meanDur.s=long_dur.s, meanDur.r=long_dur.r, sdDur=sdDur, timestep=timestep)
+        colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+                                  prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
         
-        #print(paste("iter:", iter, "y:", y_count, '-', y, "x", x_count, '-', x))
-        #Generate length of stay and antibiotic duration table
-        patient.matrix<- patient.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=1)
-        los.array<-summary.los (patient.matrix)
-        #Generate length of stay and antibiotic duration table
-        abx.matrix <- abx.table(patient.matrix, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter, meanDur.s=short_dur.l, meanDur.r = long_dur.l,sdDur=sdDur )
-        #Update values for every day
-        array_StartBact <- colo.table(patient.matrix=patient.matrix, los.array=los.array, 
-                                      prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
-        #output
-        colo.matrix <- nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=array_StartBact, 
-                               pi_r1=pi_r1, bif=bif, mu1=mu1, mu2=mu2, repop.r1=repop.r1, repop.r2=repop.r2, 
-                               repop.s1=repop.s1, repop.s2=repop.s2,repop.s3=repop.s3, abx.r=abx.r, abx.s=abx.s)
+        colo.matrix_filled_iter <- nextDay(patient.matrix, abx.matrix, colo.matrix, 
+                                          pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
+                                          repop.s1, repop.s2, repop.s3, abx.r, abx.s, timestep)
         #Summary
         df <- data.frame(colo.matrix)
         iter_totalsR[,iter] <- rowSums(df == "sR")
         #print("end iteration loop")
     }
-    totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.days*1/3):nrow(iter_totalsR),])/iterations/n.bed)
+    totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
     #print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
     
     return(totalsR_long - totalsR_short)
 }
 
-diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.01,
-                prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1, 
-                pi_r1=0.1, bif=2, mu1=.1, mu2=.1, abx.r=.1, abx.s=.1,
-                repop.r1=.1, repop.r2=.1, repop.s1=.1, repop.s2=.1, repop.s3=.1,
-                short_dur.s=2,long_dur.s=2, long_dur.l=10,long_dur.l=10,sdDur=1)
-
+parameters_binary <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
+                      "prob_StartBact_R", "prop_S_nonR", "prop_Sr_inR", "prop_sr_inR",
+                      "pi_r1", "bif", "mu1", "mu2", "abx.r", "abx.s",
+                      "repop.r1", "repop.r2", "repop.s1", "repop.s2", "repop.s3",
+                      "short_dur.s", "long_dur.s", "short_dur.r", "long_dur.r", "sdDur")

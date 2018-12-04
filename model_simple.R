@@ -133,7 +133,11 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                     bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep=1){
 
     
-    # TODO: adjust probabilities based on timestep
+    # adjust probabilities based on timestep
+    pi_ssr <- pi_ssr/timestep
+    repop.s1 <- repop.s1/timestep
+    mu_r <- mu_r/timestep
+    abx.clear <- abx.clear/timestep
     
     # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
     pi_Sr <- pi_ssr - (bif*pi_ssr)
@@ -229,9 +233,10 @@ diff_prevalence <- function(n.bed, mean.max.los,
     iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)
     for(iter in 1:iterations){
         
-        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep=1)
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p, meanDur=short_dur, sdDur=sdDur, timestep)
+        abx.matrix <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+                                meanDur.s=test_mean, meanDur.r=meanDur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
                                      prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
         
