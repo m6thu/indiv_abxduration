@@ -34,7 +34,7 @@ q<- c(
 
 q.arg <- list(            #set limits of parameters 
     list(min=5, max=50), #"n.bed", number of beds in the ward
-    list(min=3, max=5), #"mean.max.los", mean of length of stay 
+    list(min=3, max=10), #"mean.max.los", mean of length of stay 
     list(min=0.01, max=0.99), #"prob_StartBact_R",probability of initial carriage of resistant organisms
     list(min=0.01, max=0.99), #"prop_S_nonR", proportion of S in the population of S and ss 
     list(min=0, max=1), #"bif", bacterial interference factor 
@@ -60,8 +60,8 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 }
 
 # Use the LHD function to generate a hypercube 
-LHS.simple<- LHS(modelRun.simple, factors, N=1000, q, q.arg, nboot=20) #N is the size of the hypercube
-results.simple<-get.results(LHS.simple)
+LHS.simple<- LHS(modelRun.simple, factors, N=2000, q, q.arg, nboot=20) #N is the size of the hypercube
+results.simple<- get.results(LHS.simple)
 
 # Save run to disk
 image_name <- paste0("LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
@@ -92,8 +92,9 @@ for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that p
         }
 }
 require(plotrix) #load MASS package
-colour1<-alpha("#E69F00", alpha=0.3)
-colors<- c(colour1, "#009E73") #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+yellow<-alpha("#E69F00", alpha=0.3)
+green<-alpha("#009E73", alpha=0.6)
+colors<- c(yellow, green) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
 parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
 {
