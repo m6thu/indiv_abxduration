@@ -73,8 +73,11 @@ test_p <- 0.3
 test_mean <- 10
 tolerance <- 1
 # Should be equivalent to simple_model test
-abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0,
-                          meanDur.s=test_p, meanDur.r=0, sdDur=1, timestep=1)
+old <- Sys.time() # get start time
+abx.matrix.s <- abx.table(patient.matrix=patient_mat.s, los.array=los_duration.s, p.s=test_p, p.r.day1=0, p.r.dayafter=0.1,
+                          meanDur.s=test_mean, meanDur.r=test_mean, sdDur=1, timestep=1)
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
 # Expected output: 
 # To use commented test below, need to edit code: c(rep(1, abx_person), rep(0, max_days-abx_person)) to c(rep(1, abx_person), rep(1, max_days-abx_person))
 # stopifnot(abs(sum(abx.matrix.s > 0)/length(abx.matrix.s) - test_p) < tolerance) # overall number of 1s approx. probability
