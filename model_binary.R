@@ -62,53 +62,56 @@ summary.los <- function(patient.matrix){
 }
 
 
-# abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter, 
-#                       meanDur.s, meanDur.r, sdDur, timestep=1){
-#     
-#     stopifnot(p.s+p.r.day1 <= 1)
-#     
-#     #generate antibiotic use table
-#     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
-#     abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=0))
-#     #number of days of r antibiotic is drawn from the distribution of accumulated probability
-#     abx_days.r <- p.r.dayafter
-#     # Unit test - check distribution of abx distribution
-#     # hist(abx_days, breaks=20)
-#     # Unit test - compare cases that will enter padding if-else
-#     # abx_days > los.array[2, ]
-#     
-#     # abx.matrix should be same size as patient.matrix
-#     abx.matrix <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
-#     idx_end <- 1
-#     # For each patient
-#     for(i in 1:ncol(los.array)){
-#         
-#         # maxiumum number of days for a particular patient from los vector
-#         max_days <- los.array[2, i]
-#         # number of abx days for that particular patient from generated number
-#         abx_s <- abx_days.s[i]
-#         abx_r <- abx_days.r[i]
-#         # Initial treatment value derived from probability
-#         rand <- runif(1, 0, 1)
-#         if (rand < p.s){
-#             if(abx_person > max_days){
-#                 # if the number of generated abx is longer than the los of that person
-#                 # have them take abx everyday for their stay
-#                 abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(1, max_days)
-#             }else{
-#                 # else take abx for abx days and pad to fit max_days
-#                 abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(1, abx_person), rep(0, max_days-abx_person))
-#             }
-#         }else{
-#             # no abx taken for that person
-#             abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
-#         }
-#         # move starting position to end of previous patient
-#         idx_end <- idx_end+max_days
-#     }
-#     
-#     return(abx.matrix)
-# }
+# Rename to replace bottom (comment out) when its been tested to work
+abx.table.alt <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
+                          meanDur.s, meanDur.r, sdDur, timestep=1){
+
+    stopifnot(p.s+p.r.day1 <= 1)
+
+    #generate antibiotic use table
+    #number of days of s antibiotic is randomly drawn from a truncated normal distribution
+    abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=0))
+    #number of days of r antibiotic is drawn from the distribution of accumulated probability
+    abx_days.r <- p.r.dayafter
+    # Unit test - check distribution of abx distribution
+    # hist(abx_days, breaks=20)
+    # Unit test - compare cases that will enter padding if-else
+    # abx_days > los.array[2, ]
+
+    # abx.matrix should be same size as patient.matrix
+    abx.matrix <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+    idx_end <- 1
+    # For each patient
+    for(i in 1:ncol(los.array)){
+
+        # maxiumum number of days for a particular patient from los vector
+        max_days <- los.array[2, i]
+        # number of abx days for that particular patient from generated number
+        abx_s <- abx_days.s[i]
+        abx_r <- abx_days.r[i]
+        # Initial treatment value derived from probability
+        rand <- runif(1, 0, 1)
+        if (rand < p.s){
+            if(abx_person > max_days){
+                # if the number of generated abx is longer than the los of that person
+                # have them take abx everyday for their stay
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(1, max_days)
+            }else{
+                # else take abx for abx days and pad to fit max_days
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(1, abx_person), rep(0, max_days-abx_person))
+            }
+        }else{
+            # no abx taken for that person
+            abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
+        }
+        # move starting position to end of previous patient
+        idx_end <- idx_end+max_days
+    }
+
+    return(abx.matrix)
+}
+
+
 
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                       meanDur.s, meanDur.r, sdDur, timestep=1){
