@@ -65,7 +65,7 @@ summary.los <- function(patient.matrix){
 
 
 # Rename to replace bottom (comment out) when its been tested to work
-abx.table.alt <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
+abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                           meanDur.s, meanDur.r, sdDur, timestep=1){
 
     # Check assumption that possibilities are, no abx, has s abx, or has r abx on first day
@@ -158,7 +158,7 @@ abx.table.alt <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter
 
 
 
-abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
+abx.table.old <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                       meanDur.s, meanDur.r, sdDur, timestep=1){
 
     n.day <- nrow(patient.matrix)
@@ -498,7 +498,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+        abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
                                   prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
@@ -517,7 +517,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+        abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=long_dur.s, meanDur.r=long_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
                                   prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
