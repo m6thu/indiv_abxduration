@@ -494,6 +494,12 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     n.day <- 500
     iterations <- 100
     iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
+    # DEBUG
+    print(paste(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
+          prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+          pi_r1, bif, mu1, mu2, abx.r, abx.s,
+          repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
+          short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
     
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
