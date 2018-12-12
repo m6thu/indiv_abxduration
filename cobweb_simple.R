@@ -60,7 +60,11 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 }
 
 # Use the LHD function to generate a hypercube 
+old <- Sys.time() # get start time
 LHS.simple<- LHS(modelRun.simple, factors, N=2000, q, q.arg, nboot=20) #N is the size of the hypercube
+# print elapsed time
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
 results.simple<- get.results(LHS.simple)
 
 # Save run to disk
