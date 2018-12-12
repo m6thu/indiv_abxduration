@@ -112,7 +112,7 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 
 # Use the LHD function to generate a hypercube
 old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 50, q, q.arg, nboot=10)
+LHS.binary<- LHS(modelRun.binary, factors, 20, q, q.arg, nboot=10)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format

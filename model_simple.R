@@ -227,15 +227,18 @@ diff_prevalence <- function(n.bed, mean.max.los,
                             prob_StartBact_R, prop_S_nonR, 
                             bif, pi_ssr, repop.s1, mu_r, abx.clear,
                             p, short_dur, long_dur, sdDur){
-    timestep <- 1
-    n.day <- 500
-    iterations <- 100
-    iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)
+    
+    old <- Sys.time() # get start time
     # DEBUG
     print(paste(n.bed, mean.max.los, 
                 prob_StartBact_R, prop_S_nonR, 
                 bif, pi_ssr, repop.s1, mu_r, abx.clear,
                 p, short_dur, long_dur, sdDur))
+    
+    timestep <- 1
+    n.day <- 500
+    iterations <- 100
+    iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -277,6 +280,9 @@ diff_prevalence <- function(n.bed, mean.max.los,
     totalR_long <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR),])/iterations/n.bed)
     
     #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
+    # print elapsed time
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
     
     return(totalR_long - totalR_short)
 }

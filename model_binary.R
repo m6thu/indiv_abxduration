@@ -490,16 +490,20 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             pi_r1, bif, mu1, mu2, abx.r, abx.s,
                             repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
                             short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
+    
+    old <- Sys.time() # get start time
+    # DEBUG
+    print(paste(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
+                prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+                pi_r1, bif, mu1, mu2, abx.r, abx.s,
+                repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
+                short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
+    
     timestep <- 1
     n.day <- 500
     iterations <- 100
     iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
-    # DEBUG
-    print(paste(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
-          prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
-          pi_r1, bif, mu1, mu2, abx.r, abx.s,
-          repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
-          short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
+
     
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
@@ -539,6 +543,9 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
     #print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
+    # print elapsed time
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
     
     return(totalsR_long - totalsR_short)
 }
