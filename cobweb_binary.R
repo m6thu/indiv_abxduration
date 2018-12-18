@@ -71,8 +71,8 @@ q <- c(                   #distributions of parameters
 q.arg <- list(                  #set limits of parameters 
     list(min=5, max=50),        #number of beds in the ward
     list(min=3, max=10),        #mean of length of stay (normal distribution)
-    list(min=0.01, max=0.9),    #probability of being prescribed narrow spectrum antibiotic
-    list(min=0.01, max=0.9),    #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
+    list(min=0.01, max=0.5),    #probability of being prescribed narrow spectrum antibiotic
+    list(min=0.01, max=0.5),    #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     list(min=0.00001, max=0.5), #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
     list(min=0.01, max=0.99),   #probability of initial carriage of resistant organisms
     list(min=0.0001, max=0.05), #probability of being transmitted r to S (S—> Sr)
@@ -110,8 +110,12 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
     ))
 }
 
-# Use the LHD function to generate a hypercube 
+# Use the LHD function to generate a hypercube
+old <- Sys.time() # get start time
 LHS.binary<- LHS(modelRun.binary, factors, 2000, q, q.arg, nboot=20)
+# print elapsed time
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
 results.binary<-get.results(LHS.binary)
 
 # Save run to disk
