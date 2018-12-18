@@ -111,7 +111,7 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 }
 
 # Use the LHD function to generate a hypercube 
-LHS.binary<- LHS(modelRun.binary, factors, 50, q, q.arg, nboot=10)
+LHS.binary<- LHS(modelRun.binary, factors, 2000, q, q.arg, nboot=20)
 results.binary<-get.results(LHS.binary)
 
 # Save run to disk
@@ -170,7 +170,7 @@ parcoordlabel(outcome.df[,c(1:length(factors))], col = colors[outcome.df$top5])
 
 #5. Check agreement between runs to decide if our sample size for adequate 
 # Symmetric Blest Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.
-check.LHS.binary <- LHS(modelRun.binary, factors.binary, 250, q.binary, q.arg.binary)
+check.LHS.binary <- LHS(modelRun.binary, factors.binary, 100, q.binary, q.arg.binary)
 (mySbma <- sbma(LHS.binary, check.LHS.binary))
 # value of -1 indicates complete disagreement between the runs 
 # value of 1 indicated complete agreement  (>0.7 acceptable)
