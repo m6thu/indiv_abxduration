@@ -63,8 +63,6 @@ summary.los <- function(patient.matrix){
     return(los_duration)
 }
 
-
-# Rename to replace bottom (comment out) when its been tested to work
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                           meanDur.s, meanDur.r, sdDur, timestep=1){
 
