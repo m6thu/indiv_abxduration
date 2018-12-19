@@ -60,173 +60,92 @@ summary.los <- function(patient.matrix){
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                       meanDur.s, meanDur.r, sdDur, timestep=1){
     
-    n.day <- nrow(patient.matrix)
-    n.bed <- ncol(patient.matrix)
+    # Check assumption that possibilities are, no abx, has s abx, or has r abx on first day
+    stopifnot(p.s+p.r.day1 <= 1)
     
     #generate antibiotic use table
-    ## antibiotics to treat sensitive organisms 
-    matrix_DuraDay <- matrix(NA, nrow=n.day, ncol=n.bed)
-    #matrix_DuraDay is the matrix with number of days of antibiotics.s for every patient in patient.matrix
+    #number of days of s antibiotic is randomly drawn from a truncated normal distribution
+    abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=1))
+    #number of days of r antibiotic is randomly drawn from a truncated normal distribution
+    abx_days.r <- round(rtnorm(ncol(los.array), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
+    #number of days of r antibiotic for days after drawn from tunced norm dist
+    abx_r.after <- round(rtnorm(ncol(los.array), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
+    r_idx <- 1 # R indices start at 1
+    # Unit test - check distribution of abx distribution
+    # hist(abx_days.s, breaks=20)
+    # Unit test - compare cases that will enter padding if-else
+    # abx_days > los.array[2, ]
     
-    get1stdayofstay <- function(patientnumber,bednumber, bedoccmat){
-        match(patientnumber, bedoccmat[,bednumber])
-    }
-    #returns first day of stay for patientnumber in bednumber, or NA if patient not there
-    
-    #     getlos<-function(patientnumber,bednumber, bedoccmat){
-    #         sum(bedoccmat[,bednumber]==patientnumber)
-    #     }
-    #returns los of patient patientnumber in bed bedumber, in bed occupancy matrix, 
-    #0 if patient not found
-    
-    for (i in 1:max(patient.matrix)){
-        for (j in 1:n.bed){
-            matrix_DuraDay[get1stdayofstay(i,j,patient.matrix), j] <- abs(round(rnorm(1, mean=meanDur.s*timestep, sd=sdDur*timestep)))
-        }
-    }
-    #number of days of antibiotic.s is randomly drawn from a normal dist
-    
-    for (i in 2:n.day){
-        for (j in 1:n.bed){
-            if(is.na(matrix_DuraDay[i,j])){
-                matrix_DuraDay[i, j] <- matrix_DuraDay[i-1,j]
+    # abx.matrix should be same size as patient.matrix
+    abx.matrix <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
+    idx_end <- 1
+    # For each patient
+    for(i in 1:ncol(los.array)){
+        
+        # maxiumum number of days for a particular patient from los vector
+        max_days <- los.array[2, i]
+        # number of abx days for that particular patient from generated number
+        abx_s <- abx_days.s[i]
+        abx_r <- abx_days.r[i]
+        
+        # Initial treatment value derived from probability for p.r and p.s
+        rand <- runif(1, 0, 1)
+        if (rand < p.s){ # check if p.s starting
+            if(abx_s > max_days){
+                # if the number of generated abx is longer than the los of that person
+                # have them take abx everyday for their stay
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(1, max_days)
             }else{
-                matrix_DuraDay[i, j] <- matrix_DuraDay[i, j]
+                # else take abx for abx days and pad to fit max_days
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(1, abx_s), rep(0, max_days-abx_s))
             }
-        }
-    }
-    #Fill the matrix for antibiotics.s with same dimension as patient.matrix
-    
-    matrix_AtbTrt <- matrix(NA, nrow=n.day, ncol=n.bed) 
-    # #matrix_AtbTrt to count the cummulative length of stay for treated patients in the same dimension as patient.matrix
-    
-    for (i in 1:max(patient.matrix)){
-        for (j in 1:n.bed){
-            rand <- runif(1,0,1)
-            if (rand < p.s) {
-                matrix_AtbTrt[get1stdayofstay(i,j,patient.matrix), j] <-  1
-            } else {
-                matrix_AtbTrt[get1stdayofstay(i,j,patient.matrix), j] <-  0
-            }
-        }
-    }
-    # Initial treatment value derived from probability, p.s for antibiotic.s 
-    
-    
-    for (i in 2:n.day){
-        for (j in 1:n.bed){
-            if(is.na(matrix_AtbTrt[i,j]) & (matrix_AtbTrt[i-1,j] != 0)){
-                matrix_AtbTrt[i, j] <-  matrix_AtbTrt[i-1,j] + 1
-            }else if (!is.na(matrix_AtbTrt[i,j])){
-                matrix_AtbTrt[i, j] <-  matrix_AtbTrt[i, j]
+        }else if(rand < (p.s+p.r.day1)){ # case for p.r starting, rand >= p.s already checked in previous if case
+            if(abx_r > max_days){
+                # if the number of generated abx is longer than the los of that person
+                # have them take abx everyday for their stay
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(2, max_days)
             }else{
-                matrix_AtbTrt[i, j] <-  0
+                # else take abx for abx days and pad to fit max_days
+                abx.matrix[idx_end:(idx_end+max_days-1)] <- c(rep(2, abx_r), rep(0, max_days-abx_r))
             }
+        }else{
+            # no abx taken for that person
+            abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
         }
-    }
-    #Case1 (patients with missing value and having antibiotic the day before): add one more day of days in the hospital
-    #Case2 (patients with no missing value): the same value as it is
-    #Case3 (all other patients i.e. without antibiotic or value=0): 0
-    #Complete the matrix of cummulative length of stay for treated patients
-    
-    matrix_AtbTrt2 <- matrix(NA, nrow=n.day, ncol=n.bed)
-    for (i in 1:n.day){
-        for (j in 1:n.bed){
-            if(matrix_DuraDay[i,j]>=matrix_AtbTrt[i,j] & matrix_AtbTrt[i,j]!=0){
-                matrix_AtbTrt2[i, j] <-  1
-            }else{
-                matrix_AtbTrt2[i, j] <-  0
-            }
-        }
-    }
-    #Case1 (treated patients with atb duration longer than days staying in the hospital so far): 1
-    #Case2 (untreated patients or duration of atb shorter than current days in the hospital so far): 0
-    #Output matrix matrix_AtbTrt2 containing binary variable (treated vs not treated) for any bed on any particular day
-    
-    ## antibiotics to treat resistant organisms 
-    matrix_DuraDay2 <- matrix(NA, nrow=n.day, ncol=n.bed)
-    #matrix_DuraDay is the matrix with number of days of antibiotics.r for every patient in patient.matrix
-    
-    for (i in 1:max(patient.matrix)){
-        for (j in 1:n.bed){
-            matrix_DuraDay2[get1stdayofstay(i,j,patient.matrix), j]<-abs(round(rnorm(1, mean=meanDur.r*timestep, sd=sdDur*timestep)))
-        }
-    }
-    #number of days of antibiotic.r is randomly drawn from a normal dist
-    
-    for (i in 2:n.day){
-        for (j in 1:n.bed){
-            if(is.na(matrix_DuraDay2[i,j])){
-                matrix_DuraDay2[i, j] <- matrix_DuraDay2[i-1,j]
-            }else{
-                matrix_DuraDay2[i, j] <- matrix_DuraDay2[i, j]
-            }
-        }
-    }
-    #Fill the matrix for antibiotics.r with same dimension as patient.matrix
-    
-    matrix_AtbTrt.r <- matrix(NA, nrow=n.day, ncol=n.bed) 
-    # #matrix_AtbTrt.r to count the cummulative length of stay for treated patients in the same dimension as patient.matrix
-    
-    for (i in 1:max(patient.matrix)){
-        for (j in 1:n.bed){
-            rand <- runif(1,0,1)
-            if (rand < p.r.day1) {
-                matrix_AtbTrt.r[get1stdayofstay(i,j,patient.matrix), j] <-  2
-            } else {
-                matrix_AtbTrt.r[get1stdayofstay(i,j,patient.matrix), j] <-  0
-            }
-        }
-    }
-    # Initial treatment value derived from probability, p.r.day1 for antibiotic.r 
-    
-    howmanydaysofabt<- function(m, i, j){ 
-        n <- 0
-        id <- patient.matrix[i, j]
-        for (q in 1:(i-1)) {
-            if (m[(i-q), j] > 0) {
-                if (patient.matrix[(i-q), j] == id){
-                    n <- n+1
-                }else{
+        
+        #Every day has a chance of starting abx.r by a fixed probability
+        roll.r <- runif(max_days, 0, 1)
+        start.r <- roll.r < p.r.dayafter
+        #print(sum(start.r))
+        where.r <- which(start.r == 1)
+        #print(paste('where.r', where.r))
+        # Create an array of p.r starting based on this
+        # Merge starting vector and random p.r start vector (giving priority to p.r random start)
+        # for each location that rolled chance that abx.r starts
+        if(sum(start.r)){
+            for(j in 1:sum(start.r)){
+                #print(j)
+                # replace that location for the length of abx_r.after drawn from norm distribution
+                start_idx <- idx_end+where.r[j]-1
+                #print(start_idx)
+                end_idx <- start_idx+abx_r.after[r_idx]-1
+                #print(end_idx)
+                if(end_idx > (idx_end+max_days-1)){ # abx duration exceeds max_days for that person, replace the rest, escape loop
+                    abx.matrix[start_idx:(idx_end+max_days-1)] <- rep(2, max_days-where.r[j]+1)
                     break
+                }else{ # abx duration does not exceed max_days for that person
+                    abx.matrix[start_idx:end_idx] <- rep(2, abx_r.after[r_idx])
                 }
+                # move to next abx_r.after drawn
+                r_idx <- r_idx+1
             }
         }
-        return (n)
+        
+        # move starting position to end of previous patient
+        idx_end <- idx_end+max_days
     }
     
-    for (i in 2:nrow(patient.matrix)){
-        for (j in 1:n.bed){
-            #print(paste("i", i, "j", j))
-            #print(matrix_AtbTrt.r[i, j])
-            if(is.na(matrix_AtbTrt.r[i, j])){
-                rand <- runif(1,0,1)
-                # case of no antibiotics for resistant organisms in the day before
-                if (matrix_AtbTrt.r[i-1, j] == 0) {
-                    if (rand < p.r.dayafter) {
-                        matrix_AtbTrt.r [i,j] <- 2
-                    } else {
-                        matrix_AtbTrt.r [i,j] <- 0
-                    }
-                    # case of there is antibiotics for resistant organisms in the day before
-                } else if (matrix_AtbTrt.r[i-1, j] == 2) { 
-                    noabtday <- matrix_DuraDay2[i-1, j]
-                    if (howmanydaysofabt(matrix_AtbTrt.r, i, j) < noabtday) {
-                        matrix_AtbTrt.r [i,j] <- 2
-                    } else {
-                        matrix_AtbTrt.r [i,j] <- 0
-                    }
-                } else {
-                    matrix_AtbTrt.r [i,j] <- 99 # Error code
-                }
-            }
-        }
-    }
-    
-    matrix_AtbTrt3<- matrix_AtbTrt2+matrix_AtbTrt.r
-    #print('gen abx complete')
-    
-    return(matrix_AtbTrt3)
+    return(abx.matrix)
 }
 
 # Defaults from Rene's data ini_16S_log

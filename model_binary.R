@@ -63,8 +63,6 @@ summary.los <- function(patient.matrix){
     return(los_duration)
 }
 
-
-# Rename to replace bottom (comment out) when its been tested to work
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                           meanDur.s, meanDur.r, sdDur, timestep=1){
 
@@ -370,7 +368,7 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR,
 }
 
 ####################4. Update values for every day  
-nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
+nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix, 
                     pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
                     repop.s1, repop.s2,depop.r, abx.r, abx.s, timestep=1){
     
@@ -481,6 +479,167 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             } # if 0
         }  # for j
     } # for i
+    
+    return(colo.matrix)
+}
+
+nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
+                        pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
+                        repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep=1){
+    
+    # adjust probabilities based on timestep
+    pi_r1 <- pi_r1/timestep
+    mu1 <- mu1/timestep
+    mu2 <- mu2/timestep
+    repop.r1 <- repop.r1/timestep
+    repop.r2 <- repop.r2/timestep
+    repop.s1 <- repop.s1/timestep
+    repop.s2 <- repop.s2/timestep
+    depop.r <- depop.r/timestep
+    abx.r <- abx.r/timestep
+    abx.s <- abx.s/timestep
+    
+    pi_r2 <- pi_r1 * bif                 # pi_r2= probability of R transmitting to s to become sr 
+    
+    # For each day (first day should be filled)
+    for(i in 2:nrow(patient.matrix)){
+        # Get the previous row subset of the entire matrix which represents previous day or timestep
+        prev_step <- colo.matrix[i-1, ]
+        # Get the indices which are already filled by a patient entering the ward for exclusion
+        already_filled <- which(!is.na(colo.matrix[i, ]))
+        # only R can be transmitted, get number of r for transmission probability
+        #print(colo.matrix[i-1,])
+        r_num <- sum(colo.matrix[i-1,] == "sR") 
+        
+        # Update S
+        # Get the column indices which contain S in the previous day
+        S <- which(prev_step == "S")
+        # Remove column indices that already have a starting bacterial state filled in
+        S <- S[!(S %in% already_filled)]
+        # count if there are any S on the previous day
+        s_num <- length(S)
+        # if there is any S (number of S > 0) in the previous day
+        if(s_num){
+            # roll for transmission of R
+            prob_r <- 1-((1-pi_r1)^r_num)
+            # Roll a random number for each R on the previous day for clearance
+            roll_clear <- runif(s_num, 0, 1)
+            # All column indices which roll < probability of clearance AND there is antibiotic in the previous day
+            clear_idx.s <- S[abx.matrix[i-1, S] & (roll_clear < abx.s)]
+            # All column indices which roll < probability of clearance AND there is antibiotic in the previous day
+            clear_idx.r <- S[abx.matrix[i-1, S] & (roll_clear < abx.r)]
+            # Merge clear_idx from s abx and r abx
+            clear_idx <- unique(c(clear_idx.s, clear_idx.r))
+            # Clear those that pass roll and use abx to ss
+            colo.matrix[i, clear_idx] <- "ss"
+            # Removed those that have been cleared by abx from list of S indices
+            S <- S[!(S %in% clear_idx)]
+            # Roll a random number for each remaining S for chance of transmission
+            roll_trans <- runif(length(S), 0, 1)
+            r_idx <- S[roll_trans < prob_r]
+            same_idx <- S[roll_trans >= prob_r]
+            colo.matrix[i, r_idx] <- "Sr"
+            colo.matrix[i, same_idx] <- "S"
+        }
+        
+        # Update ss
+        ss <- which(prev_step == "ss")
+        ss <- ss[!(ss %in% already_filled)]
+        if(length(ss)){
+            # roll for transmission of R
+            prob_r <- 1-((1-pi_r2)^r_num)
+            # roll for repop of S
+            prob_s <- repop.s1
+            
+            #print(paste(pi_r2, r_num, repop.s1, prob_r, prob_s))
+            # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
+            if(!(prob_r+prob_s < 1)){
+                stop(paste("Error stopifnot: prob_r + prob_s < 1. prob_r:", prob_r, "prob_s:", prob_s))
+            }
+            
+            roll_r <- runif(length(ss), 0, 1)
+            r_idx <- ss[roll_r < prob_r]
+            roll_ss <- runif(length(ss), 0, 1)
+            s_idx <- ss[(roll_ss >= prob_r) & (roll_ss < (prob_s+prob_r)) & !abx.matrix[i, ss]]
+            same_idx <- ss[!(ss %in% c(r_idx, s_idx))]
+            
+            colo.matrix[i, s_idx] <- "S"
+            colo.matrix[i, r_idx] <- "sr"
+            colo.matrix[i, same_idx] <- "ss"
+        }
+        
+        # Update Sr
+        Sr <- which(prev_step == "Sr")
+        Sr <- Sr[!(Sr %in% already_filled)]
+        if(length(Sr)){
+            
+            # Roll for abx clearance
+            roll_clear <- runif(length(Sr), 0, 1)
+            # All column indices which roll < probability of clearance AND there is antibiotic in the previous day
+            clear_idx.s <- Sr[abx.matrix[i-1, Sr] & (roll_clear < abx.s)]
+            # All column indices which roll < probability of clearance AND there is antibiotic in the previous day
+            clear_idx.r <- Sr[abx.matrix[i-1, Sr] & (roll_clear < abx.r)]
+            # Merge clear_idx from s abx and r abx
+            clear_idx <- unique(c(clear_idx.s, clear_idx.r))
+            # Clear those that pass roll and use abx to ss
+            colo.matrix[i, clear_idx] <- "sr"
+            # Removed those that have been cleared by abx from list of S indices
+            Sr <- Sr[!(Sr %in% clear_idx)]
+            
+            # Roll a random number for each remaining Sr for chance decolonization
+            roll_decolonise <- runif(length(Sr), 0, 1)
+            r_idx <- Sr[roll_decolonise < mu1]
+            same_idx <- Sr[roll_decolonise >= mu1]
+            colo.matrix[i, r_idx] <- "S"
+            colo.matrix[i, same_idx] <- "Sr"
+        }
+        
+        # Update sr
+        sr <- which(prev_step == "sr")
+        sr <- sr[!(sr %in% already_filled)]
+        if(length(sr)){
+            
+            # Roll for repop
+            roll_repop <- runif(length(sr), 0, 1)
+            # If roll passes repop.r2 and has antibiotics, R grows
+            sR_idx <- sr[abx.matrix[i-1, sr] & (roll_repop < repop.r2)]
+            # Remove indices selected for repop.s2 event
+            sr <- sr[!(sr %in% sR_idx)]
+            # Instead, if roll does not pass repop.r2 event and passes repop.s2 with 0 antibiotics, S grows
+            Sr_idx <- sr[!abx.matrix[i-1, sr] & (roll_repop < repop.s2)]
+            # Remove indices already selected for repopulation event
+            sr <- sr[!(sr %in% sR_idx)]
+            
+            # Roll a random number for each remaining sr for chance decolonization
+            roll_decolonise <- runif(length(sr), 0, 1)
+            ss_idx <- sr[roll_decolonise < mu2]
+            same_idx <- sr[roll_decolonise >= mu2]
+            colo.matrix[i, sR_idx] <- "sR"
+            colo.matrix[i, Sr_idx] <- "Sr"
+            colo.matrix[i, ss_idx] <- "ss"
+            colo.matrix[i, same_idx] <- "sr"
+        }
+        
+        # Update sR
+        sR <- which(prev_step == "sR")
+        sR <- sR[!(sR %in% already_filled)]
+        if(length(sR)){
+            # Roll for abx clearance
+            roll_clear <- runif(length(sR), 0, 1)
+            # if r abx used and pass roll for clearance
+            clear_idx <- sR[(abx.matrix[i-1, sR] > 1)  & (roll_clear < abx.r)]
+            # Remove indices selected for clearance
+            sR <- sR[!(sR %in% clear_idx)]
+            
+            # Roll a random number for each remaining sR for chance to decolonize
+            roll_decolonise <- runif(length(sR), 0, 1)
+            sr_idx <- sR[roll_decolonise < depop.r]
+            same_idx <- sR[roll_decolonise >= depop.r]
+            colo.matrix[i, clear_idx] <- "sr"
+            colo.matrix[i, sr_idx] <- "sr"
+            colo.matrix[i, same_idx] <- "sR"
+        }
+    }
     
     return(colo.matrix)
 }
