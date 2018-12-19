@@ -20,7 +20,11 @@ factors <- c(             #list parameters in an array
     "p.r.day1",           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     "p.r.dayafter",       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
     "prob_StartBact_R",   #probability of initial carriage of resistant organisms
+    "prop_S_nonR",        #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+    "prop_Sr_inR",        #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+    "prop_sr_inR",        #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
     "pi_r1",              #probability of being transmitted r to S (S—> Sr)
+    "bif",                #bacterial interference factor (pi_r2 = pi_r1 * bif )
     "mu1",                #probability of being decolonised to S (Sr—> S) 
     "mu2",                #probability of being decolonised to S (sr—> s) 
     "abx.r",              #probability of clearing R to become r
@@ -30,10 +34,6 @@ factors <- c(             #list parameters in an array
     "repop.s1",           #probability of regrowth of S  (s—>S)
     "repop.s2",           #probability of regrowth of S  (sr—>Sr)
     "depop.r",            #probability of sR-->sr without antibiotics
-    "bif",                #bacterial interference factor (pi_r2 = pi_r1 * bif )
-    "prop_S_nonR",        #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-    "prop_Sr_inR",        #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-    "prop_sr_inR",        #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
     "short_dur.s",        #mean short duration of narrow spectrum antibiotics (normal distribution) 
     "long_dur.s",         #mean long duration of narrow spectrum antibiotics (normal distribution) 
     "short_dur.r",        #mean short duration of broad spectrum antibiotics (normal distribution) 
@@ -47,7 +47,11 @@ q <- c(                   #distributions of parameters
     "qunif",              #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     "qunif",              #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
     "qunif",              #probability of initial carriage of resistant organisms
+    "qunif",              #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+    "qunif",              #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+    "qunif",              #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
     "qunif",              #probability of being transmitted r to S (S—> Sr)
+    "qunif",              #bacterial interference factor (pi_r2 = pi_r1 * bif )
     "qunif",              #probability of being decolonised to S (Sr—> S) 
     "qunif",              #probability of being decolonised to S (sr—> s) 
     "qunif",              #probability of clearing R to become r
@@ -57,10 +61,6 @@ q <- c(                   #distributions of parameters
     "qunif",              #probability of regrowth of S  (s—>S)
     "qunif",              #probability of regrowth of S  (sr—>Sr)
     "qunif",              #probability of probability of sR-->sr without antibiotics
-    "qunif",              #bacterial interference factor (pi_r2 = pi_r1 * bif )
-    "qunif",              #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-    "qunif",              #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-    "qunif",              #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
     "qunif",              #mean short duration of narrow spectrum antibiotics (normal distribution) 
     "qunif",              #mean long duration of narrow spectrum antibiotics (normal distribution) 
     "qunif",              #mean short duration of broad spectrum antibiotics (normal distribution) 
@@ -69,26 +69,26 @@ q <- c(                   #distributions of parameters
 ) 
 
 q.arg <- list(                  #set limits of parameters 
-    list(min=5, max=50),        #number of beds in the ward
-    list(min=3, max=10),        #mean of length of stay (normal distribution)
+    list(min=5, max=50),        #n.bed; number of beds in the ward
+    list(min=3, max=10),        #mean.max.los; mean of length of stay (normal distribution)
     list(min=0.01, max=0.5),    #probability of being prescribed narrow spectrum antibiotic
     list(min=0.01, max=0.5),    #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     list(min=0.00001, max=0.5), #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
     list(min=0.01, max=0.99),   #probability of initial carriage of resistant organisms
-    list(min=0.0001, max=0.05), #probability of being transmitted r to S (S—> Sr)
+    list(min=0.01, max=0.99),   #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+    list(min=0.01, max=0.99),   #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+    list(min=0.01, max=0.99),   #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
+    list(min=0.0001, max=0.001), #pi_r1; probability of being transmitted r to S (S—> Sr)
+    list(min=0, max=0.2),       #bif; bacterial interference factor (pi_r2 = pi_r1 * bif )
     list(min=0, max=0.03),      #probability of being decolonised to S (Sr—> S) 
     list(min=0, max=0.03),      #probability of being decolonised to S (sr—> s) 
     list(min=0.01, max=0.9),    #probability of clearing R to become r
     list(min=0.01, max=0.9),    #probability of clearing S to become s
     list(min=0.01, max=0.9),    #probability of transmission of r to S (s—> Sr) 
     list(min=0.0001, max=20),   #probability of sR—> sr
-    list(min=0, max=0.03),      #probability of regrowth of S (s—>S)
+    list(min=0, max=0.03),      #repop.s1; probability of regrowth of S (s—>S)
     list(min=0, max=0.03),      #probability of regrowth of S (sr—>Sr)
     list(min=0, max=0.03),      #probability of sR-->sr without antibiotics
-    list(min=0, max=1),         #bacterial interference factor (pi_r2 = pi_r1 * bif )
-    list(min=0.01, max=0.99),   #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-    list(min=0.01, max=0.99),   #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-    list(min=0.01, max=0.99),   #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
     list(min=3, max=7),         #mean short duration of narrow spectrum antibiotics (normal distribution) 
     list(min=3, max=7),         #mean long duration of narrow spectrum antibiotics (normal distribution) 
     list(min=10, max=21),       #mean short duration of broad spectrum antibiotics (normal distribution) 
@@ -98,21 +98,18 @@ q.arg <- list(                  #set limits of parameters
 
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
-                  data.df[,1], data.df[,2], data.df[,3], 
-                  data.df[,4], data.df[,5], data.df[,6], 
-                  data.df[,7], data.df[,8], data.df[,9], 
-                  data.df[,10], data.df[,11], data.df[,12], 
-                  data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16], data.df[,17], data.df[,18],
-                  data.df[,19],data.df[,20], data.df[,21], data.df[,22], 
-                  data.df[,23], data.df[,24], data.df[,25]
+                  data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
+                  data.df[,6], data.df[,7], data.df[,8], data.df[,9], 
+                  data.df[,10], data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
+                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],data.df[,20], 
+                  data.df[,21], data.df[,22], data.df[,23], data.df[,24], data.df[,25]
                   
     ))
 }
 
 # Use the LHD function to generate a hypercube
 old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 20, q, q.arg, nboot=10)
+LHS.binary<- LHS(modelRun.binary, factors, 40, q, q.arg, nboot=10)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
