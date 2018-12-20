@@ -75,7 +75,7 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
     #number of days of r antibiotic is randomly drawn from a truncated normal distribution
     abx_days.r <- round(rtnorm(ncol(los.array), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
     #number of days of r antibiotic for days after drawn from tunced norm dist
-    abx_r.after <- round(rtnorm(ncol(los.array), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
+    abx_r.after <- round(rtnorm(length(patient.matrix), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
     r_idx <- 1 # R indices start at 1
     # Unit test - check distribution of abx distribution
     # hist(abx_days.s, breaks=20)
@@ -133,9 +133,9 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                 #print(j)
                 # replace that location for the length of abx_r.after drawn from norm distribution
                 start_idx <- idx_end+where.r[j]-1
-                #print(start_idx)
+                print(paste(start_idx, abx_r.after[r_idx], length(abx_r.after), r_idx))
                 end_idx <- start_idx+abx_r.after[r_idx]-1
-                #print(end_idx)
+                #print(paste(end_idx, idx_end, max_days))
                 if(end_idx > (idx_end+max_days-1)){ # abx duration exceeds max_days for that person, replace the rest, escape loop
                     abx.matrix[start_idx:(idx_end+max_days-1)] <- rep(2, max_days-where.r[j]+1)
                     break
