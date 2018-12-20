@@ -133,7 +133,7 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                 #print(j)
                 # replace that location for the length of abx_r.after drawn from norm distribution
                 start_idx <- idx_end+where.r[j]-1
-                print(paste(start_idx, abx_r.after[r_idx], length(abx_r.after), r_idx))
+                #print(paste(start_idx, abx_r.after[r_idx], length(abx_r.after), r_idx))
                 end_idx <- start_idx+abx_r.after[r_idx]-1
                 #print(paste(end_idx, idx_end, max_days))
                 if(end_idx > (idx_end+max_days-1)){ # abx duration exceeds max_days for that person, replace the rest, escape loop
