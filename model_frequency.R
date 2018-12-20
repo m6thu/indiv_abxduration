@@ -275,7 +275,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     timestep <- 1
     n.day <- 500
-    iterations <- 10
+    iterations <- 100
     
     iter_totalR.no <- matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres <- matrix(NA, nrow = n.day, ncol = iterations)
@@ -284,7 +284,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+        abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd)
         
@@ -307,8 +307,9 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     for(iter in 1:iterations){
         
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+        abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd)
         
