@@ -454,8 +454,9 @@ stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])
 diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.01,
                 prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1,
                 pi_r1=0.1, bif=2, mu1=0.10, mu2=0.10, abx.r=0.10, abx.s=0.10,
-                repop.r1=0.10, repop.r2=0.10, repop.s1=0.10, repop.s2=0.10, repop.s3=0.10,
+                repop.r1=0.10, repop.r2=0.10, repop.s1=0.10, repop.s2=0.10, depop.r=0.10,
                 short_dur.s=2, long_dur.s=10, short_dur.r=2, long_dur.r=10, sdDur=5)
+
 
 # Case: At no transmission and no abx
 # Expected output: base level of starting Rs generated
@@ -474,3 +475,48 @@ diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.
 
 # Case: High transmission
 # Expected output: ?
+
+############################################# Debug rigs ################################################
+# Uncomment when needed (so they don't interfere with regression tests)
+# ---------------------------------------------------------------------------------------
+# Test name: Rig for closing issue #24 on git
+# Test summary: Bug fixed
+# Function tested: abx.table
+# Pre-conditions:
+# rm(list=ls()) # Clean working environment
+# source("model_binary.R") # Load model for testing
+# diff_prevalence(6.6875, 8.1625, 0.016125, 0.469375, 0.431251375,
+#                 0.14475, 0.04812875, 0.012375, 0.019875,
+#                 0.332625, 0.332625, 0.555125, 8.75005625, 0.022125, 0.004875,
+#                 0.020625, 0.6625, 0.83075, 0.12025, 0.46325,
+#                 4.15, 5.95, 10.9625, 20.8625, 1.15)
+# 
+# # n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
+# # prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+# # pi_r1, bif, mu1, mu2, abx.r, abx.s,
+# # repop.r1, repop.r2, repop.s1, repop.s2, depop.r,
+# # short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur
+# n.bed=6.6875; mean.max.los=8.1625; p.s=0.016125; p.r.day1=0.469375; p.r.dayafter=0.431251375;
+# prob_StartBact_R=0.14475; prop_S_nonR=0.04812875; prop_Sr_inR=0.012375; prop_sr_inR=0.019875; 
+# pi_r1=0.332625; bif=0.332625; mu1=0.555125; mu2=8.75005625; abx.r=0.022125; abx.s=0.004875;
+# repop.r1=0.020625; repop.r2=0.6625; repop.s1=0.83075; repop.s2=0.12025; depop.r=0.46325;
+# short_dur.s=4.15; long_dur.s=5.95; short_dur.r=10.9625; long_dur.r=20.8625; sdDur=1.15
+# timestep <- 1
+# n.day <- 500
+# iterations <- 100
+# patient.matrix <- patient.table(n.bed=n.bed, n.day, mean.max.los=mean.max.los, timestep)
+# los.array <- summary.los(patient.matrix)
+# abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+#                         meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
+# colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+#                           prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
+# 
+# colo.matrix_filled_iter <- nextDay(patient.matrix, abx.matrix, colo.matrix, 
+#                                    pi_r1, bif, mu1, mu2, repop.r1, repop.r2, 
+#                                    repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep)
+
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions:
