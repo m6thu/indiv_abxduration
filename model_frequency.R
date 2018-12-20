@@ -1,3 +1,5 @@
+require(msm)
+
 # generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
 patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
