@@ -265,6 +265,14 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             abxr_killr, abxr_kills, abxs_kills,
                             short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
     
+    old <- Sys.time() # get start time
+    # DEBUG
+    print(paste(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
+                K, t_mean, t_sd, r_mean, r_sd,
+                pi_r, r_thres, r_growth, r_trans, 
+                abxr_killr, abxr_kills, abxs_kills,
+                short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
+    
     timestep <- 1
     n.day <- 500
     iterations <- 10
@@ -319,6 +327,10 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     }
     totalR_no_long <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
     totalR_thres_long <- mean(rowSums(iter_totalR.thres)/iterations/n.bed)
+    
+    # print elapsed time
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
     
     return(list((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short)))
 }
