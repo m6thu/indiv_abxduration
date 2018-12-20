@@ -11,6 +11,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 cl <- makeCluster(detectCores())
 
+model <- 'simple'
 #source(paste0("model_simple.R"))
 # source functions on all cores
 clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_simple.R')})
@@ -58,14 +59,14 @@ if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.simple <- LHS(modelRun.simple, factors, N=1000, q, q.arg, nboot=20) #N is the size of the hypercube
+LHS.simple <- LHS(modelRun.simple, factors, N=3000, q, q.arg, nboot=20) #N is the size of the hypercube
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 
 old <- Sys.time() # get start time
-check.LHS.simple <- LHS(modelRun.simple, factors, 500, q, q.arg, nboot=10, cl=cl)
+check.LHS.simple <- LHS(modelRun.simple, factors, 2000, q, q.arg, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 

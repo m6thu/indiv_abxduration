@@ -77,7 +77,7 @@ stopifnot(dim(patient_mat.m) == c(270, 100))
 # ---------------------------------------------------------------------------------------
 # Test name: 
 # Test summary: 
-# Function tested: 
+# Function tested: summary.los
 # Pre-conditions: 
 rm(list=ls()) # Clean working environment
 source("model_binary.R") # Load model for testing
@@ -95,7 +95,7 @@ stopifnot(max(patient_mat.s) == max(los_duration)) # highest number from array s
 # ---------------------------------------------------------------------------------------
 # Test name: 
 # Test summary: 
-# Function tested: 
+# Function tested: summary.los
 # Pre-conditions: 
 rm(list=ls()) # Clean working environment
 source("model_binary.R") # Load model for testing
@@ -111,7 +111,6 @@ hist(table(patient_mat.m)) # chould be the same as input, los.array should = tab
 stopifnot(max(patient_mat.m) == max(los_duration.m)) # highest number from array should be exactly the same as highest id in patient.matrix
 
 #################################### Test abx matrix generation ####################################
-
 # ---------------------------------------------------------------------------------------
 # Test name: simple run
 # Test summary: equivalent to simple_model test

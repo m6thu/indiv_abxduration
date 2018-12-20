@@ -10,6 +10,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 cl <- makeCluster(detectCores())
 
+model <- 'frequency'
 #source(paste0("model_frequency.R"))
 # source functions on all cores
 clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_frequency.R')})

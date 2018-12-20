@@ -10,6 +10,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 cl <- makeCluster(detectCores())
 
+model <- 'binary'
 #source(paste0("model_binary.R"))
 
 clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_binary.R')})
@@ -70,14 +71,14 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 
 # Use the LHD function to generate a hypercube
 old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 1000, q, q.arg, nboot=10, cl=cl)
+LHS.binary<- LHS(modelRun.binary, factors, 3000, q, q.arg, nboot=10, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 
 old <- Sys.time() # get start time
-check.LHS.binary <- LHS(modelRun.binary, factors, 500, q, q.arg, nboot=10, cl=cl)
+check.LHS.binary <- LHS(modelRun.binary, factors, 2000, q, q.arg, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
