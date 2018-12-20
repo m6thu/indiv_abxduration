@@ -1,3 +1,5 @@
+require(msm)
+
 # generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
 patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
@@ -265,9 +267,17 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                             abxr_killr, abxr_kills, abxs_kills,
                             short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur){
     
+    old <- Sys.time() # get start time
+    # DEBUG
+    print(paste(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
+                K, t_mean, t_sd, r_mean, r_sd,
+                pi_r, r_thres, r_growth, r_trans, 
+                abxr_killr, abxr_kills, abxs_kills,
+                short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
+    
     timestep <- 1
     n.day <- 500
-    iterations <- 10
+    iterations <- 100
     
     iter_totalR.no <- matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres <- matrix(NA, nrow = n.day, ncol = iterations)
@@ -276,7 +286,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+        abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd)
         
@@ -299,8 +309,9 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     for(iter in 1:iterations){
         
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
-        abx.matrix <- abx.table(patient.matrix, los_duration.s, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
+        abx.matrix <- abx.table(patient.matrix, los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd)
         
@@ -319,6 +330,10 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     }
     totalR_no_long <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
     totalR_thres_long <- mean(rowSums(iter_totalR.thres)/iterations/n.bed)
+    
+    # print elapsed time
+    new <- Sys.time() - old # calculate difference
+    print(new) # print in nice format
     
     return(list((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short)))
 }

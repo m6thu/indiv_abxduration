@@ -52,10 +52,10 @@ pi_r <- 0.06                             # p.t = daily probability of transmitti
 
 ###### All parameters below are on log scale
 K <- 100                            # gut holding capacity
-t_mean <- 4.0826
-t_sd <- 1.1218
-r_mean <- 1.7031
-r_sd <- 1.8921
+t_mean <- 4.0826                    # mean of total starting amount of gut bacteria on log scale
+t_sd <- 1.1218                      # sd of total starting amount of gut bacteria on log scale
+r_mean <- 1.7031                    # mean of starting amount of resistant gut bacteria on log scale
+r_sd <- 1.8921                       # sd of starting amount of resistant gut bacteria on log scale
 
 r_growth <- 2                           # r_growth = growth constant for logistic growth
 r_thres <- 10                          # r_thres = R threshold level for tranmissibility
