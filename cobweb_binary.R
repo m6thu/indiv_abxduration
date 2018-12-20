@@ -5,13 +5,15 @@
 # SAMPLE PARAMETER SPACE 
 # load libraries 
 require(pse) #load pse package for Latin Hypercube
-require(sensitivity) #load sensitivity package for sensitivity analysis 
+require(sensitivity) #load sensitivity package for sensitivity analysis
+require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-# model can be "simple", "binary", or "frequency"
-model <- "binary"
+cl <- makeCluster(detectCores())
 
-source(paste0("model_", model,".R"))
+#source(paste0("model_binary.R"))
 
+clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_binary.R')})
+# source functions on all cores
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
                   data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
@@ -68,15 +70,24 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 
 # Use the LHD function to generate a hypercube
 old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 40, q, q.arg, nboot=10)
+LHS.binary<- LHS(modelRun.binary, factors, 1000, q, q.arg, nboot=10, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-results.binary<-get.results(LHS.binary)
 
+
+old <- Sys.time() # get start time
+check.LHS.binary <- LHS(modelRun.binary, factors, 500, q, q.arg, nboot=10, cl=cl)
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
+
+
+results.binary <- get.results(LHS.binary)
 # Save run to disk
-image_name <- paste0("LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("./runs/LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save.image(paste0(image_name, ".Rdata"))
+
+stopCluster(cl)
 
 ##################################### Display results ########################################
 #Plot findings: 
@@ -139,19 +150,19 @@ check.LHS.binary <- LHS(modelRun.binary, factors.binary, 100, q.binary, q.arg.bi
 
 #################################################################################
 ###DUMMY CODE FOR PARAMETER EXPLORATION###
-fun.trial<- function(x1, x2, x3) {x1+x2^2+ x3^3} #dummy model 
-factors.trial<-c('x1', 'x2', 'x3') #dummy variables 
-q.trial<- c("qunif","qunif","qunif") #distribution of the variables 
-q.arg.trial <- list(        #set limits to the variables   
-    list(min=0.1, max=0.9),     
-    list(min=0.1, max=0.9),       
-    list(min=0.1, max=0.9)) 
-modelRun.trial <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
-    return(mapply(fun.trial, data.df[,1], data.df[,2], data.df[,3]))
-}
-
-LHS.trial<- LHS(modelRun.trial, factors.trial, 50, q.trial, q.arg.trial, nboot=20) #50 parameter combinations to be generated, nboot= number of correlation coefficients 
-results.trial<-get.results(LHS.trial)
+# fun.trial<- function(x1, x2, x3) {x1+x2^2+ x3^3} #dummy model 
+# factors.trial<-c('x1', 'x2', 'x3') #dummy variables 
+# q.trial<- c("qunif","qunif","qunif") #distribution of the variables 
+# q.arg.trial <- list(        #set limits to the variables   
+#     list(min=0.1, max=0.9),     
+#     list(min=0.1, max=0.9),       
+#     list(min=0.1, max=0.9)) 
+# modelRun.trial <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
+#     return(mapply(fun.trial, data.df[,1], data.df[,2], data.df[,3]))
+# }
+# 
+# LHS.trial<- LHS(modelRun.trial, factors.trial, 50, q.trial, q.arg.trial, nboot=20) #50 parameter combinations to be generated, nboot= number of correlation coefficients 
+# results.trial<-get.results(LHS.trial)
 
 #Plot findings: 
 #1. empirical cumulative distribution function used to illustrate the distribution of the model results
@@ -184,8 +195,10 @@ parcoord(outcome.df[,c(1:3)] , col= colors[outcome.df$top5],var.label=T)
 
 #5. Check agreement between runs to decide if our sample size for adequate 
 # Symmetric Blest Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.
-check.LHS.trial <- LHS(modelRun.trial, factors.trial, 250, q.trial, q.arg.trial)
+#check.LHS.trial <- LHS(modelRun.trial, factors.trial, 250, q.trial, q.arg.trial)
 (mySbma <- sbma(LHS.trial, check.LHS.trial))
 # value of -1 indicates complete disagreement between the runs 
 # value of 1 indicated complete agreement  (>0.7 acceptable)
 #caveat: if none of the model parameters is monotonically correlated with the output, the agreement between runs may stay as low as 0.2 even for very large hypercubes.
+
+

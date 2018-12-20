@@ -6,11 +6,13 @@
 # load libraries 
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
+require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-# model can be "simple", "binary", or "frequency"
-model <- "frequency"
+cl <- makeCluster(detectCores())
 
-source(paste0("model_", model,".R"))
+#source(paste0("model_frequency.R"))
+# source functions on all cores
+clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_frequency.R')})
 
 modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
@@ -68,16 +70,24 @@ if(!(sum(factors == parameters_frequency) ==  length(parameters_frequency))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 40, q, q.arg, nboot=20)
+LHS.freq<- LHS(modelRun.freq, factors, 1000, q, q.arg, nboot=20)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-results.freq <- get.results(LHS.freq)
 
+
+old <- Sys.time() # get start time
+check.LHS.freq <- LHS(modelRun.freq, factors, 500, q, q.arg, nboot=10, cl=cl)
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
+
+
+results.freq <- get.results(LHS.freq)
 # Save run to disk
-image_name <- paste0("LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("./runs/LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save.image(paste0(image_name, ".Rdata"))
 
+stopCluster(cl)
 
 ##################################### Display results ########################################
 #Plot findings: 
@@ -164,7 +174,7 @@ parcoord(outcome.df[,c(1:3)] , col= colors[outcome.df$top5],var.label=T)
 
 #5. Check agreement between runs to decide if our sample size for adequate 
 # Symmetric Blest Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.
-check.LHS.trial <- LHS(modelRun.trial, factors.trial, 250, q.trial, q.arg.trial)
+#check.LHS.trial <- LHS(modelRun.trial, factors.trial, 250, q.trial, q.arg.trial)
 (mySbma <- sbma(LHS.trial, check.LHS.trial))
 # value of -1 indicates complete disagreement between the runs 
 # value of 1 indicated complete agreement  (>0.7 acceptable)
