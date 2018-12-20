@@ -1,6 +1,6 @@
 #######Modelling Day Project######
 #######Parameter exploration######
-##################################
+################################### Dependencies and functions ################################################
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
@@ -12,10 +12,20 @@ model <- "binary"
 
 source(paste0("model_", model,".R"))
 
+modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
+    return(mapply(diff_prevalence, 
+                  data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
+                  data.df[,6], data.df[,7], data.df[,8], data.df[,9], 
+                  data.df[,10], data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
+                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],data.df[,20], 
+                  data.df[,21], data.df[,22], data.df[,23], data.df[,24], data.df[,25]
+                  
+    ))
+}
+
+################################## Define parameters and run LHS ####################################
 #list parameters, the probability density functions from which the parameter values will be calculated, and what are the arguments to these functions
-#list parameters together with name, so they are linked 
-#if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
-# MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
+#list parameters together with name, so they are "linked" or not easily confused
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"), #n.bed; number of beds in the ward
     c("qunif", list(min=3, max=10), "mean.max.los"), #mean.max.los; mean of length of stay (normal distribution)
@@ -49,15 +59,11 @@ q <- unlist(lapply(parameters, function(l) l[[1]]))
 q.arg <- lapply(parameters, function(l) l[2:3])
 factors <- unlist(lapply(parameters, function(l) l[[4]]))
 
-modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
-    return(mapply(diff_prevalence, 
-                  data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
-                  data.df[,6], data.df[,7], data.df[,8], data.df[,9], 
-                  data.df[,10], data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],data.df[,20], 
-                  data.df[,21], data.df[,22], data.df[,23], data.df[,24], data.df[,25]
-                  
-    ))
+# Test
+# if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
+# MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
+if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
+    stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
 }
 
 # Use the LHD function to generate a hypercube
@@ -72,6 +78,7 @@ results.binary<-get.results(LHS.binary)
 image_name <- paste0("LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save.image(paste0(image_name, ".Rdata"))
 
+##################################### Display results ########################################
 #Plot findings: 
 #1. empirical cumulative distribution function used to illustrate the distribution of the model results
 plotecdf(LHS.binary) #outcome has a high probability in the steepest parts of the graph 
