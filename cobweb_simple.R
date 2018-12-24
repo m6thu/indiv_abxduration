@@ -14,7 +14,7 @@ cl <- makeCluster(detectCores())
 model <- 'simple'
 #source(paste0("model_simple.R"))
 # source functions on all cores
-clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_simple.R')})
+clusterCall(cl, function() {source('~/Desktop/indiv_abxduration/model_simple.R')})
 
 modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
