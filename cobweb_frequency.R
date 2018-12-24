@@ -38,7 +38,7 @@ parameters <- list(
     c("qunif", list(min=0.01, max=0.5), "p.s"), #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=0.01, max=0.5), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=0.00001, max=0.5), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
-    c("qunif", list(min=100, max=10000), "K"), # gut holding capacity
+    c("qunif", list(min=100, max=300), "K"), # gut holding capacity, on log scale, largest R number possible is exp(300)
     c("qunif", list(min=3, max=5), "t_mean"), # mean of total starting amount of gut bacteria on log scale
     c("qunif", list(min=0.5, max=2), "t_sd"),  # sd of total starting amount of gut bacteria on log scale
     c("qunif", list(min=1,max=2), "r_mean"), # mean of starting amount of resistant gut bacteria on log scale
@@ -46,7 +46,7 @@ parameters <- list(
     c("qunif", list(min=0.01,max=0.10), "pi_r"), # pi_r = daily probability of transmitting resistant E coli
     c("qunif", list(min=5,max=20), "r_thres"), # r_thres = R threshold level for tranmissibility
     c("qunif", list(min=1,max=5), "r_growth"), # r_growth = growth constant for logistic growth
-    c("qunif", list(min=5,max=20), "r_trans"), # r_trans = amount transmitted
+    c("qunif", list(min=5,max=20), "r_trans"), # r_trans = amount transmitted on log scale
     c("qunif", list(min=5,max=20), "abxr_killr"), # abxr_killr = amount of r killed by broad spectrum abx r
     c("qunif", list(min=5,max=20), "abxr_kills"), # abxr_kills = amount of s killed by broad spectrum abx r
     c("qunif", list(min=5,max=20), "abxs_kills"), # abxs_kills = amount of s killed by narrow spectrum abx s
@@ -71,14 +71,14 @@ if(!(sum(factors == parameters_frequency) ==  length(parameters_frequency))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 1000, q, q.arg, nboot=20)
+LHS.freq<- LHS(modelRun.freq, factors, 3000, q, q.arg, nboot=20)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 
 old <- Sys.time() # get start time
-check.LHS.freq <- LHS(modelRun.freq, factors, 500, q, q.arg, nboot=10, cl=cl)
+check.LHS.freq <- LHS(modelRun.freq, factors, 2000, q, q.arg, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
