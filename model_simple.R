@@ -184,11 +184,14 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             # Roll a random number for each R on the previous day for clearance
             roll_clear <- runif(s_num, 0, 1)
             # All column indices which roll < probability of clearance AND there is antibiotic used on that patient-timestep
-            clear_idx <- S[abx.matrix[i, S] & (roll_clear < abx.clear)]
+            clear_idx <- S[abx.matrix[i-1, S] & (roll_clear < abx.clear)]
             # Clear those that pass roll and use abx to ss
             colo.matrix[i, clear_idx] <- "ss"
             # Removed those that have been cleared by abx from list of S indices
-            S <- S[!(S %in% clear_idx)]
+            # S <- S[!(S %in% clear_idx)] 
+            # Note: Removal is not necessary since these events do not have priority. If clearance happens
+            # and transmission happens, then it becomes R.
+            
             # Roll a random number for each remaining S for chance of selection to
             roll_trans <- runif(length(S), 0, 1)
             r_idx <- S[roll_trans < prob_r]
@@ -207,11 +210,11 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             prob_s <- repop.s1
             
             # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
-            stopifnot((prob_r+prob_s) < 1)
+            stopifnot((prob_r+prob_s) <= 1)
             
             roll <- runif(length(ss), 0, 1)
             r_idx <- ss[roll < prob_r]
-            s_idx <- ss[(roll >= prob_r) & (roll < (prob_s+prob_r)) & !abx.matrix[i, ss]]
+            s_idx <- ss[(roll >= prob_r) & (roll < (prob_s+prob_r)) & !abx.matrix[i-1, ss]]
             same_idx <- ss[!(ss %in% c(r_idx, s_idx))]
             
             colo.matrix[i, s_idx] <- "S"
