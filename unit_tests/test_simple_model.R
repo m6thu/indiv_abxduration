@@ -3,7 +3,7 @@ rm(list=ls()) # Clean working environment
 source("model_simple.R") # Load model for testing
 
 # Please add as appropriate, be as pendantic as much as possible
-# Cleanest way to run. Source above, select only block of test case, try running
+# Cleanest way to run. Source above lines, select only block of test case, try running
 
 # Generates an artificial patient table where each patient stays an equal number of days "each"
 # matrix(rep(rep(1:100, rep(3, 100)), 20) + rep((0:19)*100, rep(300, 20)), ncol=20, nrow=300)
@@ -32,52 +32,103 @@ colo.table.prop <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_
 
 ############################################# Function tests ##################################################
 #################################### Test patient matrix generation ####################################
-
-# Cases: Single time step
+# ---------------------------------------------------------------------------------------
+# Test name: simple run
+# Test summary: Tests patient.table functions exits with no errors, gives correct mean, and gives correct shape
+# Function tested: patient.table
+# Pre-conditions:
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
 test_mean <- 5
 tolerance <- 1
-patient_mat.s <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
-# Expected output: At high points, patient table should give exponential distribution with mean given within tolerance
-hist(table(patient_mat.s)) # eyeball that this looks like an exponential distribution and that maximum value at tail makes sense
-stopifnot(abs(mean(table(patient_mat.s)) - test_mean) < tolerance) # Make sure gives correct mean
-stopifnot(dim(patient_mat.s) == c(300, 20)) # Make sure dimensions are correct
+patient_mat <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
+# Expected result: at high points, patient table should give exponential distribution with mean given within tolerance
+hist(table(patient_mat)) # eyeball that this looks like an exponential distribution and that maximum value at tail makes sense
+# Expected result: mean from table is the same mean given within tolerance
+stopifnot(abs(mean(table(patient_mat)) - test_mean) < tolerance)
+# Expected result: dimensions are correct dimensions
+stopifnot(dim(patient_mat) == c(300, 20))
 
-# Cases: Multiple time step
+# ---------------------------------------------------------------------------------------
+# Test name: simple run
+# Test summary: For >1 timesteps, tests patient.table functions exits with no errors, gives correct mean, and gives correct shape
+# Function tested: patient.table
+# Pre-conditions:
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
+test_mean <- 7
 tolerance <- 1*3
 patient_mat.m <- patient.table(n.bed = 100, n.day = 90, mean.max.los = test_mean, timestep=3)
-# Expected output: 
-hist(table(patient_mat.m)) # eyeball that this looks like an exponential distribution and that maximum value at tail makes sense
-stopifnot(abs(mean(table(patient_mat.m)) - test_mean*3) < tolerance) # Make sure gives correct mean
-stopifnot(dim(patient_mat.m) == c(270, 100)) # Make sure dimensions are correct
+# Expected result: looks like an exponential distribution and that maximum value at tail makes sense
+hist(table(patient_mat.m))
+# Expected result: mean from table is the same mean given within tolerance
+stopifnot(abs(mean(table(patient_mat.m)) - test_mean*3) < tolerance)
+# Expected result: dimensions are correct dimensions
+stopifnot(dim(patient_mat.m) == c(270, 100))
 
 #################################### Test los.array summary ####################################
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: summary.los
+# Pre-conditions: 
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
+test_mean <- 3
+tolerance <- 1
+patient_mat <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
+los_duration <- summary.los(patient_mat)
+# Expected result: 
+hist(los_duration[2, ]) # check distribution of length of stay, should be exponential
+# Expected result: 
+hist(table(patient_mat)) # chould be the same as input, los.array should = table(patient.table.output)
+# Expected result: 
+stopifnot(max(patient_mat.s) == max(los_duration)) # highest number from array should be exactly the same as highest id in patient.matrix
 
-# Cases: Single time step
-los_duration.s <- summary.los(patient_mat.s)
-# Expected output: 
-hist(los_duration.s[2, ]) # check distribution of length of stay, should be exponential
-hist(table(patient_mat.s)) # chould be the same as input, los.array should = table(patient.table.output)
-stopifnot(max(patient_mat.s) == max(los_duration.s)) # highest number from array should be exactly the same as highest id in patient.matrix
-
-# Cases: Multiple timesteps
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: summary.los
+# Pre-conditions: 
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
+test_mean <- 3
+tolerance <- 1*3
+patient_mat.m <- patient.table(n.bed = 100, n.day = 90, mean.max.los = test_mean, timestep=3)
 los_duration.m <- summary.los(patient_mat.m)
-# Expected output: 
+# Expected result: 
 hist(los_duration.m[2, ]) # check distribution of length of stay, should be exponential
+# Expected result: 
 hist(table(patient_mat.m)) # chould be the same as input, los.array should = table(patient.table.output)
+# Expected result: 
 stopifnot(max(patient_mat.m) == max(los_duration.m)) # highest number from array should be exactly the same as highest id in patient.matrix
 
 #################################### Test abx matrix generation ####################################
-
-# Cases: Single time step
+# ---------------------------------------------------------------------------------------
+# Test name: Single time step basic run
+# Test summary:
+# Function tested: abx.table
+# Pre-conditions: 
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
 test_p <- 0.3
 test_mean <- 10
 tolerance <- 1
+patient_mat.s <- patient.table(n.bed = 100, n.day = 90, mean.max.los = test_mean, timestep=1)
+los_duration.s <- summary.los(patient_mat.s)
+# Expected result: 
 abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep = 1)
 # Expected output: 
 # To use commented test below, need to edit code: c(rep(1, abx_person), rep(0, max_days-abx_person)) to c(rep(1, abx_person), rep(1, max_days-abx_person))
 # stopifnot(abs(sum(abx.matrix.s > 0)/length(abx.matrix.s) - test_p) < tolerance) # overall number of 1s approx. probability
 
-# 100% effectiveness, no clipping of antibiotics
+# ---------------------------------------------------------------------------------------
+# Test name: p, meanDur
+# Test summary: # 100% effectiveness, no clipping of antibiotics
+# Function tested: abx.table
+# Pre-conditions: 
+rm(list=ls()) # Clean working environment
+source("model_simple.R") # Load model for testing
 test_p <- 1
 test_mean <- 10
 tolerance <- 1
@@ -85,26 +136,40 @@ patient_mat.s <- patient.table(n.bed = 20, n.day = 3000, mean.max.los = 100, tim
 los_duration.s <- summary.los(patient_mat.s)
 abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=1)
 abx_summary <- table(abx.matrix.s*patient_mat.s)
-# Expected output: 
-hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx duration shape should be truncated norm as used
-stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_mean) < tolerance) # mean of abx duration is within tolerance
-stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
+# Expected result: # distribution of abx duration shape should be truncated norm as used
+hist(abx_summary[2:length(abx_summary)], breaks=20) 
+# Expected result: # mean of abx duration is within tolerance
+stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_mean) < tolerance)
+# Expected result: # dimensions must equal patient.matrix
+stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) 
 
-# 100% effectiveness, all clipping of antibiotics
-# should track exponential function of length of stay
+# ---------------------------------------------------------------------------------------
+# Test name: meanDur > mean.max.los
+# Test summary: # 100% effectiveness, all clipping of antibiotics
+# Function tested: abx.table
+# Pre-conditions: 
 test_p <- 1
 test_mean <- 10
-test_los_mean <- 5 
+test_los_mean <- 5 # have days short to create clipping
 tolerance <- 1
-patient_mat.s <- patient.table(n.bed = 20, n.day = 30000, mean.max.los = test_los_mean, timestep=1) # have days short to create clipping
+patient_mat.s <- patient.table(n.bed = 20, n.day = 30000, mean.max.los = test_los_mean, timestep=1) 
 los_duration.s <- summary.los(patient_mat.s)
 abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_mean, sdDur=1, timestep=1)
 abx_summary <- table(abx.matrix.s*patient_mat.s)
-# Expected output: 
-hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx duration shape should be exponential function, small bump at test_mean for "lucky hits"
-stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_los_mean) < tolerance) # mean of abx duration is mean of los instead
-stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
+# Expected result: # should track exponential function of length of stay
+# distribution of abx duration shape should be exponential function, small bump at test_mean for "lucky hits"
+hist(abx_summary[2:length(abx_summary)], breaks=20) 
+# Expected result: # mean of abx duration is mean of los instead
+stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_los_mean) < tolerance) 
+# Expected result: # dimensions must equal patient.matrix
+stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) 
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # Cases: Multiple time step
 test_p <- 0.3
 test_mean <- 10
@@ -114,6 +179,12 @@ abx.matrix.s <- abx.table(patient_mat.s, los_duration.s, p=test_p, meanDur=test_
 # To use commented test below, need to edit code: c(rep(1, abx_person), rep(0, max_days-abx_person)) to c(rep(1, abx_person), rep(1, max_days-abx_person))
 # stopifnot(abs(sum(abx.matrix.s > 0)/length(abx.matrix.s) - test_p) < tolerance) # overall number of 1s approx. probability
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # 100% effectiveness, no clipping of antibiotics
 test_p <- 1
 test_mean <- 10
@@ -127,6 +198,12 @@ hist(abx_summary[2:length(abx_summary)], breaks=20) # distribution of abx durati
 stopifnot(abs(mean(abx_summary[2:length(abx_summary)]) - test_mean*2) < tolerance) # mean of abx duration is within tolerance
 stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patient.matrix
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # 100% effectiveness, all clipping of antibiotics
 # should track exponential function of length of stay
 test_p <- 1
@@ -144,7 +221,12 @@ stopifnot(dim(abx.matrix.s) == dim(patient_mat.s)) # dimensions must equal patie
 
 
 #################################### Test starting bacteria generation ####################################
-
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # Cases: Single time step
 prob_StartBact_R <- 0.2
 prop_S_nonR <- 0.3
@@ -161,6 +243,12 @@ stopifnot(dim(colo.matrix) == dim(patient.matrix)) # dimension must equal patien
 patient_idx <- cumsum(c(1, los.array[2,]))
 stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])) == 0) # starts on same position as patient id
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # Cases: Multiple time step
 prob_StartBact_R <- 0.6
 prop_S_nonR <- 0.2
@@ -180,6 +268,12 @@ stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])
 
 #################################### Test daily updates ####################################
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # Cases: Single time step
 tolerance <- 0.02
 pi_ssr <- 0.05
@@ -195,6 +289,12 @@ stopifnot(sum(!(update == "R" | update == "S" | update == "ss")) == 0) # all day
 colo_idx <- which(!is.na(colo.matrix))
 stopifnot(sum(!colo.matrix[colo_idx] == update[colo_idx]) == 0) # starting conditions on colo.matrix was not overwritten
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # update probability R -> S holds (mu_r)
 # No abx, no transmission, 
 tolerance <- 0.02
@@ -220,6 +320,12 @@ r_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count on
 # Expect output:
 stopifnot(abs(state_change/r_count - mu_r) < tolerance) # update probability R -> S holds (mu_r)
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # update probability ss -> S holds (repop.s1)
 tolerance <- 0.02
 repop.s1 <- 0.5
@@ -244,7 +350,12 @@ ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)]))) # count o
 # Expect output:
 stopifnot(abs(state_change/ss_count - repop.s1) < tolerance) # update probability ss -> S holds (repop.s1)
 
-
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # update probability S -> ss holds (p*abx.clear)
 # abx.clear = 1, all patients have the same length of stay, each antibiotic given based on flat probability
 # remove effect of patient exponential distribution and abx truncated norm distribution, to check only update works
@@ -274,6 +385,12 @@ ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count 
 # Expect output:
 stopifnot(abs(state_change/ss_count - p) < tolerance) # update probability S -> ss holds (p*abx.clear)
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # abx.clear = 0.36, check abx.clear augments p of getting abx correctly
 tolerance <- 0.02
 p <- 0.3
@@ -302,12 +419,17 @@ ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))  # count 
 # Expect output:
 stopifnot(abs(state_change/ss_count - p*abx.clear) < tolerance) 
 
-# update probability ss -> R holds (pi_ssr)
+# ---------------------------------------------------------------------------------------
+# Test name: pi_ssr
+# Test summary: update probability ss -> R holds (pi_ssr)
+# Function tested: nextDay 
+# Pre-conditions: 
 tolerance <- 0.02
 patient.matrix<-patient.table(n.bed=20, n.day=50, mean.max.los=5, timestep=1)
 los.array<- summary.los(patient.matrix=patient.matrix)
 abx.matrix<- abx.table(patient.matrix=patient.matrix, los.array=los.array, p=0.2, meanDur=3, sdDur=1, timestep=1)
 colo.matrix<- colo.table(patient.matrix=patient.matrix, los.array=los.array, prob_StartBact_R=0.5, prop_S_nonR=0.3)
+# Expected result: 
 bif=1
 repop.s1=0
 mu_r=0
@@ -373,11 +495,22 @@ ss_count <- sum(unlist(lapply(parse_list, function(x) x[-length(x)])))
 state_change/ss_count
 stopifnot(abs(state_change/length(colo.matrix == "ss") - pi_ssr) < tolerance) # update probability ss -> R holds (pi_ssr)
 
-
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # No abx, no starting R, get probability of transmission from S to R, (pi_Sr)
 #stopifnot(abs(state_change/(length(colo.matrix) - length(colo_idx)) - pi_ssr) < tolerance) # update probability S -> R holds (pi_Sr)
 
 
+# ---------------------------------------------------------------------------------------
+# Test name: 
+# Test summary: 
+# Function tested: 
+# Pre-conditions: 
+# Expected result: 
 # Cases: Multiple time steps
 
 ############################################ Integration tests ##################################################

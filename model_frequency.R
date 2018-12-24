@@ -218,9 +218,9 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # calculate effect of R logistic bacteria growth 
                 R_grow <- exp(r_growth)*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # add effect of transmission if roll pass prob check and if previous R level is 0
-                R_trans <- exp(r_trans)*((roll < prob_r) & !R_table[i-1, j])
+                R_trans <- exp(r_trans)*((roll < prob_r))# & !R_table[i-1, j])
                 # add effect of abx death if abx.matrix is r abx (== 2)
-                R_abx <- -(abx.matrix[i-1, j] > 1)*exp(abxr_killr)
+                R_abx <- -(abx.matrix[i-1, j] == 2)*exp(abxr_killr)
                 # apply effects to current table
                 R_table[i, j] <- exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
@@ -239,7 +239,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 S_grow <- exp(r_growth)*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
                 # calculate effect of death antibiotics R and effect of death by abx S
                 S_abx_s <- -(abx.matrix[i-1, j] == 1)*exp(abxs_kills)
-                S_abx_r <- -(abx.matrix[i-1, j] > 1)*exp(abxr_kills)
+                S_abx_r <- -(abx.matrix[i-1, j] == 2)*exp(abxr_kills)
                 # apply effects
                 S_table[i, j] <- exp(S_table[i-1, j]) + R_grow + S_abx_s + S_abx_r
                 # trim range
