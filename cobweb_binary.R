@@ -13,7 +13,7 @@ cl <- makeCluster(detectCores())
 model <- 'binary'
 #source(paste0("model_binary.R"))
 
-clusterCall(cl, function() {source('~/Desktop/indivi_duration/model_binary.R')})
+clusterCall(cl, function() {source('~/Desktop/indiv_abxduration/model_binary.R')})
 # source functions on all cores
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
@@ -63,6 +63,7 @@ q.arg <- lapply(parameters, function(l) l[2:3])
 factors <- unlist(lapply(parameters, function(l) l[[4]]))
 
 # Test
+source(paste0("model_binary.R"))
 # if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
 # MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
 if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){

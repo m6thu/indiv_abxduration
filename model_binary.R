@@ -558,7 +558,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             #print(paste(pi_r2, r_num, repop.s1, prob_r, prob_s))
             # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
             if(!(prob_r+prob_s < 1)){
-                stop(paste("Error stopifnot: prob_r + prob_s < 1. prob_r:", prob_r, "prob_s:", prob_s))
+                stop(paste("Error stopifnot: prob_r + prob_s < 1. prob_r:", prob_r, "repop.s1:", prob_s))
             }
             
             roll_r <- runif(length(ss), 0, 1)
@@ -625,9 +625,6 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             roll_repop <- runif(length(sr), 0, 1)
             # If roll passes repop.r2 and has s antibiotics, R grows
             sR_idx <- sr[(abx.matrix[i-1, sr] == 1) & (roll_repop < repop.r2)]
-            # Remove indices selected for repop.s2 event
-            sr <- sr[!(sr %in% sR_idx)]
-            roll_repop <- roll_repop[!(sr %in% sR_idx)]
             # Instead, if roll does not pass repop.r2 event and passes repop.s2 with 0 antibiotics, S grows
             Sr_idx <- sr[!abx.matrix[i-1, sr] & (roll_repop >= repop.r2) & (roll_repop < (repop.s2+repop.r2))]
             # Remove indices already selected for repopulation event
@@ -657,7 +654,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             # Roll a random number for each remaining sR for chance to decolonize
             roll_decolonise <- runif(length(sR), 0, 1)
             sr_idx <- sR[(abx.matrix[i-1, sR] != 2) & roll_decolonise < depop.r]
-            same_idx <- sR[roll_decolonise >= depop.r]
+            same_idx <- sR[!(sR %in% sr_idx)]
             colo.matrix[i, clear_idx] <- "sr"
             colo.matrix[i, sr_idx] <- "sr"
             colo.matrix[i, same_idx] <- "sR"
@@ -684,7 +681,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     timestep <- 1
     n.day <- 500
     iterations <- 100
-    iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
 
     
     for(iter in 1:iterations){
@@ -705,7 +702,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     }
     totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),])/iterations/n.bed)
     
-    iter_totalsR <- matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)

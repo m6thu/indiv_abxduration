@@ -83,12 +83,12 @@ rm(list=ls()) # Clean working environment
 source("model_binary.R") # Load model for testing
 test_mean <- 3
 tolerance <- 1
-patient_mat <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
-los_duration <- summary.los(patient_mat)
+patient_mat.s <- patient.table(n.bed = 20, n.day = 300, mean.max.los = test_mean, timestep=1)
+los_duration <- summary.los(patient_mat.s)
 # Expected result: 
 hist(los_duration[2, ]) # check distribution of length of stay, should be exponential
 # Expected result: 
-hist(table(patient_mat)) # chould be the same as input, los.array should = table(patient.table.output)
+hist(table(patient_mat.s)) # chould be the same as input, los.array should = table(patient.table.output)
 # Expected result: 
 stopifnot(max(patient_mat.s) == max(los_duration)) # highest number from array should be exactly the same as highest id in patient.matrix
 
@@ -493,10 +493,12 @@ stopifnot(sum(!(which(!is.na(colo.matrix)) == patient_idx[-length(patient_idx)])
 
 ############################################ Integration tests ##################################################
 # Test diff_prevalence
+rm(list=ls()) # Clean working environment
+source("model_binary.R") # Load model for testing
 diff_prevalence(n.bed=20, mean.max.los=4, p.s=0.1, p.r.day1=0.2, p.r.dayafter=0.01,
                 prob_StartBact_R=0.3, prop_S_nonR=0.1, prop_Sr_inR=0.1, prop_sr_inR=0.1,
                 pi_r1=0.1, bif=2, mu1=0.10, mu2=0.10, abx.r=0.10, abx.s=0.10,
-                repop.r1=0.10, repop.r2=0.10, repop.s1=0.10, repop.s2=0.10, depop.r=0.10,
+                repop.r1=0.10, repop.r2=0.10, repop.s1=0.05, repop.s2=0.05, depop.r=0.10,
                 short_dur.s=2, long_dur.s=10, short_dur.r=2, long_dur.r=10, sdDur=5)
 
 
