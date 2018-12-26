@@ -12,7 +12,6 @@ require(parallel) # load parallel processing package to use multiple cores on co
 cl <- makeCluster(detectCores())
 
 model <- 'simple'
-#source(paste0("model_simple.R"))
 # source functions on all cores
 clusterCall(cl, function() {source('~/Desktop/indiv_abxduration/model_simple.R')})
 
@@ -53,13 +52,14 @@ factors <- unlist(lapply(parameters, function(l) l[[4]]))
 # Test
 # if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
 # MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
+source(paste0("model_simple.R"))
 if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
     stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
 }
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.simple <- LHS(modelRun.simple, factors, N=3000, q, q.arg, nboot=20) #N is the size of the hypercube
+LHS.simple <- LHS(modelRun.simple, factors, N=3000, q, q.arg, nboot=10, cl=cl) #N is the size of the hypercube
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
