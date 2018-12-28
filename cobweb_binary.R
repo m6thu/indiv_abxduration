@@ -46,7 +46,7 @@ parameters <- list(
     c("qunif", list(min=0.01, max=0.9), "abx.r"),              #probability of clearing R to become r
     c("qunif", list(min=0.01, max=0.9), "abx.s"),              #probability of clearing S to become s
     c("qunif", list(min=0.01, max=0.9), "repop.r1"),           #probability of transmission of r to S (s—> Sr) 
-    c("qunif", list(min=0.0001, max=20), "repop.r2"),           #probability of regrowth of s (sR—> sr)
+    c("qunif", list(min=0.01, max=0.9), "repop.r2"),           #probability of regrowth of s (sR—> sr)
     c("qunif", list(min=0, max=0.03), "repop.s1"),           #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0, max=0.03), "repop.s2"),           #probability of regrowth of S  (sr—>Sr)
     c("qunif", list(min=0, max=0.03), "depop.r"),            #probability of sR-->sr without antibiotics
@@ -69,6 +69,15 @@ source(paste0("model_binary.R"))
 if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
     stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
 }
+
+
+# Mini run for error checking
+old <- Sys.time() # get start time
+LHS.binary<- LHS(modelRun.binary, factors, 50, q, q.arg, nboot=10, cl=cl)
+# print elapsed time
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
+
 
 # Use the LHD function to generate a hypercube
 old <- Sys.time() # get start time
