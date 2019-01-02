@@ -70,6 +70,13 @@ if(!(sum(factors == parameters_frequency) ==  length(parameters_frequency))){
     stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
 }
 
+# Mini run for error checking.
+old <- Sys.time() # get start time
+LHS.freq<- LHS(modelRun.freq, factors, 50, q, q.arg, nboot=10, cl=cl)
+# print elapsed time
+new <- Sys.time() - old # calculate difference
+print(new) # print in nice format
+
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, 3000, q, q.arg, nboot=10, cl=cl)
