@@ -1,4 +1,4 @@
-require(msm)
+source('msm_util_rtnorm.R')
 
 #(1 for short duration and 1 for long duration) 
 #simulate inpatients with various lengths of stay
