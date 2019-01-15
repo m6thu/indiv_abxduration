@@ -79,7 +79,7 @@ save.image(paste0("./runs/", image_name, ".Rdata"))
 stopCluster(cl)
 
 ##################################### Display results ########################################
-load('LHS_simple_05Dec2018_0211GMT.Rdata')
+load('runs/LHS_simple_25Dec2018_0623+07.Rdata')
 
 #Plot findings: 
 #1. empirical cumulative distribution function used to illustrate the distribution of the model results

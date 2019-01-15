@@ -8,7 +8,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores())
+cl <- makeCluster(detectCores()-1)
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
