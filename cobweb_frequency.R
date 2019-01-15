@@ -8,7 +8,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores())
+cl <- makeCluster(detectCores()-2)
 
 model <- 'frequency'
 #source(paste0("model_frequency.R"))
@@ -72,21 +72,21 @@ if(!(sum(factors == parameters_frequency) ==  length(parameters_frequency))){
 
 # Mini run for error checking.
 old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 50, q, q.arg, nboot=10, cl=cl)
+LHS.freq<- LHS(modelRun.freq, factors, 50, q, q.arg, res.names, nboot=2, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 3000, q, q.arg, nboot=10, cl=cl)
+LHS.freq<- LHS(modelRun.freq, factors, 2000, q, q.arg, res.names, nboot=10, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 
 old <- Sys.time() # get start time
-check.LHS.freq <- LHS(modelRun.freq, factors, 2000, q, q.arg, nboot=10, cl=cl)
+check.LHS.freq <- LHS(modelRun.freq, factors, 2000, q, q.arg, res.names, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
@@ -101,7 +101,7 @@ stopCluster(cl)
 ##################################### Display results ########################################
 #Plot findings: 
 #1. empirical cumulative distribution function used to illustrate the distribution of the model results
-plotecdf(LHS.freq) #outcome has a high probability in the steepest parts of the graph 
+plotecdf(LHS.freq,stack=TRUE) #outcome has a high probability in the steepest parts of the graph 
 
 #2. scatterplot of the result as a function of each parameter: distribution of values returned by the model 
 # in the parameter space sampled by the hypercube and how sensible are these model responses to the variation of each parameter.
@@ -123,10 +123,31 @@ for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that p
             outcome.df$top5[i] <-1
         }
 }
-require(MASS) #load MASS package
-colors<- c("#E69F00", "#009E73") #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+require(plotrix) #load MASS package
+blue<-alpha("lightskyblue1", alpha=0.3)
+red<-alpha("red", alpha=0.6)
+colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
-parcoord(outcome.df[,c(1:length(factors))] , col= colors[outcome.df$top5],var.label=T)
+parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
+{
+    df <- as.data.frame(x)
+    pr <- lapply(df, pretty)
+    rx <- lapply(pr, range, na.rm = TRUE)
+    x <- mapply(function(x,r) {
+        (x-r[1])/(r[2]-r[1])
+    },
+    df, rx)
+    matplot(1L:ncol(x), t(x), type = "l", col = col, lty = lty, 
+            xlab = "", ylab = "", axes = FALSE,...)
+    axis(1, at = 1L:ncol(x), labels = c(colnames(x)), las = 2)
+    for (i in 1L:ncol(x)) {
+        lines(c(i, i), c(0, 1), col = "grey")
+        text(c(i, i), seq(0,1,length.out=length(pr[[i]])), labels = pr[[i]], 
+             xpd = NA, col=lblcol, cex=0.5)
+    }
+    invisible()
+}
+parcoordlabel(outcome.df[,c(1:length(factors))], col = colors[outcome.df$top5])
 
 #5. Check agreement between runs to decide if our sample size for adequate 
 # Symmetric Blest Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.

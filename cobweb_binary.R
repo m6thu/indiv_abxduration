@@ -126,9 +126,9 @@ for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that p
         }
 }
 require(plotrix) #load MASS package
-yellow<-alpha("#E69F00", alpha=0.3)
-green<-alpha("#009E73", alpha=0.6)
-colors<- c(yellow, green) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+blue<-alpha("lightskyblue1", alpha=0.3)
+red<-alpha("red", alpha=0.6)
+colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
 parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
 {
