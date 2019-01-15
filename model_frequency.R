@@ -335,8 +335,9 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     new <- Sys.time() - old # calculate difference
     print(new) # print in nice format
     
-    return(list((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short)))
+    return(array(c((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short))))
 }
+res.names <- c(paste("No R per bed"),paste("R Thres per bed"))
 
 parameters_frequency <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
                           "K", "t_mean", "t_sd", "r_mean", "r_sd",

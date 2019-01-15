@@ -8,7 +8,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores()-2)
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
@@ -73,7 +73,7 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 
 # Mini run for error checking
 old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 50, q, q.arg, nboot=10, cl=cl)
+LHS.binary<- LHS(modelRun.binary, factors, 2000, q, q.arg, nboot=10, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
@@ -126,9 +126,9 @@ for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that p
         }
 }
 require(plotrix) #load MASS package
-yellow<-alpha("#E69F00", alpha=0.3)
-green<-alpha("#009E73", alpha=0.6)
-colors<- c(yellow, green) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+blue<-alpha("lightskyblue1", alpha=0.3)
+red<-alpha("red", alpha=0.6)
+colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
 parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
 {
