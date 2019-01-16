@@ -32,27 +32,26 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"), #n.bed; number of beds in the ward
     c("qunif", list(min=3, max=10), "mean.max.los"), #mean.max.los; mean of length of stay (normal distribution)
-    c("qunif", list(min=0.01, max=0.5), "p.s"), #probability of being prescribed narrow spectrum antibiotic
-    c("qunif", list(min=0.01, max=0.5), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-    c("qunif", list(min=0.00001, max=0.5), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
+    c("qunif", list(min=0.1, max=0.9), "p.s"), #probability of being prescribed narrow spectrum antibiotic
+    c("qunif", list(min=0.1, max=0.9), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
+    c("qunif", list(min=0.0001, max=0.1), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
     c("qunif", list(min=0.01, max=0.99), "prob_StartBact_R"),   #probability of initial carriage of resistant organisms
     c("qunif", list(min=0.01, max=0.99), "prop_S_nonR"),        #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
     c("qunif", list(min=0.01, max=0.99), "prop_Sr_inR"),        #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
     c("qunif", list(min=0.01, max=0.99), "prop_sr_inR"),        #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
-    c("qunif", list(min=0.0001, max=0.001), "pi_r1"),              #probability of being transmitted r to S (S—> Sr)
-    c("qunif", list(min=0, max=0.2), "bif"),                #bacterial interference factor (pi_r2 = pi_r1 * bif )
+    c("qunif", list(min=0.00001, max=0.005), "pi_r1"),              #probability of being transmitted r to S (S—> Sr)
+    c("qunif", list(min=0, max=1), "bif"),                #bacterial interference factor (pi_r2 = pi_r1 * bif )
     c("qunif", list(min=0, max=0.03), "mu1"),                #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0, max=0.03), "mu2"),                #probability of being decolonised to S (sr—> s) 
     c("qunif", list(min=0.01, max=0.9), "abx.r"),              #probability of clearing R to become r
     c("qunif", list(min=0.01, max=0.9), "abx.s"),              #probability of clearing S to become s
-    c("qunif", list(min=0.01, max=0.9), "repop.r1"),           #probability of transmission of r to S (s—> Sr) 
-    c("qunif", list(min=0.01, max=0.9), "repop.r2"),           #probability of regrowth of s (sR—> sr)
+    c("qunif", list(min=0, max=0.9), "repop.r"),           #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0, max=0.03), "repop.s1"),           #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0, max=0.03), "repop.s2"),           #probability of regrowth of S  (sr—>Sr)
-    c("qunif", list(min=0, max=0.03), "depop.r"),            #probability of sR-->sr without antibiotics
+    c("qunif", list(min=0, max=0.9), "depop.r"),            #probability of sR-->sr without antibiotics
     c("qunif", list(min=3, max=7), "short_dur.s"),        #mean short duration of narrow spectrum antibiotics (normal distribution) 
-    c("qunif", list(min=3, max=7), "long_dur.s"),         #mean long duration of narrow spectrum antibiotics (normal distribution) 
-    c("qunif", list(min=10, max=21), "short_dur.r"),        #mean short duration of broad spectrum antibiotics (normal distribution) 
+    c("qunif", list(min=10, max=21), "long_dur.s"),         #mean long duration of narrow spectrum antibiotics (normal distribution) 
+    c("qunif", list(min=3, max=7), "short_dur.r"),        #mean short duration of broad spectrum antibiotics (normal distribution) 
     c("qunif", list(min=10, max=21), "long_dur.r"),         #mean long duration of broad spectrum antibiotics (normal distribution) 
     c("qunif", list(min=1, max=5), "sdDur")               #standard deviation of the duration of antibiotics
     )
