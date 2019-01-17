@@ -216,7 +216,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # roll for transmission
                 roll <- runif(1, 0, 1)
                 # calculate effect of R logistic bacteria growth 
-                R_grow <- exp(r_growth)*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
+                R_grow <- r_growth*exp(R_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/K)
                 # add effect of transmission if roll pass prob check and if previous R level is 0
                 R_trans <- exp(r_trans)*((roll < prob_r))# & !R_table[i-1, j])
                 # add effect of abx death if abx.matrix is r abx (== 2)
@@ -224,8 +224,8 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # apply effects to current table
                 R_table[i, j] <- exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
-                if(R_table[i, j] > exp(K)){
-                    R_table[i, j] <- exp(K)
+                if(R_table[i, j] > K){
+                    R_table[i, j] <- K
                 }
                 if(R_table[i, j] < 0){
                     R_table[i, j] <- 0
@@ -236,15 +236,15 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 }
                 
                 # calculate effect of S logistic bacteria growth 
-                S_grow <- exp(r_growth)*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(K))
+                S_grow <- r_growth*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/K)
                 # calculate effect of death antibiotics R and effect of death by abx S
                 S_abx_s <- -(abx.matrix[i-1, j] == 1)*exp(abxs_kills)
                 S_abx_r <- -(abx.matrix[i-1, j] == 2)*exp(abxr_kills)
                 # apply effects
                 S_table[i, j] <- exp(S_table[i-1, j]) + R_grow + S_abx_s + S_abx_r
                 # trim range
-                if(S_table[i, j] > exp(K)){
-                    S_table[i, j] <- exp(K)
+                if(S_table[i, j] > K){
+                    S_table[i, j] <- K
                 }
                 if(S_table[i, j] < 0){
                     S_table[i, j] <- 0
