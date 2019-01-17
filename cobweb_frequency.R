@@ -79,7 +79,7 @@ print(new) # print in nice format
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 2000, q, q.arg, res.names, nboot=10, cl=cl)
+LHS.freq<- LHS(modelRun.freq, factors, 3000, q, q.arg, res.names, nboot=10, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
