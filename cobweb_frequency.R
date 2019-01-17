@@ -35,24 +35,24 @@ modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter v
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"), #n.bed; number of beds in the ward
     c("qunif", list(min=3, max=10), "mean.max.los"), #mean.max.los; mean of length of stay (normal distribution)
-    c("qunif", list(min=0.01, max=0.5), "p.s"), #probability of being prescribed narrow spectrum antibiotic
-    c("qunif", list(min=0.01, max=0.5), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-    c("qunif", list(min=0.00001, max=0.5), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
-    c("qunif", list(min=100, max=300), "K"), # gut holding capacity, on log scale, largest R number possible is exp(300)
-    c("qunif", list(min=3, max=5), "t_mean"), # mean of total starting amount of gut bacteria on log scale
+    c("qunif", list(min=0.1, max=0.9), "p.s"), #probability of being prescribed narrow spectrum antibiotic
+    c("qunif", list(min=0.1, max=0.9), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
+    c("qunif", list(min=0.0001, max=0.1), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
+    c("qunif", list(min=10, max=30), "K"), # gut holding capacity, on log scale, largest R number possible is exp(300)
+    c("qunif", list(min=2, max=20), "t_mean"), # mean of total starting amount of gut bacteria on log scale
     c("qunif", list(min=0.5, max=2), "t_sd"),  # sd of total starting amount of gut bacteria on log scale
-    c("qunif", list(min=1,max=2), "r_mean"), # mean of starting amount of resistant gut bacteria on log scale
-    c("qunif", list(min=1,max=2), "r_sd"), #sd of starting amount of resistant gut bacteria on log scale
-    c("qunif", list(min=0.01,max=0.10), "pi_r"), # pi_r = daily probability of transmitting resistant E coli
-    c("qunif", list(min=5,max=20), "r_thres"), # r_thres = R threshold level for tranmissibility
-    c("qunif", list(min=1,max=5), "r_growth"), # r_growth = growth constant for logistic growth
-    c("qunif", list(min=5,max=20), "r_trans"), # r_trans = amount transmitted on log scale
+    c("qunif", list(min=1,max=15), "r_mean"), # mean of starting amount of resistant gut bacteria on log scale
+    c("qunif", list(min=0.5,max=2), "r_sd"), #sd of starting amount of resistant gut bacteria on log scale
+    c("qunif", list(min=0.00001,max=0.005), "pi_r"), # pi_r = daily probability of transmitting resistant E coli
+    c("qunif", list(min=2,max=20), "r_thres"), # r_thres = R threshold level for tranmissibility
+    c("qunif", list(min=0.1,max=5), "r_growth"), # r_growth = growth constant for logistic growth
+    c("qunif", list(min=2,max=15), "r_trans"), # r_trans = amount transmitted on log scale
     c("qunif", list(min=5,max=20), "abxr_killr"), # abxr_killr = amount of r killed by broad spectrum abx r
     c("qunif", list(min=5,max=20), "abxr_kills"), # abxr_kills = amount of s killed by broad spectrum abx r
     c("qunif", list(min=5,max=20), "abxs_kills"), # abxs_kills = amount of s killed by narrow spectrum abx s
     c("qunif", list(min=3, max=7), "short_dur.s"),        #mean short duration of narrow spectrum antibiotics (normal distribution) 
-    c("qunif", list(min=3, max=7), "long_dur.s"),         #mean long duration of narrow spectrum antibiotics (normal distribution) 
-    c("qunif", list(min=10, max=21), "short_dur.r"),        #mean short duration of broad spectrum antibiotics (normal distribution) 
+    c("qunif", list(min=10, max=21), "long_dur.s"),         #mean long duration of narrow spectrum antibiotics (normal distribution) 
+    c("qunif", list(min=3, max=7), "short_dur.r"),        #mean short duration of broad spectrum antibiotics (normal distribution) 
     c("qunif", list(min=10, max=21), "long_dur.r"),         #mean long duration of broad spectrum antibiotics (normal distribution) 
     c("qunif", list(min=1, max=5), "sdDur")               #standard deviation of the duration of antibiotics
     )
@@ -86,7 +86,7 @@ print(new) # print in nice format
 
 
 old <- Sys.time() # get start time
-check.LHS.freq <- LHS(modelRun.freq, factors, 2000, q, q.arg, res.names, nboot=10, cl=cl)
+check.LHS.freq <- LHS(modelRun.freq, factors, 3000, q, q.arg, res.names, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
