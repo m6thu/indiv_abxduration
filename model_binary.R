@@ -66,6 +66,9 @@ summary.los <- function(patient.matrix){
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                           meanDur.s, meanDur.r, sdDur, timestep=1){
 
+    p.s <- p.s/timestep
+    p.r.day1 <- p.r.day1/timestep
+    p.r.dayafter <- p.r.dayafter/timestep
     # Check assumption that possibilities are, no abx, has s abx, or has r abx on first day
     stopifnot(p.s+p.r.day1 <= 1)
 

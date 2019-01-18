@@ -8,7 +8,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores()-2)
+cl <- makeCluster(detectCores())
 
 model <- 'frequency'
 #source(paste0("model_frequency.R"))
@@ -70,23 +70,24 @@ if(!(sum(factors == parameters_frequency) ==  length(parameters_frequency))){
     stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
 }
 
-# Mini run for error checking.
-old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 50, q, q.arg, res.names, nboot=2, cl=cl)
-# print elapsed time
-new <- Sys.time() - old # calculate difference
-print(new) # print in nice format
+# Mini run for error checking. 
+# 50 runs too small for freq model and LHScorcorr: correlation does not converge after maximum iterations
+# old <- Sys.time() # get start time
+# LHS.freq<- LHS(modelRun.freq, factors, 50, q, q.arg, res.names, nboot=2, cl=cl)
+# # print elapsed time
+# new <- Sys.time() - old # calculate difference
+# print(new) # print in nice format
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.freq<- LHS(modelRun.freq, factors, 3000, q, q.arg, res.names, nboot=10, cl=cl)
+LHS.freq<- LHS(modelRun.freq, factors, 1000, q, q.arg, res.names, nboot=10, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 
 old <- Sys.time() # get start time
-check.LHS.freq <- LHS(modelRun.freq, factors, 3000, q, q.arg, res.names, nboot=10, cl=cl)
+check.LHS.freq <- LHS(modelRun.freq, factors, 100, q, q.arg, res.names, nboot=10)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 

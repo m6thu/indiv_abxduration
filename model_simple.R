@@ -61,6 +61,7 @@ summary.los <- function(patient.matrix){
 
 abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
     
+    p <- p/timestep
     #generate antibiotic use table
     #number of days of antibiotic is randomly drawn from a truncated normal distribution
     abx_days <- round(rtnorm(ncol(los.array), mean=meanDur*timestep, sd=sdDur*timestep, lower=0))

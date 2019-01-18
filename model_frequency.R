@@ -62,6 +62,9 @@ summary.los <- function(patient.matrix){
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                       meanDur.s, meanDur.r, sdDur, timestep=1){
     
+    p.s <- p.s/timestep
+    p.r.day1 <- p.r.day1/timestep
+    p.r.dayafter <- p.r.dayafter/timestep
     # Check assumption that possibilities are, no abx, has s abx, or has r abx on first day
     stopifnot(p.s+p.r.day1 <= 1)
     
@@ -275,7 +278,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                 abxr_killr, abxr_kills, abxs_kills,
                 short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
     
-    timestep <- 1
+    timestep <- 5
     n.day <- 500
     iterations <- 100
     
@@ -294,6 +297,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                            pi_r, K, r_thres, r_growth, r_trans, 
                                            abxr_killr, abxr_kills, abxs_kills, timestep)
         # Summary
+        print(df.R)
         df.R <- data.frame(colo.matrix_filled_iter[[2]])
         iter_totalR.no[, iter] <- rowSums(df.R)
         
