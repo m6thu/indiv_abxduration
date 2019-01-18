@@ -20,8 +20,8 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
                   data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
                   data.df[,6], data.df[,7], data.df[,8], data.df[,9], 
                   data.df[,10], data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],data.df[,20], 
-                  data.df[,21], data.df[,22], data.df[,23], data.df[,24], data.df[,25]
+                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],
+                  data.df[,20], data.df[,21], data.df[,22], data.df[,23], data.df[,24]
                   
     ))
 }
@@ -70,12 +70,12 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 }
 
 
-# Mini run for error checking
-old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 2000, q, q.arg, nboot=10, cl=cl)
-# print elapsed time
-new <- Sys.time() - old # calculate difference
-print(new) # print in nice format
+# # Mini run for error checking
+# old <- Sys.time() # get start time
+# LHS.binary<- LHS(modelRun.binary, factors, 100, q, q.arg, nboot=10)
+# # print elapsed time
+# new <- Sys.time() - old # calculate difference
+# print(new) # print in nice format
 
 
 # Use the LHD function to generate a hypercube
