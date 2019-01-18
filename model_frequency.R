@@ -278,12 +278,12 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                 abxr_killr, abxr_kills, abxs_kills,
                 short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
     
-    timestep <- 5
+    timestep <- 2
     n.day <- 500
     iterations <- 100
     
-    iter_totalR.no <- matrix(NA, nrow = n.day, ncol = iterations)
-    iter_totalR.thres <- matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR.no <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR.thres <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -297,8 +297,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                            pi_r, K, r_thres, r_growth, r_trans, 
                                            abxr_killr, abxr_kills, abxs_kills, timestep)
         # Summary
-        print(df.R)
         df.R <- data.frame(colo.matrix_filled_iter[[2]])
+        print(df.R)
         iter_totalR.no[, iter] <- rowSums(df.R)
         
         #for number of people who reached R threshold on a day
