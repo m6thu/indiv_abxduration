@@ -85,9 +85,13 @@ LHS.freq<- LHS(modelRun.freq, factors, 1000, q, q.arg, res.names, nboot=10, cl=c
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
+# Save run to disk
+image_name <- paste0("./runs/LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"), "_temp")
+save.image(paste0(image_name, ".Rdata"))
+
 
 old <- Sys.time() # get start time
-check.LHS.freq <- LHS(modelRun.freq, factors, 100, q, q.arg, res.names, nboot=10)
+check.LHS.freq <- LHS(modelRun.freq, factors, 1000, q, q.arg, res.names, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
