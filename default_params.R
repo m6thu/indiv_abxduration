@@ -3,8 +3,12 @@
 n.bed<-20                             # n.bed= number of beds in the ward
 mean.max.los<-7                      # mean.max.los= mean of max length of stay (exponential distribution)
 sdDur <- 3                              # sdDur = sd of duration of antibiotics
+n.day<-500
 
 ############# Simple model #################
+short_dur <- 5
+long_dur <- 20
+
 p <- 0.4                             # p=probability of receiving antibiotic
 prob_StartBact_R <- 0.4             # Probability of being colonized with resistant strain on admission
 prop_S_nonR <- 0.5                # Proportion of large S within non-resistant states (S+s)
@@ -15,6 +19,11 @@ mu_r <- 0  # mu_r= rate of clearance of R to become S
 abx.clear <- 0.5  # probability of clearing S to become ss under antibiotic treatment 
 
 ############## Binary model ###################
+short_dur.s <- 5
+long_dur.s <- 20
+short_dur.r <- 5
+long_dur.r <- 20
+
 p.s<-0.3                              # p=probability of receiving antibiotic for sensitive organisms
 p.r.day1<-0.1                         # p= probability of receiving antibiotic for resistant organisms on day 1 admission 
 p.r.dayafter<-0.0005                     # p= daily probability of contracting HAI and receiving antibiotic for resistant organisms
