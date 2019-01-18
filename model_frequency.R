@@ -298,7 +298,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                                            abxr_killr, abxr_kills, abxs_kills, timestep)
         # Summary
         df.R <- data.frame(colo.matrix_filled_iter[[2]])
-        print(df.R)
+        #print(df.R)
         iter_totalR.no[, iter] <- rowSums(df.R)
         
         #for number of people who reached R threshold on a day
