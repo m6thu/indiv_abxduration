@@ -308,8 +308,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     totalR_no_short <- mean(rowSums(iter_totalR.no)/iterations/n.bed)
     totalR_thres_short <- mean(rowSums(iter_totalR.thres)/iterations/n.bed)
     
-    iter_totalR.no <- matrix(NA, nrow = n.day, ncol = iterations)
-    iter_totalR.thres <- matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR.no <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR.thres <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
     for(iter in 1:iterations){
         
