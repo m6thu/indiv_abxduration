@@ -16,6 +16,7 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
     patient.id <- 1:n.patient
     
     all_los <- ceiling(rexp(n.patient, 1/(mean.max.los*timestep)))
+    # This tail flattening effect after 5 times may be slightly hacky
     all_los[all_los > 5*mean.max.los*timestep] <- 1
     sum_los <- cumsum(all_los)
     
