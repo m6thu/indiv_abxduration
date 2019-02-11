@@ -13,7 +13,7 @@ cl <- makeCluster(detectCores())
 
 model <- 'simple'
 # source functions on all cores
-clusterCall(cl, function() {source('/home/Mathupanee/indiv_abxduration/model_simple.R')})
+clusterCall(cl, function() {source('~/Desktop/indiv_abxduration/model_simple.R')})
 
 modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
@@ -59,7 +59,7 @@ if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.simple <- LHS(modelRun.simple, factors, N=1000, q, q.arg, nboot=10, cl=cl) #N is the size of the hypercube
+LHS.simple <- LHS(modelRun.simple, factors, N=50, q, q.arg, nboot=10, cl=cl) #N is the size of the hypercube
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format

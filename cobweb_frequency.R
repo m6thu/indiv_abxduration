@@ -197,7 +197,7 @@ pic(LHS.trial, nboot=40) #pic (partial inclination coefficient) is the sensitivi
 outcome.df<-as.data.frame(cbind(LHS.trial$data,results.trial)) #dummy matrix with parameter values in columns and outcome in last column
 names(outcome.df)<- c('X1','X2','X3','Y') #name the columns of the dummy matrix 
 for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that produced top 5% of the outcomes
-    if (outcome.df$Y[i]<quantile(outcome.df$Y,probs = 0.95)) { 
+    if (outcome.df$Y[i] <= quantile(outcome.df$Y,probs = 0.95)) { 
         outcome.df$top5[i] <-0 } else {
             outcome.df$top5[i] <-1
         }
