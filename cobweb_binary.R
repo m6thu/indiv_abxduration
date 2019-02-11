@@ -8,7 +8,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores()-2)
+cl <- makeCluster(detectCores())
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
@@ -31,7 +31,7 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 #list parameters together with name, so they are "linked" or not easily confused
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"), #n.bed; number of beds in the ward
-    c("qunif", list(min=3, max=10), "mean.max.los"), #mean.max.los; mean of length of stay (normal distribution)
+    c("qunif", list(min=3, max=10), "mean.max.los"), #mean.max.los; mean of length of stay (exponential distribution)
     c("qunif", list(min=0.1, max=0.9), "p.s"), #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=0.1, max=0.9), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=0.0001, max=0.1), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
@@ -78,21 +78,25 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 # print(new) # print in nice format
 
 
-# Use the LHD function to generate a hypercube
+# # Use the LHD function to generate a hypercube
+# old <- Sys.time() # get start time
+# LHS.binary<- LHS(modelRun.binary, factors, 100, q, q.arg, nboot=10, cl=cl)
+# # print elapsed time
+# new <- Sys.time() - old # calculate difference
+# print(new) # print in nice format
+# 
+# results.binary <- get.results(LHS.binary)
+# # Save run to disk
+# image_name <- paste0("./runs/LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"), '_temp')
+# save.image(paste0(image_name, ".Rdata"))
+
 old <- Sys.time() # get start time
-LHS.binary<- LHS(modelRun.binary, factors, 3000, q, q.arg, nboot=10, cl=cl)
-# print elapsed time
+check.LHS.binary <- LHS(modelRun.binary, factors, 200, q, q.arg, nboot=10, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 
-old <- Sys.time() # get start time
-check.LHS.binary <- LHS(modelRun.binary, factors, 2000, q, q.arg, nboot=10, cl=cl)
-new <- Sys.time() - old # calculate difference
-print(new) # print in nice format
-
-
-results.binary <- get.results(LHS.binary)
+results.binary <- get.results(check.LHS.binary)
 # Save run to disk
 image_name <- paste0("./runs/LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save.image(paste0(image_name, ".Rdata"))
