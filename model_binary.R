@@ -6,7 +6,7 @@ source('msm_util_rtnorm.R')
 
 # generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
-patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
+patient.table <- function(n.bed, n.day, mean.max.los, timestep){
     
     #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
     #number of days. This is to ensure there are enough total number of patients generated to fill table 
@@ -65,7 +65,7 @@ summary.los <- function(patient.matrix){
 }
 
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
-                          meanDur.s, meanDur.r, sdDur, timestep=1){
+                          meanDur.s, meanDur.r, sdDur, timestep){
 
     p.s <- p.s/timestep
     p.r.day1 <- p.r.day1/timestep
@@ -161,7 +161,7 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
 
 
 abx.table.old <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
-                      meanDur.s, meanDur.r, sdDur, timestep=1){
+                      meanDur.s, meanDur.r, sdDur, timestep){
 
     n.day <- nrow(patient.matrix)
     n.bed <- ncol(patient.matrix)
@@ -374,7 +374,7 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR,
 ####################4. Update values for every day  
 nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix, 
                     pi_r1, bif, mu1, mu2, repop.r, 
-                    repop.s1, repop.s2,depop.r, abx.r, abx.s, timestep=1){
+                    repop.s1, repop.s2,depop.r, abx.r, abx.s, timestep){
     
     # adjust probabilities based on timestep
     pi_r1 <- pi_r1/timestep
@@ -488,7 +488,7 @@ nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix,
 
 nextDay <- function(patient.matrix, abx.matrix, colo.matrix, 
                         pi_r1, bif, mu1, mu2, repop.r,
-                        repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep=1){
+                        repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep){
     
     # adjust probabilities based on timestep
     pi_r1 <- pi_r1/timestep
