@@ -2,7 +2,7 @@ source('msm_util_rtnorm.R')
 
 # generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
-patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
+patient.table <- function(n.bed, n.day, mean.max.los, timestep){
     
     #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
     #number of days. This is to ensure there are enough total number of patients generated to fill table 
@@ -60,7 +60,7 @@ summary.los <- function(patient.matrix){
 }
 
 abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
-                      meanDur.s, meanDur.r, sdDur, timestep=1){
+                      meanDur.s, meanDur.r, sdDur, timestep){
     
     p.s <- p.s/timestep
     p.r.day1 <- p.r.day1/timestep
@@ -193,7 +193,7 @@ colo.table <- function(patient.matrix, los.array, t_mean, t_sd, r_mean, r_sd){
 # 4. Update values for every day (define function)
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
                     pi_r, K, r_thres, r_growth, r_trans, 
-                    abxr_killr, abxr_kills, abxs_kills, timestep=1){
+                    abxr_killr, abxr_kills, abxs_kills, timestep){
     
     # K: loading capacity, and r_thres:threshold for infectiousness does not change with time
     pi_r <- pi_r/timestep

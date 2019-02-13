@@ -2,7 +2,7 @@ source('msm_util_rtnorm.R')
 
 # generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
-patient.table <- function(n.bed, n.day, mean.max.los, timestep=1){
+patient.table <- function(n.bed, n.day, mean.max.los, timestep){
 
     #generate patient id numbers, the maximum number of patients possible is number of bed multiple by
     #number of days. This is to ensure there are enough total number of patients generated to fill table 
@@ -59,7 +59,7 @@ summary.los <- function(patient.matrix){
     return(los_duration)
 }
 
-abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep=1){
+abx.table <- function(patient.matrix, los.array, p, meanDur, sdDur, timestep){
     
     p <- p/timestep
     #generate antibiotic use table
@@ -131,14 +131,17 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR)
 
 ####################4. Update values for every day  #####################
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep=1){
+                    bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep){
 
+    #print(paste("pre-pi_ssr:", pi_ssr))
     
     # adjust probabilities based on timestep
     pi_ssr <- pi_ssr/timestep
     repop.s1 <- repop.s1/timestep
     mu_r <- mu_r/timestep
     abx.clear <- abx.clear/timestep
+    
+    #print(paste("pi_ssr, timestep:", pi_ssr, timestep))
     
     # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
     pi_Sr <- pi_ssr - (bif*pi_ssr)
@@ -211,6 +214,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             prob_s <- repop.s1
             
             # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
+            #print(paste("prob_r, prob_s, r_num:", prob_r, prob_s, r_num))
             stopifnot((prob_r+prob_s) <= 1)
             
             roll <- runif(length(ss), 0, 1)
@@ -239,10 +243,10 @@ diff_prevalence <- function(n.bed, mean.max.los,
                 bif, pi_ssr, repop.s1, mu_r, abx.clear,
                 p, short_dur, long_dur, sdDur))
     
-    timestep <- 1
+    timestep <- 100
     n.day <- 500
     iterations <- 100
-    iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -254,7 +258,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         
         colo_table_filled_iter <- nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                           abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          bif, pi_ssr, repop.s1, mu_r, abx.clear)
+                                          bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep)
         
         #Summary
         df <- data.frame(colo_table_filled_iter)
@@ -263,10 +267,10 @@ diff_prevalence <- function(n.bed, mean.max.los,
     # Discard first 1/3 runs as burn-in
     totalR_short <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR),])/iterations/n.bed)
     
-    iter_totalR <- matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     for(iter in 1:iterations){
         
-        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep=1)
+        patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
         abx.matrix <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p, meanDur=long_dur, sdDur=sdDur, timestep)
         colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
@@ -274,7 +278,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         
         colo_table_filled_iter <- nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                           abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          bif, pi_ssr, repop.s1, mu_r, abx.clear)
+                                          bif, pi_ssr, repop.s1, mu_r, abx.clear, timestep)
         
         #Summary
         df <- data.frame(colo_table_filled_iter)

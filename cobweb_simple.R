@@ -13,7 +13,7 @@ cl <- makeCluster(detectCores())
 
 model <- 'simple'
 # source functions on all cores
-clusterCall(cl, function() {source('/home/Mathupanee/indiv_abxduration/model_simple.R')})
+clusterCall(cl, function() {source('~/Desktop/indiv_abxduration/model_simple.R')})
 
 modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
@@ -30,10 +30,10 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 #list parameters together with name, so they are "linked" or not easily confused
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"),  #"n.bed", number of beds in the ward
-    c("qunif", list(min=3, max=10), "mean.max.los"), #"mean.max.los", mean of length of stay 
+    c("qunif", list(min=3, max=10), "mean.max.los"), #"mean.max.los", mean of length of stay
     c("qunif", list(min=0.01, max=0.99), "prob_StartBact_R"),   #"prob_StartBact_R",probability of initial carriage of resistant organisms
-    c("qunif", list(min=0.01, max=0.99), "prop_S_nonR"),        #"prop_S_nonR", proportion of S in the population of S and ss 
-    c("qunif", list(min=0, max=1), "bif"),                #"bif", bacterial interference factor 
+    c("qunif", list(min=0.01, max=0.99), "prop_S_nonR"),        #"prop_S_nonR", proportion of S in the population of S and ss
+    c("qunif", list(min=0, max=1), "bif"),                #"bif", bacterial interference factor
     c("qunif", list(min=0, max=0.99), "pi_ssr"),              # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
     c("qunif", list(min=0, max=0.99), "repop.s1"),          # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
     c("qunif", list(min=0, max=0.99), "mu_r"),                 # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI = 69.3%–82.8%) at 1 month to 35.2% (95% CI = 28.2%–42.9%) at 12 months of follow-up)
@@ -41,8 +41,8 @@ parameters <- list(
     c("qunif", list(min=0.01, max=0.99), "p"),               # "p", probability of being prescribed antibiotics
     c("qunif", list(min=3, max=7), "short_dur"),           # "short_dur", mean short duration of antibiotics (normal distribution)
     c("qunif", list(min=10, max=21), "long_dur"),         # "long_dur", mean long duration of antibiotics (normal distribution)
-    c("qunif", list(min=1, max=5), "sdDur")               # "sdDur", standard deviation of duration of antibiotics 
-)    
+    c("qunif", list(min=1, max=5), "sdDur")               # "sdDur", standard deviation of duration of antibiotics
+)  
 
 # arrange parameters in a way LHS will be happy with
 q <- unlist(lapply(parameters, function(l) l[[1]]))
@@ -59,16 +59,10 @@ if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.simple <- LHS(modelRun.simple, factors, N=1000, q, q.arg, nboot=10, cl=cl) #N is the size of the hypercube
+LHS.simple <- LHS(modelRun.simple, factors, N=50, q, q.arg, nboot=10, cl=cl) #N is the size of the hypercube
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-
-
-# old <- Sys.time() # get start time
-# check.LHS.simple <- LHS(modelRun.simple, factors, N=500, q, q.arg, nboot=10, cl=cl)
-# new <- Sys.time() - old # calculate difference
-# print(new) # print in nice format
 
 
 results.simple <- get.results(LHS.simple)
