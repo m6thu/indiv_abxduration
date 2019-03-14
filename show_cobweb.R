@@ -1,11 +1,9 @@
 # Knit together results????
 
 
-load('./runs/LHS_binary_20Dec2018_1524+07.Rdata')
-LHS.trial <- LHS.binary
-check.LHS.trial <- check.LHS.binary
-results.trial <- results.binary
-
+load('./runs/____')
+LHS.trial <- LHS.simple
+results.trial <- results.simple
 
 # Show results for cobweb
 #Plot findings: 
