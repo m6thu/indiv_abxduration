@@ -1,6 +1,5 @@
 # Knit together results????
 
-
 load('./runs/____')
 LHS.trial <- LHS.simple
 results.trial <- results.simple
@@ -26,19 +25,39 @@ pic(LHS.trial, nboot=40) #pic (partial inclination coefficient) is the sensitivi
 #after removing the linear effect of the other parameters
 
 # 4. Cobweb
-#dummy matrix with parameter values in columns and outcome in last column
-outcome.df<-as.data.frame(cbind(LHS.trial$data,results.trial)) 
-names(outcome.df)<- c('X1','X2','X3','Y') #name the columns of the dummy matrix 
+outcome.df<-as.data.frame(cbind(LHS.trial$data,results.trial)) #dummy matrix with parameter values in columns and outcome in last column
+names(outcome.df)<- c(parameters_simple,'outcome') #name the columns of the dummy matrix 
 for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that produced top 5% of the outcomes
-    if (outcome.df$Y[i]<quantile(outcome.df$Y,probs = 0.95)) { 
-        outcome.df$top5[i] <-0 } else {
-            outcome.df$top5[i] <-1
-        }
+  if (outcome.df$outcome[i]<quantile(outcome.df$outcome,probs = 0.95)) { 
+    outcome.df$top5[i] <-0 } else {
+      outcome.df$top5[i] <-1
+    }
 }
-library(MASS) #load MASS package
-colors<- c("grey", "#E69F00") #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+require(plotrix) #load MASS package
+blue<-alpha("lightskyblue1", alpha=0.3)
+red<-alpha("red", alpha=0.6)
+colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
-parcoord(outcome.df[,c(1:3)] , col= colors[outcome.df$top5],var.label=T)
+parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
+{
+  df <- as.data.frame(x)
+  pr <- lapply(df, pretty)
+  rx <- lapply(pr, range, na.rm = TRUE)
+  x <- mapply(function(x,r) {
+    (x-r[1])/(r[2]-r[1])
+  },
+  df, rx)
+  matplot(1L:ncol(x), t(x), type = "l", col = col, lty = lty, 
+          xlab = "", ylab = "", axes = FALSE,...)
+  axis(1, at = 1L:ncol(x), labels = c(colnames(x)), las = 2)
+  for (i in 1L:ncol(x)) {
+    lines(c(i, i), c(0, 1), col = "grey")
+    text(c(i, i), seq(0,1,length.out=length(pr[[i]])), labels = pr[[i]], 
+         xpd = NA, col=lblcol, cex=0.5)
+  }
+  invisible()
+}
+parcoordlabel(outcome.df[,c(1:length(factors))], col = colors[outcome.df$top5])
 
 #5. Check agreement between runs to decide if our sample size for adequate 
 # Symmetric Blest Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.

@@ -29,19 +29,19 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 #list parameters, the probability density functions from which the parameter values will be calculated, and what are the arguments to these functions
 #list parameters together with name, so they are "linked" or not easily confused
 parameters <- list(
-    c("qunif", list(min=5, max=50), "n.bed"),  #"n.bed", number of beds in the ward
-    c("qunif", list(min=3, max=10), "mean.max.los"), #"mean.max.los", mean of length of stay
-    c("qunif", list(min=0.49, max=0.5), "prob_StartBact_R"),   #"prob_StartBact_R",probability of initial carriage of resistant organisms
-    c("qunif", list(min=0.49, max=0.5), "prop_S_nonR"),        #"prop_S_nonR", proportion of S in the population of S and ss
+    c("qunif", list(min=50, max=50.000001), "n.bed"),  #"n.bed", number of beds in the ward
+    c("qunif", list(min=15, max=15.000001), "mean.max.los"), #"mean.max.los", mean of length of stay
+    c("qunif", list(min=0.2, max=0.200001), "prob_StartBact_R"),   #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    c("qunif", list(min=0.95, max=0.950001), "prop_S_nonR"),        #"prop_S_nonR", proportion of S in the population of S and ss
     c("qunif", list(min=0, max=1), "bif"),                #"bif", bacterial interference factor
-    c("qunif", list(min=0.00001, max=0.001), "pi_ssr"),              # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
-    c("qunif", list(min=0.0000001, max=0.000001), "repop.s1"),          # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
-    c("qunif", list(min=0, max=0.0000001), "mu_r"),                 # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI = 69.3%–82.8%) at 1 month to 35.2% (95% CI = 28.2%–42.9%) at 12 months of follow-up)
-    c("qunif", list(min=0, max=0.2), "abx.clear"),             # "abx.clear", probability of S becoming ss after being on antibiotics
-    c("qunif", list(min=0.59, max=0.6), "p"),               # "p", probability of being prescribed antibiotics
-    c("qunif", list(min=3, max=4), "short_dur"),           # "short_dur", mean short duration of antibiotics (normal distribution)
-    c("qunif", list(min=10, max=11), "long_dur"),         # "long_dur", mean long duration of antibiotics (normal distribution)
-    c("qunif", list(min=1, max=2), "sdDur")               # "sdDur", standard deviation of duration of antibiotics
+    c("qunif", list(min=0.04, max=0.040001), "pi_ssr"),              # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
+    c("qunif", list(min=0, max=0.00000000001), "repop.s1"),          # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
+    c("qunif", list(min=0, max=0.00000000001), "mu_r"),                 # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI = 69.3%–82.8%) at 1 month to 35.2% (95% CI = 28.2%–42.9%) at 12 months of follow-up)
+    c("qunif", list(min=0.1, max=0.100001), "abx.clear"),             # "abx.clear", probability of S becoming ss after being on antibiotics
+    c("qunif", list(min=0.9, max=0.9000001), "p"),               # "p", probability of being prescribed antibiotics
+    c("qunif", list(min=3, max=3.000001), "short_dur"),           # "short_dur", mean short duration of antibiotics (normal distribution)
+    c("qunif", list(min=15, max=15.000001), "long_dur"),         # "long_dur", mean long duration of antibiotics (normal distribution)
+    c("qunif", list(min=1, max=1.00001), "sdDur")               # "sdDur", standard deviation of duration of antibiotics
 )  
 
 # arrange parameters in a way LHS will be happy with
