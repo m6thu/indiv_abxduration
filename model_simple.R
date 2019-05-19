@@ -238,8 +238,8 @@ diff_prevalence <- function(n.bed, mean.max.los,
                 p, short_dur, long_dur, sdDur))
     
     timestep <- 10
-    n.day <- 500
-    iterations <- 10
+    n.day <- 550
+    iterations <- 1
     iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
     for(iter in 1:iterations){
@@ -259,7 +259,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         iter_totalR[, iter] <- rowSums(df == "R")    
     }
     # Discard first 1/3 runs as burn-in
-    totalR_short <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR),])/iterations/n.bed)
+    totalR_short <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
     
     iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     for(iter in 1:iterations){
@@ -279,7 +279,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         iter_totalR[, iter] <- rowSums(df == "R")    
     }
     # Discard first 1/3 runs as burn-in
-    totalR_long <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR),])/iterations/n.bed)
+    totalR_long <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
     
     #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
     # print elapsed time
@@ -292,3 +292,66 @@ diff_prevalence <- function(n.bed, mean.max.los,
 parameters_simple<- c("n.bed", "mean.max.los", "prob_StartBact_R", "prop_S_nonR", 
                "bif", "pi_ssr", "repop.s1", "mu_r", "abx.clear", "p", "short_dur", "long_dur", "sdDur")
 
+diff_prevalence <- function(n.bed, mean.max.los, 
+                            prob_StartBact_R, prop_S_nonR, 
+                            bif, pi_ssr, repop.s1, mu_r, abx.clear,
+                            p, short_dur, long_dur, sdDur){
+  
+  old <- Sys.time() # get start time
+  # DEBUG
+  print(paste(n.bed, mean.max.los, 
+              prob_StartBact_R, prop_S_nonR, 
+              bif, pi_ssr, repop.s1, mu_r, abx.clear,
+              p, short_dur, long_dur, sdDur))
+  
+  timestep <- 10
+  n.day <- 550
+  iterations <- 1
+  iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
+  
+  for(iter in 1:iterations){
+    
+    patient.matrix <- patient.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=timestep)
+    los.array <- summary.los(patient.matrix=patient.matrix)
+    abx.matrix <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p=p, meanDur=short_dur, sdDur=sdDur, timestep=timestep)
+    colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+                              prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+    
+    colo_table_filled_iter <- nextDay(patient.matrix=patient.matrix, los.array=los.array, 
+                                      abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                      bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.clear=abx.clear, timestep=timestep)
+    
+    #Summary
+    df <- data.frame(colo_table_filled_iter)
+    iter_totalR[, iter] <- rowSums(df == "R")    
+  }
+  # Discard first 1/3 runs as burn-in
+  totalR_short <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR),, drop=FALSE])/iterations/n.bed)
+  
+  iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
+  for(iter in 1:iterations){
+    
+    patient.matrix <- patient.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=timestep)
+    los.array <- summary.los(patient.matrix=patient.matrix)
+    abx.matrix <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p=p, meanDur=long_dur, sdDur=sdDur, timestep=timestep)
+    colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
+                              prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+    
+    colo_table_filled_iter <- nextDay(patient.matrix=patient.matrix, los.array=los.array, 
+                                      abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                      bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.clear=abx.clear, timestep=timestep)
+    
+    #Summary
+    df <- data.frame(colo_table_filled_iter)
+    iter_totalR[, iter] <- rowSums(df == "R")    
+  }
+  # Discard first 1/3 runs as burn-in
+  totalR_long <- mean(rowSums(iter_totalR[ceiling(n.day*1/3):nrow(iter_totalR),, drop=FALSE])/iterations/n.bed)
+  
+  #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
+  # print elapsed time
+  new <- Sys.time() - old # calculate difference
+  print(new) # print in nice format
+  
+  return(totalR_long - totalR_short)
+}
