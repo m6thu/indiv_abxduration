@@ -5,10 +5,11 @@
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
+require(spartan) #load spartan for eFAST and AA 
 
 setwd('/Users/moyin/Desktop/angelsfly/indiv_abxduration')
 
-cl <- makeCluster(detectCores())
+cl <- makeCluster(detectCores()-1)
 
 model <- 'simple'
 # source functions on all cores
@@ -58,46 +59,10 @@ if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.simple <- LHS(modelRun.simple, factors, N=20, q, q.arg, nboot=1000, cl=cl) #N is the size of the hypercube
+LHS.simple <- LHS(modelRun.simple, factors, N=200, q, q.arg, nboot=1000, cl=cl) #N is the size of the hypercube
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-
-samples<-LHS.simple[['data']]
-results <- get.results(LHS.simple)
-aa_data_simple<-cbind(samples, results)
-
-# Save run to disk
-iterationstotry= c(1, 5, 50, 100, 300)
-numberofrepeatsineachiteration=20
-aa_data_simple<-list()
-for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
-    LHS.simple <- LHS(modelRun.simple, factors, N=20, q, q.arg, nboot=1000, cl=cl)
-    samples<-LHS.simple[['data']]
-    results <- get.results(LHS.simple)
-    aa_data_simple[[i]]<-cbind(samples, results)
-} 
-
-for (i in iterationstotry){
-  data=total
-  setwd('/Users/moyin/Desktop/angelsfly/indiv_abxduration/papers/simple_model')
-  numbertoputinfolderi=i*numberofrepeatsineachiteration
-  dir.create(as.character(i))
-  for (k in 1:numberofrepeatsineachiteration){
-    directory=paste0('/Users/moyin/Desktop/angelsfly/indiv_abxduration/papers/simple_model/',i)
-    setwd(directory)
-    dir.create(as.character(k))
-    for (g in 1:i){
-      directory=paste0('/Users/moyin/Desktop/angelsfly/indiv_abxduration/papers/simple_model/',i,'/',k)
-      setwd(directory)
-      dir.create(as.character(g))
-      directory=paste0('/Users/moyin/Desktop/angelsfly/indiv_abxduration/papers/simple_model/',i,'/',k, '/',g)
-      setwd(directory)
-      write.csv(data[[1]],'aa_data_simple.csv',row.names=FALSE)
-      data=data[-1]
-    }
-  }
-}
 
 image_name <- paste0("LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save.image(paste0("./runs/", image_name, ".Rdata"))
