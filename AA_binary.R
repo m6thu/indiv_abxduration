@@ -12,7 +12,7 @@ setwd('/Users/moyin/Desktop/angelsfly/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # source functions on all cores
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores())
 clusterCall(cl, function() {source('model_binary.R')})
 
 #parameters 
@@ -48,7 +48,7 @@ values <- as.numeric(unlist(lapply(parameters, function(l) l[[1]])))
 factors <- unlist(lapply(parameters, function(l) l[[2]]))
 
 # Use the LHS function to generate a hypercube 
-iterationstotry= c(1, 50, 100, 125, 150, 200) #iterations we are going to test 
+iterationstotry= c(1, 50, 100, 150, 200, 225, 250) #iterations we are going to test 
 numberofrepeatsineachiteration=20 
 aa_data_binary_diff<-list() 
 for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
@@ -70,7 +70,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Desktop/angelsfly/indiv_abxduration/runs/ATest_binary/test1'
+dirtostoreAAruns='/Users/moyin/Desktop/angelsfly/indiv_abxduration/runs/ATest_binary/test2'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){

@@ -677,7 +677,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     
     timestep <- 10
     n.day <- 550
-    iterations <- 1
+    iterations <- 200
     iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
     for(iter in 1:iterations){

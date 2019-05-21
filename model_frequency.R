@@ -340,7 +340,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
 }
 res.names <- c(paste("No R per bed"),paste("R Thres per bed"))
 
-parameters_frequency <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
+parameters_freq <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
                           "K", "t_mean", "t_sd", "r_mean", "r_sd",
                           "pi_r", "r_thres", "r_growth", "r_trans",
                           "abxr_killr", "abxr_kills", "abxs_kills",

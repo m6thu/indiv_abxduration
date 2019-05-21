@@ -58,24 +58,25 @@ if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-LHS.simple <- LHS(modelRun.simple, factors, N=200, q, q.arg, nboot=1000, cl=cl) #N is the size of the hypercube
+N=1000
+LHS.simple <- LHS(modelRun.simple, factors, N=N, q, q.arg, nboot=1000, cl=cl) #N is the size of the hypercube
 results.simple <- get.results(LHS.simple)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 old <- Sys.time() # get start time
-LHS.simple2 <- LHS(modelRun.simple, factors, N=300, q, q.arg, nboot=1000, cl=cl)
+LHS.simple2 <- LHS(modelRun.simple, factors, N=N-100, q, q.arg, nboot=1000, cl=cl)
 results.simple2 <- get.results(LHS.simple2)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 # Save run to disk
-image_name <- paste0("LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save.image(paste0("./runs/", image_name, ".Rdata"))
+image_name <- paste0("LHS_", model, "_", N, format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.simple, file=paste0("./runs/", image_name, ".Rdata"))
 
-image_name <- paste0("LHS2_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save.image(paste0("./runs/", image_name, ".Rdata"))
+image_name <- paste0("LHS2_", model, "_", N-100, format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.simple2, file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)

@@ -70,24 +70,25 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 }
 
 old <- Sys.time() # get start time
-check.LHS.binary <- LHS(modelRun.binary, factors, N=200, q, q.arg, nboot=1000, cl=cl)
+N=1000
+LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=1000, cl=cl)
 results.binary <- get.results(LHS.binary)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 old <- Sys.time() # get start time
-LHS.binary2 <- LHS(modelRun.binary, factors, N=300, q, q.arg, nboot=1000, cl=cl)
+LHS.binary2 <- LHS(modelRun.binary, factors, N=N-100, q, q.arg, nboot=1000, cl=cl)
 results.binary2 <- get.results(LHS.binary2)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 
 # Save run to disk
-image_name <- paste0("./runs/LHS_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save.image(paste0(image_name, ".Rdata"))
+image_name <- paste0("./runs/LHS_", model, "_", N, format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.binary, file=paste0(image_name, ".Rdata"))
 
-image_name <- paste0("LHS2_", model, "_", format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save.image(paste0("./runs/", image_name, ".Rdata"))
+image_name <- paste0("LHS2_", model, "_", N-100, format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.binary2, file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)
 
