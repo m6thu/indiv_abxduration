@@ -276,8 +276,8 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
                 short_dur.s, long_dur.s, short_dur.r, long_dur.r, sdDur))
     
     timestep <- 10
-    n.day <- 500
-    iterations <- 100
+    n.day <- 550
+    iterations <- 1
     
     iter_totalR.no <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     iter_totalR.thres <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
@@ -340,7 +340,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
 }
 res.names <- c(paste("No R per bed"),paste("R Thres per bed"))
 
-parameters_frequency <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
+parameters_freq <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
                           "K", "t_mean", "t_sd", "r_mean", "r_sd",
                           "pi_r", "r_thres", "r_growth", "r_trans",
                           "abxr_killr", "abxr_kills", "abxs_kills",
