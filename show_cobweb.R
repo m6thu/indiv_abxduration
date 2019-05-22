@@ -1,10 +1,10 @@
-# Knit together results????
+library(epiR)
 
 load('./runs/____')
-LHS.output <- check.LHS.binary
-LHS.output.sbma <- LHS.binary2
-results.output <- get.results(check.LHS.binary)
-parameters<-parameters_binary
+LHS.output <- LHS.simple
+LHS.output.sbma <- LHS.simple2
+results.output <- get.results(LHS.simple)
+parameters<-parameters_simple
 
 # 1. Check monotonicity 
 ##### scatterplot of the result as a function of each parameter: distribution of values returned by the model 
@@ -59,6 +59,10 @@ prcc$hi_lo[which(prcc$`max. c.i.`<0)]='Below'
 prcc$hi_lo[is.na(prcc$hi_lo)]='None'
 prcc<-prcc[order(prcc$original, decreasing = TRUE),]
 rownames.prcc<-factor(as.factor(rownames(prcc)), levels = rownames(prcc))
+
+dat= cbind.data.frame(parametersamples, output)
+parameters
+pvalues=epi.prcc(dat = dat, sided.test = 2)
 
 ggplot(data=prcc, mapping = aes(x = rownames.prcc, y = original)) +
   geom_hline(yintercept=0, color = "azure2")+
