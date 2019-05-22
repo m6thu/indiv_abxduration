@@ -116,9 +116,9 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
             abx.matrix[idx_end:(idx_end+max_days-1)] <- rep(0, max_days)
         }
         
-        #Every day has a chance of starting abx.r by a fixed probability
-        roll.r <- runif(max_days, 0, 1)
-        start.r <- roll.r < p.r.dayafter
+        #Every day has a chance of starting abx.r by accumulative probability
+        dailyrisk<-1-((1-(p.r.dayafter/timestep))^(1:max_days)) 
+        start.r <- rbinom(max_days, 1, prob=dailyrisk)
         #print(sum(start.r))
         where.r <- which(start.r == 1)
         #print(paste('where.r', where.r))
