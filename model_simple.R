@@ -1,4 +1,5 @@
 source('msm_util_rtnorm.R')
+sourceCpp('rcpptable.cpp')
 
 # generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
@@ -49,12 +50,12 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep){
 summary.los <- function(patient.matrix){    
     
     # Summarize how often each patient.id is encountered to get days for each id
-    los.dur <- table(patient.matrix)
-    los_duration <- array(dim = c(2, length(los.dur)))
+    los.dur <- table_cpp(patient.matrix)
+    los_duration <- array(dim = c(2, max(los.dur$values)))
     # Attach patient ID on 1st row
-    los_duration[1,] <- 1:length(los.dur)
+    los_duration[1,] <- los.dur$values
     # Put summary of days on 2nd row
-    los_duration[2,] <- los.dur
+    los_duration[2,] <- los.dur$lengths
     
     return(los_duration)
 }
@@ -240,6 +241,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
     timestep <- 10
     n.day <- 550
     iterations <- 125
+
     iter_totalR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
     for(iter in 1:iterations){
