@@ -184,7 +184,9 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             # probability for transmission of R
             prob_r <- 1-((1-pi_Sr)^r_num)
             
-            stopifnot((prob_r+abx.clear) <= 1)
+            if(!(prob_r+abx.clear < 1)){
+              stop(paste("Error stopifnot: p.s+p.r.day1 < 1.  p.s:",  p.s, "abx.clear:", abx.clear))
+            }
 
             # Roll a random number for each R on the previous day for clearance
             roll<- runif(length(S), 0, 1)
@@ -209,7 +211,9 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             
             # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
             #print(paste("prob_r, prob_s, r_num:", prob_r, prob_s, r_num))
-            stopifnot((prob_r+prob_s) <= 1)
+            if(!(prob_r+prob_s < 1)){
+              stop(paste("Error stopifnot: p.s+p.r.day1 < 1.  p.s:",  p.s, "p.r.day1:", p.r.day1))
+            }
             
             roll <- runif(length(ss), 0, 1)
             

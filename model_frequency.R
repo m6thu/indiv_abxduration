@@ -64,16 +64,16 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
                       meanDur.s, meanDur.r, sdDur, timestep){
 
     # Check assumption that possibilities are, no abx, has s abx, or has r abx on first day
-    stopifnot(p.s+p.r.day1 <= 1)
+  if(!(p.s+p.r.day1 < 1)){
+    stop(paste("Error stopifnot: p.s+p.r.day1 < 1.  p.s:",  p.s, "p.r.day1:", p.r.day1))
+  }
     
     #generate antibiotic use table
     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
     abx_days.s <- round(rtnorm(ncol(los.array), mean=meanDur.s*timestep, sd=sdDur*timestep, lower=1))
     #number of days of r antibiotic is randomly drawn from a truncated normal distribution
     abx_days.r <- round(rtnorm(ncol(los.array), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
-    #number of days of r antibiotic for days after drawn from tunced norm dist
-    abx_r.after <- round(rtnorm(length(patient.matrix), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
-    r_idx <- 1 # R indices start at 1
+    
     # Unit test - check distribution of abx distribution
     # hist(abx_days.s, breaks=20)
     # Unit test - compare cases that will enter padding if-else
@@ -119,6 +119,10 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
         #Every day has a chance of starting abx.r by accumulative probability
         dailyrisk<-1-((1-(p.r.dayafter/timestep))^(1:max_days)) 
         start.r <- rbinom(max_days, 1, prob=dailyrisk)
+        #number of days of r antibiotic for days after drawn from tunced norm dist
+        abx_r.after <- round(rtnorm(sum(start.r), mean=meanDur.r*timestep, sd=sdDur*timestep, lower=1))
+        r_idx <- 1 # R indices start at 1
+        
         #print(sum(start.r))
         where.r <- which(start.r == 1)
         #print(paste('where.r', where.r))
