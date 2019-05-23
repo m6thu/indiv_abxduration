@@ -13,7 +13,7 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep){
     patient.id <- 1:n.patient
     
     all_los <- ceiling(rexp(n.patient, 1/(mean.max.los*timestep)))
-    all_los[all_los > 5*mean.max.los*timestep] <- 1
+    all_los[all_los > 5*mean.max.los*timestep] <- mean.max.los*timestep
     sum_los <- cumsum(all_los)
     
     #make up a matrix of number of days we want to observe (rows) -
