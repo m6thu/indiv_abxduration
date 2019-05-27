@@ -66,13 +66,13 @@ factors <- unlist(lapply(parameters, function(l) l[[4]]))
 # if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
 # MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
 source(paste0("model_frequency.R"))
-if(!(sum(factors == parameters_frequency) ==  length(parameters_frequency))){
+if(!(sum(factors == parameters_freq) ==  length(parameters_freq))){
     stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
 }
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-N=1000
+N=500
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=1000, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference

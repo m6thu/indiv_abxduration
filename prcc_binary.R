@@ -1,20 +1,21 @@
 #######Modelling Day Project######
 #######Parameter exploration######
 ################################### Dependencies and functions ################################################
+setwd('Desktop/angelsfly/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
-require(Rcpp) #optimising functions
 
-cl <- makeCluster(detectCores())
+cl <- makeCluster(detectCores()-1)
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
 
 clusterCall(cl, function() {source('model_binary.R')})
+
 # source functions on all cores
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
     return(mapply(diff_prevalence, 
@@ -46,7 +47,7 @@ parameters <- list(
     c("qunif", list(min=0, max=0.005), "mu2"),             #probability of being decolonised to S (sr—> s) 
     c("qunif", list(min=0.1, max=0.9), "abx.r"),           #probability of clearing R to become r
     c("qunif", list(min=0.1, max=0.9), "abx.s"),           #probability of clearing S to become s
-    c("qunif", list(min=0, max=0.2), "repop.r"),           #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0, max=1), "repop.r"),           #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0, max=0.2), "repop.s1"),          #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0, max=0.2), "repop.s2"),          #probability of regrowth of S  (sr—>Sr)
     c("qunif", list(min=0, max=0.2), "depop.r"),           #probability of sR-->sr without antibiotics

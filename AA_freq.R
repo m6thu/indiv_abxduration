@@ -95,7 +95,7 @@ FILEPATH <- dirtostoreAAruns #already in dirtostoreAAruns stated above
 # Sample sizes (number of simulation replicates in each distribution) to be analysed
 SAMPLESIZES <- iterationstotry
 # The simulation output measures to be analysed
-MEASURES <- "results"
+MEASURES <- c("Rperbed", "RThresperbed")
 # Number of distributions being compared. Default: 20, as performed by Read et al
 NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.

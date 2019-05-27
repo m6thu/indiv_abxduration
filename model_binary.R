@@ -1,5 +1,4 @@
 source('msm_util_rtnorm.R')
-sourceCpp('rcpptable.cpp')
 
 #(1 for short duration and 1 for long duration) 
 #simulate inpatients with various lengths of stay
@@ -55,12 +54,12 @@ patient.table <- function(n.bed, n.day, mean.max.los, timestep){
 summary.los <- function(patient.matrix){    
     
     # Summarize how often each patient.id is encountered to get days for each id
-    los.dur <- table_cpp(patient.matrix)
-    los_duration <- array(dim = c(2, max(los.dur$values)))
+    los.dur <- table(patient.matrix)
+    los_duration <- array(dim = c(2, max(patient.matrix)))
     # Attach patient ID on 1st row
-    los_duration[1,] <- los.dur$values
+    los_duration[1,] <- 1:max(patient.matrix)
     # Put summary of days on 2nd row
-    los_duration[2,] <- los.dur$lengths
+    los_duration[2,] <- los.dur
     
     return(los_duration)
 }
@@ -72,7 +71,6 @@ abx.table <- function(patient.matrix, los.array, p.s, p.r.day1, p.r.dayafter,
   if(!(p.s+p.r.day1 < 1)){
     stop(paste("Error stopifnot: p.s+p.r.day1 < 1.  p.s:",  p.s, "p.r.day1:", p.r.day1))
   }
-
 
     #generate antibiotic use table
     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
@@ -179,7 +177,7 @@ colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR,
     Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1:3])) & (Patient_unif <= sum(prob_StartBact_bi))] <- 'sr'
     Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1:2])) & (Patient_unif <= sum(prob_StartBact_bi[1:3]))] <- 'sR'
     Patient_StartBact[(Patient_unif > sum(prob_StartBact_bi[1])) & (Patient_unif <= sum(prob_StartBact_bi[1:2]))] <- 'Sr'
-    Patient_StartBact[Patient_unif <= sum(prob_StartBact_bi[1])] <- 'S'
+    Patient_StartBact[Patient_unif <= prob_StartBact_bi[1]] <- 'S'
     
     #Creating array for carriage status
     array_StartBact <- matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
@@ -221,17 +219,17 @@ nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix,
             #print(colo.matrix[i-1, j])
             if(is.na(colo.matrix[i, j])){
                 r_num <- sum(colo.matrix[i-1,] == "sR") #only R can be transmitted 
+                
                 if(colo.matrix[i-1, j] == "S"){
                     #print("----case S")
-                    # check antibiotic
-                    roll_clear <- runif(1, 0, 1)
-                    roll_transmit <- runif(1, 0, 1)
+                    #roll for next event for S
+                    roll_S <- runif(1, 0, 1)
                     prob_r <- 1-((1-pi_r1)^r_num)
-                    if (abx.matrix[i-1, j] == 1 & roll_clear < abx.s){
+                    if (abx.matrix[i-1, j] == 1 & roll_S < abx.s){
                         colo.matrix[i, j] <- "ss"
-                    } else if (abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
+                    } else if (abx.matrix[i-1, j] > 1 & roll_S < abx.r){
                         colo.matrix[i, j] <- "ss"
-                    } else if (roll_transmit < prob_r){ 
+                    } else if (roll_S < prob_r){ 
                         colo.matrix[i, j] <- "Sr"
                     }else {
                         colo.matrix[i, j] <- "S"
@@ -240,14 +238,15 @@ nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix,
                     # case ss
                 }else if(colo.matrix[i-1, j] == "ss"){
                     #print("----case s")
-                    # roll for transmission of r
-                    roll_r <- runif(1, 0, 1)
-                    prob_r <- 1-((1-pi_r2)^r_num)
-                    # roll for repopulation of s to become S
+                    # roll for next event for ss 
                     roll_ss <- runif(1, 0, 1)
-                    if (roll_r < prob_r) { 
+                    prob_r <- 1-((1-pi_r2)^r_num)
+                    if(!(prob_r+repop.s1 < 1)){
+                      stop(paste("Error stopifnot: repop.s1+prob_r < 1.  repop.s1:",  repop.s1, "prob_r(prob_r <- 1-((1-pi_r2)^r_num)):", prob_r))
+                    }
+                    if (roll_ss < prob_r) { 
                         colo.matrix[i,j]<-"sr" 
-                    } else if ( roll_ss < repop.s1) {
+                    } else if ( roll_ss < (prob_r+repop.s1) & roll_ss > prob_r & abx.matrix[i-1, j]==0) { #repop only if not on antibiotics the previous timestep
                         colo.matrix[i,j]<-"S"
                     } else{
                         colo.matrix[i, j] <- "ss"
@@ -256,14 +255,13 @@ nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix,
                     # case Sr
                 }else if(colo.matrix[i-1, j] == "Sr"){
                     #print("----case Sr")
-                    # check antibiotics 
-                    roll_clear <- runif(1, 0, 1)
-                    roll_decolonise <- runif(1, 0, 1)
-                    if(abx.matrix[i-1, j] ==1 & roll_clear < abx.s){
+                    # roll next event for Sr 
+                    roll_Sr <- runif(1, 0, 1)
+                    if(abx.matrix[i-1, j] ==1 & roll_Sr < abx.s){
                         colo.matrix[i, j] <- "sr"
-                    } else if (abx.matrix[i-1, j] >1 & roll_clear < abx.r ) {
-                        colo.matrix[i, j] <- "sr"
-                    } else if(roll_decolonise < mu1){ 
+                    } else if (abx.matrix[i-1, j] >1 & roll_Sr < abx.r ) {
+                        colo.matrix[i, j] <- "s"
+                    } else if(roll_Sr < mu1){ 
                         colo.matrix[i, j] <- "S"
                     }else {
                         colo.matrix[i, j] <- "Sr"
@@ -272,16 +270,17 @@ nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix,
                     # case sr
                 }else if(colo.matrix[i-1, j] == "sr"){
                     #print("----case sr")
-                    roll_repop <- runif(1, 0, 1)
-                    roll_decolonise <- runif(1, 0, 1)
-                    # check antibiotics
-                    if(abx.matrix[i-1, j] == 1 & roll_repop < repop.r){
+                  #roll event for sr
+                    roll_sr <- runif(1, 0, 1)
+                    sr_event_prob<- c(repop.r, repop.s2, mu2)
+                    if(!( sr_event_prob < 1)){
+                      stop(paste("Error stopifnot: repop.s2+repop.r+mu2 < 1.  repop.s2:",  repop.s2, "repop.r:", repop.r, "mu2:", mu2))
+                    }
+                    if(roll_sr < repop.r & abx.matrix[i-1, j] == 1){
                         colo.matrix[i, j] <- "sR"
-                    }else if(abx.matrix[i-1, j] == 0 & roll_repop < repop.s2){
+                    }else if(roll_sr < sum(sr_event_prob[1:2]) & roll_sr > repop.r & abx.matrix[i-1, j] == 0){
                         colo.matrix[i, j] <- "Sr"
-                        # }else if(abx.matrix[i-1, j] == 0 & roll_repop < repop.r){
-                        #     colo.matrix[i, j] <- "sR"
-                    }else if (roll_decolonise < mu2){
+                    }else if (roll_sr < sum(sr_event_prob) & roll_sr > sum(sr_event_prob[1:2])){
                         colo.matrix[i, j] <- "ss"
                     }else {
                         colo.matrix[i, j] <- "sr"
@@ -290,10 +289,10 @@ nextDay.old <- function(patient.matrix, abx.matrix, colo.matrix,
                     # case sR
                 }else if(colo.matrix[i-1, j] == "sR"){
                     #print("----case sR")
-                    roll_clear <- runif(1, 0, 1)
-                    if(abx.matrix[i-1, j] > 1 & roll_clear < abx.r){
+                    roll_sR <- runif(1, 0, 1)
+                    if(roll_sR < abx.r & abx.matrix[i-1, j] > 1){
                         colo.matrix[i, j] <- "sr"
-                    }else if (abx.matrix[i-1, j] == 0 & roll_clear < depop.r){
+                    }else if (roll_sR < depop.r & abx.matrix[i-1, j] == 0){
                         colo.matrix[i, j] <- "sr"
                     }else {
                         colo.matrix[i, j] <- "sR"
@@ -369,6 +368,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             same_idx <- S[roll_trans >= prob_r]
             colo.matrix[i, r_idx] <- "Sr"
             colo.matrix[i, same_idx] <- "S"
+            
         }
         
         # Update ss
@@ -506,19 +506,19 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     timestep <- 10
     n.day <- 550
     iterations <- 200
-    iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
+    iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=timestep)
-        los.array <- summary.los(patient.matrix)
+        los.array <- summary.los(patient.matrix=patient.matrix)
         abx.matrix <- abx.table(patient.matrix=patient.matrix, los.array=los.array, p.s=p.s, p.r.day1=p.r.day1, p.r.dayafter=p.r.dayafter,
                                 meanDur.s=short_dur.s, meanDur.r=short_dur.r, sdDur=sdDur, timestep=timestep)
         colo.matrix <- colo.table(patient.matrix=patient.matrix, los=los.array, 
                                   prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
         
-        colo.matrix_filled_iter <- nextDay(patient.matrix, abx.matrix, colo.matrix, 
-                                          pi_r2, bif, mu1, mu2, repop.r, 
-                                          repop.s1, repop.s2, depop.r, abx.r, abx.s, timestep)
+        colo.matrix_filled_iter <- nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                          pi_r2=pi_r2, bif=bif, mu1=mu1, mu2=mu2, repop.r=repop.r, 
+                                          repop.s1=repop.s1, repop.s2=repop.s2, depop.r=depop.r, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
         #Summary
         df <- data.frame(colo.matrix_filled_iter)
         iter_totalsR[, iter] <- rowSums(df == "sR")

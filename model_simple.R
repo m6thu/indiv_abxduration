@@ -206,19 +206,17 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         if(length(ss)){
             # roll for transmission of R
             prob_r <- 1-((1-pi_ssr)^r_num)
-            # roll for repop of S
-            prob_s <- repop.s1
             
             # as a Gillespie approximation probability of r and s transmission should be small enough that they do not add to 1
             #print(paste("prob_r, prob_s, r_num:", prob_r, prob_s, r_num))
-            if(!(prob_r+prob_s < 1)){
-              stop(paste("Error stopifnot: p.s+p.r.day1 < 1.  p.s:",  p.s, "p.r.day1:", p.r.day1))
+            if(!(prob_r+repop.s1 < 1)){
+              stop(paste("Error stopifnot: repop.s1+prob_r < 1.  repop.s1:",  repop.s1, "prob_r:", prob_r))
             }
             
             roll <- runif(length(ss), 0, 1)
             
             r_idx <- ss[roll < prob_r]
-            s_idx <- ss[(roll >= prob_r) & (roll < (prob_s+prob_r)) & !abx.matrix[i-1, ss]]
+            s_idx <- ss[(roll >= prob_r) & (roll < (repop.s1+prob_r)) & !abx.matrix[i-1, ss]]
             same_idx <- ss[!(ss %in% c(r_idx, s_idx))]
             
             colo.matrix[i, s_idx] <- "S"
