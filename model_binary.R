@@ -508,6 +508,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
     iterations <- 200
     
     iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalr_or_R<- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=timestep)
         los.array <- summary.los(patient.matrix=patient.matrix)
@@ -522,11 +523,14 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #Summary
         df <- data.frame(colo.matrix_filled_iter)
         iter_totalsR[, iter] <- rowSums(df == "sR")
+        iter_totalr_or_R[, iter] <- rowSums(df == "sR" | df == "sr" |df == "Sr")
         #print("end iteration loop")
     }
     totalsR_short <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
+    totalr_or_R_short <- mean(rowSums(iter_totalr_or_R[ceiling(n.day*1/3):nrow(iter_totalr_or_R),, drop=FALSE])/iterations/n.bed)
     
     iter_totalsR <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalr_or_R <- matrix(NA, nrow = n.day*timestep, ncol = iterations)
     for(iter in 1:iterations){
         patient.matrix <- patient.table(n.bed, n.day, mean.max.los, timestep)
         los.array <- summary.los(patient.matrix)
@@ -541,17 +545,20 @@ diff_prevalence <- function(n.bed, mean.max.los, p.s, p.r.day1, p.r.dayafter,
         #Summary
         df <- data.frame(colo.matrix_filled_iter)
         iter_totalsR[,iter] <- rowSums(df == "sR")
+        iter_totalr_or_R[, iter] <- rowSums(df == "sR" | df == "sr" |df == "Sr")
         #print("end iteration loop")
     }
     totalsR_long <- mean(rowSums(iter_totalsR[ceiling(n.day*1/3):nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
+    totalr_or_R_long <- mean(rowSums(iter_totalr_or_R[ceiling(n.day*1/3):nrow(iter_totalr_or_R),, drop=FALSE])/iterations/n.bed)
     
     #print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
     # print elapsed time
     new <- Sys.time() - old # calculate difference
     print(new) # print in nice format
     
-    return(totalsR_long - totalsR_short)
+    return(array(c((totalsR_long - totalsR_short),(totalr_or_R_long-totalr_or_R_short))))
 }
+res.names <- c(paste("No sr/sR/Sr per bed"),paste("sR per bed"))
 
 parameters_binary <- c("n.bed", "mean.max.los", "p.s", "p.r.day1", "p.r.dayafter",
                       "prob_StartBact_R", "prop_S_nonR", "prop_Sr_inR", "prop_sr_inR",

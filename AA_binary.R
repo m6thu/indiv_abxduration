@@ -2,7 +2,7 @@
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
-library(spartan) #load spartan package for AA and eFAST
+require(spartan) #for AA 
 
 ################################### Consistency testing ############################################
 #resource: https://cran.r-project.org/web/packages/spartan/vignettes/sensitivity_analysis.html
@@ -12,7 +12,7 @@ setwd('/Users/moyin/Desktop/angelsfly/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # source functions on all cores
-cl <- makeCluster(detectCores())
+cl <- makeCluster(detectCores()-1)
 clusterCall(cl, function() {source('model_binary.R')})
 
 #parameters 
@@ -32,7 +32,7 @@ parameters <- list(
   c(runif(1,min=0, max=0.005), "mu2"),             #probability of being decolonised to S (sr—> s) 
   c(runif(1,min=0.1, max=0.9), "abx.r"),           #probability of clearing R to become r
   c(runif(1,min=0.1, max=0.9), "abx.s"),           #probability of clearing S to become s
-  c(runif(1,min=0, max=0.2), "repop.r"),           #probability of regrowth of s (sr—> sR)
+  c(runif(1,min=0, max=1), "repop.r"),           #probability of regrowth of s (sr—> sR)
   c(runif(1,min=0, max=0.2), "repop.s1"),          #probability of regrowth of S  (s—>S)
   c(runif(1,min=0, max=0.2), "repop.s2"),          #probability of regrowth of S  (sr—>Sr)
   c(runif(1,min=0, max=0.2), "depop.r"),           #probability of sR-->sr without antibiotics
@@ -64,13 +64,13 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
                             long_dur.r=values[23], sdDur=values[24])
   samples<- values #sampled parameter combinations 
   results <- binary #save results of the simulations
-  aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 25) #combine sampled parameter combinations and results in one file 
-  colnames(aa_data_binary_diff[[i]])=c(parameters_binary, 'results')
+  aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 26) #combine sampled parameter combinations and results in one file 
+  colnames(aa_data_binary_diff[[i]])=c(parameters_binary, "No sr/sR/Sr per bed", "sR per bed")
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Desktop/angelsfly/indiv_abxduration/runs/ATest_binary/test2'
+dirtostoreAAruns='/Users/moyin/Desktop/angelsfly/indiv_abxduration/runs/ATest_binary/test3'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){
@@ -101,7 +101,7 @@ FILEPATH <- dirtostoreAAruns #already in dirtostoreAAruns stated above
 # Sample sizes (number of simulation replicates in each distribution) to be analysed
 SAMPLESIZES <- iterationstotry
 # The simulation output measures to be analysed
-MEASURES <- "results"
+MEASURES <- c("No sr/sR/Sr per bed", "sR per bed")
 # Number of distributions being compared. Default: 20, as performed by Read et al
 NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
@@ -109,7 +109,7 @@ RESULTFILENAME <- "aa_data_binary.csv"
 # Notes the column in the CSV results file where the results start.
 OUTPUTFILECOLSTART <- 25
 # Last column of the output measure results
-OUTPUTFILECOLEND <- 25
+OUTPUTFILECOLEND <- 26
 # The A-Test value either side of 0.5 which should be considered a 'large difference'
 # between two sets of results. Use of 0.23 was taken from the Vargha-Delaney publication
 LARGEDIFFINDICATOR <- 0.23

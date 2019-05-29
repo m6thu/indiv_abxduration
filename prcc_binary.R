@@ -9,7 +9,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores())
+cl <- makeCluster(detectCores()-1)
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
@@ -72,7 +72,7 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 }
 
 old <- Sys.time() # get start time
-N=1000
+N=1300
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=1000, cl=cl)
 results.binary <- get.results(LHS.binary)
 new <- Sys.time() - old # calculate difference

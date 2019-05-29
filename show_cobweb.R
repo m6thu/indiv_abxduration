@@ -1,10 +1,10 @@
 library(epiR) #calculate p values for PRCC
 
-load('./runs/____')
-LHS.output <- LHS.binary
+load('runs/LHS_simple_100022May2019_0007BST.Rdata')
+LHS.output <- LHS.simple
 LHS.output.sbma <- LHS.binary2
-results.output <- get.results(LHS.binary)
-parameters<-parameters_binary
+results.output <- get.results(LHS.simple)
+parameters<-parameters_simple
 
 # 1. Check monotonicity 
 ##### scatterplot of the result as a function of each parameter: distribution of values returned by the model 
