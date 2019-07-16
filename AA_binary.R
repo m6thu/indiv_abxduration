@@ -8,7 +8,7 @@ require(spartan) #for AA
 #resource: https://cran.r-project.org/web/packages/spartan/vignettes/sensitivity_analysis.html
 #data download: http://www.kieranalden.info/index.php/spartan/
 
-setwd('/Users/moyin/Desktop/angelsfly/indiv_abxduration/')
+setwd('/Users/moyin/Desktop/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # source functions on all cores
@@ -17,31 +17,29 @@ clusterCall(cl, function() {source('model_binary.R')})
 
 #parameters 
 parameters <- list(
-  c(runif(1,min=3, max=50), "n.bed"),              #n.bed; number of beds in the ward
-  c(runif(1,min=3, max=30), "mean.max.los"),       #mean.max.los; mean of length of stay (exponential distribution)
-  c(runif(1,min=0.1, max=0.5), "p.s"),             #probability of being prescribed narrow spectrum antibiotic
-  c(runif(1,min=0, max=0.4), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-  c(runif(1,min=0, max= 0.2), "p.r.dayafter"),     #probability of being prescribed broad spectrum antibiotic after admission 
-  c(runif(1,min=0, max=0.9), "prob_StartBact_R"),  #probability of initial carriage of resistant organisms
-  c(runif(1,min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-  c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-  c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
-  c(runif(1,min=0, max=0.05), "pi_r2"),            #probability of being transmitted r to ss (ss—> ssr)
-  c(runif(1,min=0, max=1), "bif"),                 #bacterial interference factor (pi_r2 = pi_r1 * bif )
-  c(runif(1,min=0, max=0.005), "mu1"),             #probability of being decolonised to S (Sr—> S) 
-  c(runif(1,min=0, max=0.005), "mu2"),             #probability of being decolonised to S (sr—> s) 
-  c(runif(1,min=0.1, max=0.9), "abx.r"),           #probability of clearing R to become r
-  c(runif(1,min=0.1, max=0.9), "abx.s"),           #probability of clearing S to become s
-  c(runif(1,min=0, max=1), "repop.r"),           #probability of regrowth of s (sr—> sR)
-  c(runif(1,min=0, max=0.2), "repop.s1"),          #probability of regrowth of S  (s—>S)
-  c(runif(1,min=0, max=0.2), "repop.s2"),          #probability of regrowth of S  (sr—>Sr)
-  c(runif(1,min=0, max=0.2), "depop.r"),           #probability of sR-->sr without antibiotics
-  c(runif(1,min=3, max=7), "short_dur.s"),         #mean short duration of narrow spectrum antibiotics (normal distribution) 
-  c(runif(1,min=8, max=20), "long_dur.s"),         #mean long duration of narrow spectrum antibiotics (normal distribution) 
-  c(runif(1,min=3, max=7), "short_dur.r"),         #mean short duration of broad spectrum antibiotics (normal distribution) 
-  c(runif(1,min=8, max=20), "long_dur.r"),         #mean long duration of broad spectrum antibiotics (normal distribution) 
-  c(runif(1,min=1, max=2), "sdDur")                #standard deviation of the duration of antibiotics
-) 
+    c(runif(1,min=3, max=50), "n.bed"),              #n.bed; number of beds in the ward
+    c(runif(1,min=3, max=30), "mean.max.los"),       #mean.max.los; mean of length of stay (exponential distribution)
+    c(runif(1,min=0, max=1), "prob_StartBact_R"),    #probability of initial carriage of resistant organisms
+    c(runif(1,min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
+    c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
+    c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
+    c(runif(1,min=0, max=1), "bif"),                 #bacterial interference factor (pi_r2 = pi_r1 * bif )
+    c(runif(1,min=0, max=0.1), "pi_r2"),             #probability of being transmitted r to ss (ss—> ssr)
+    c(runif(1,min=0, max=0.05), "repop.s1"),         #probability of regrowth of S  (s—>S)
+    c(runif(1,min=0, max=0.05), "repop.s2"),         #probability of regrowth of S  (sr—>Sr)
+    c(runif(1,min=0, max=0.05), "repop.r1"),         #probability of regrowth of s (sr—> sR)
+    c(runif(1,min=0, max=0.05), "repop.r2"),         #probability of regrowth of s (sr—> sR)
+    c(runif(1,min=0, max=0.05), "mu1"),              #probability of being decolonised to S (Sr—> S) 
+    c(runif(1,min=0, max=0.05), "mu2"),              #probability of being decolonised to S (sr—> s) 
+    c(runif(1,min=0, max=0.05), "mu.r"),             #probability of being decolonised to S (Sr—> S) 
+    c(runif(1,min=0.1, max=0.6), "abx.s"),           #probability of clearing S to become s
+    c(runif(1,min=0, max=0.0001), "abx.r"),        #probability of clearing R to become r
+    c(runif(1,min=0.1, max=0.9), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
+    c(runif(1,min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
+    c(runif(1,min=0.1, max=0.9), "p.r.day1"),        #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
+    c(runif(1,min=3, max=7), "short_dur"),           #mean short duration of antibiotics (normal distribution) 
+    c(runif(1,min=14, max=21), "long_dur")           #mean long duration of antibiotics (normal distribution) 
+)
 
 # get factor values 
 values <- as.numeric(unlist(lapply(parameters, function(l) l[[1]])))
@@ -55,22 +53,21 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(paste('Calculating', i, 'in', (max(iterationstotry)*numberofrepeatsineachiteration), 'total runs'))
   old <- Sys.time() # get start time
   binary <- diff_prevalence(n.bed=values[1], mean.max.los=values[2], 
-                            p.s=values[3], p.r.day1=values[4], 
-                            p.r.dayafter=values[5], prob_StartBact_R=values[6], prop_S_nonR=values[7], 
-                            prop_Sr_inR=values[8],prop_sr_inR=values[9],pi_r2=values[10], bif=values[11], 
-                            mu1=values[12], mu2=values[13], abx.r=values[14], 
-                            abx.s=values[15], repop.r=values[16], repop.s1=values[17], repop.s2=values[18], 
-                            depop.r=values[19], short_dur.s=values[20], long_dur.s=values[21], short_dur.r=values[22], 
-                            long_dur.r=values[23], sdDur=values[24])
+                            prob_StartBact_R=values[3], prop_S_nonR=values[4], 
+                            prop_Sr_inR=values[5], prop_sr_inR=values[6], bif=values[7], 
+                            pi_r2=values[8], repop.s1=values[9], repop.s2=values[10], repop.r1=values[11], 
+                            repop.r2=values[12], mu1=values[13], mu2=values[14], 
+                            mu.r=values[15], abx.s=values[16], abx.r=values[17], p.infect=values[18], 
+                            cum.r.1=values[19], p.r.day1=values[20], short_dur=values[21], long_dur=values[22])
   samples<- values #sampled parameter combinations 
   results <- binary #save results of the simulations
-  aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 26) #combine sampled parameter combinations and results in one file 
+  aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 24) #combine sampled parameter combinations and results in one file 
   colnames(aa_data_binary_diff[[i]])=c(parameters_binary, "No sr/sR/Sr per bed", "sR per bed")
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Desktop/angelsfly/indiv_abxduration/runs/ATest_binary/test3'
+dirtostoreAAruns='/Users/moyin/Desktop/indiv_abxduration/runs/ATest_binary/test1'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){
@@ -107,9 +104,9 @@ NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
 RESULTFILENAME <- "aa_data_binary.csv"
 # Notes the column in the CSV results file where the results start.
-OUTPUTFILECOLSTART <- 25
+OUTPUTFILECOLSTART <- 23
 # Last column of the output measure results
-OUTPUTFILECOLEND <- 26
+OUTPUTFILECOLEND <- 24
 # The A-Test value either side of 0.5 which should be considered a 'large difference'
 # between two sets of results. Use of 0.23 was taken from the Vargha-Delaney publication
 LARGEDIFFINDICATOR <- 0.23

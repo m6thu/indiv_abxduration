@@ -5,12 +5,11 @@
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
-require(fastmatch) #optimising functions %in%
 require(MCMCglmm) #for rtnorm
 
 setwd('/Users/moyin/Desktop/indiv_abxduration')
 
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores()-3)
 
 model <- 'simple'
 # source functions on all cores
@@ -32,17 +31,17 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 parameters <- list(
     c("qunif", list(min=3, max=50), "n.bed"),              #"n.bed", number of beds in the ward
     c("qunif", list(min=3, max=30), "mean.max.los"),       #"mean.max.los", mean of length of stay
-    c("qunif", list(min=0, max=0.9), "prob_StartBact_R"),  #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    c("qunif", list(min=0, max=1), "prob_StartBact_R"),  #"prob_StartBact_R",probability of initial carriage of resistant organisms
     c("qunif", list(min=0, max=1), "prop_S_nonR"),         #"prop_S_nonR", proportion of S in the population of S and ss
     c("qunif", list(min=0, max=1), "bif"),                 #"bif", bacterial interference factor
-    c("qunif", list(min=0, max=0.3), "pi_ssr"),           # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
+    c("qunif", list(min=0, max=0.1), "pi_ssr"),            # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
     c("qunif", list(min=0, max=0.05), "repop.s1"),         # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
     c("qunif", list(min=0, max=0.05), "mu_r"),             # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI=69.3%–82.8%) at 1 month to 35.2% (95% CI=28.2%–42.9%) at 12 months of follow-up)
-    c("qunif", list(min=0.1, max=0.9), "abx_s"),           # "abx_s", probability of S becoming ss after being on narrow spectrum antibiotics
-    c("qunif", list(min=0, max=0.00000001), "abx_r"),      # "abx_r", probability of R becoming ss after being on broad spectrum antibiotics
-    c("qunif", list(min=0.1, max=0.5), "p.infect"),        # "p.infect", probability of being prescribed antibiotics
-    c("qunif", list(min=0, max=0.9), "p.r.day1"),          # probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-    c("qunif", list(min=0.01, max=0.1), "p.r.dayafter"),   #probability of being prescribed broad spectrum antibiotic after admission (daily probability)
+    c("qunif", list(min=0.1, max=0.7), "abx_s"),           # "abx_s", probability of S becoming ss after being on narrow spectrum antibiotics
+    c("qunif", list(min=0, max=0.7), "abx_r"),            # "abx_r", probability of R becoming ss after being on broad spectrum antibiotics
+    c("qunif", list(min=0.1, max=0.9), "p.infect"),        # "p.infect", probability of being prescribed antibiotics
+    c("qunif", list(min=10, max=10000), "cum.r.1"),        # admission day when cummulative prabability of HAI requiring abx.r is 1
+    c("qunif", list(min=0.1, max=0.9), "p.r.day1"),        #probability of being prescribed broad spectrum antibiotic on admission 
     c("qunif", list(min=3, max=7), "short_dur"),           # "short_dur", mean short duration of antibiotics (normal distribution)
     c("qunif", list(min=14, max=21), "long_dur")           # "long_dur", mean long duration of antibiotics (normal distribution)
 )  
@@ -62,7 +61,7 @@ if(!(sum(factors == parameters_simple) ==  length(parameters_simple))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-N=100
+N=500
 LHS.simple <- LHS(modelRun.simple, factors, N=N, q, q.arg, nboot=100, cl=cl) #N is the size of the hypercube
 results.simple <- get.results(LHS.simple)
 # print elapsed time
