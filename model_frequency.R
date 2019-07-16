@@ -2,27 +2,26 @@ source('msm_util_rtnorm.R')
 source('los_abx_matrix.R')
 
 # Defaults from Rene's data ini_16S_log
-colo.table <- function(patient.matrix, los.array, t_mean, r_mean){
+colo.table <- function(patient.matrix, los.array, total_prop, r_prop, K){
 
     n.day = nrow(patient.matrix)
     n.bed = ncol(patient.matrix)
     
     number_of_patients = dim(los.array)[2]
-    # Unit test example: mean(t_mean), sd()
-    total_bact = rnorm(number_of_patients, t_mean )
-    r_bact = rnorm(number_of_patients, r_mean )
     
-    # since both are on log scale, to sum them together would need logsumexp()
-    s_bact = exp(total_bact) - exp(r_bact)
-    # spin until no minus values for log... probably not best way
-    while(min(s_bact) < 0){
-        spin_n = sum(s_bact < 0)
-        spin_total = rnorm(spin_n, t_mean)
-        spin_r = rnorm(spin_n, r_mean)
-        s_bact[s_bact < 0] = exp(spin_total) - exp(spin_r)
-    }
-    # convert back to log, log part of logsumexp()
-    s_bact = log(s_bact)
+    t_mean= log(total_prop*exp(K)) #total number of bacteria is a proportion of the total capacity 
+    total_bact = rnorm(number_of_patients, t_mean) 
+    
+    r_bact = log(r_prop*exp(total_bact))
+    s_bact = log(exp(total_bact) - exp(r_bact))
+    
+    # # spin until no minus values for log... probably not best way
+    # while(min(s_bact) < 0){
+    #     spin_n = sum(s_bact < 0)
+    #     spin_total = rnorm(spin_n, t_mean)
+    #     spin_r = rnorm(spin_n, r_mean)
+    #     s_bact[s_bact < 0] = exp(spin_total) - exp(spin_r)
+    # }
     
     S_Bactlevelstart = matrix(NA, n.day, n.bed)
     R_Bactlevelstart = matrix(NA, n.day, n.bed)
@@ -119,18 +118,18 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
 }
 
 diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
-                            K, t_mean, r_mean, pi_r, r_thres, r_growth, r_trans, 
+                            K, total_prop, r_prop, pi_r, r_thres, r_growth, r_trans, 
                             abx.s, abx.r, short_dur,long_dur){
     
     old = Sys.time() # get start time
     # DEBUG
     print(paste(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
-                K, t_mean, r_mean, pi_r, r_thres, r_growth, r_trans, 
+                K, total_prop, r_prop, pi_r, r_thres, r_growth, r_trans, 
                 abx.s, abx.r, short_dur,long_dur))
     
     timestep = 1
     n.day = 350
-    iterations = 10
+    iterations = 50
     
     iter_totalR.no = matrix(NA, nrow = n.day*timestep, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day*timestep, ncol = iterations)
@@ -143,7 +142,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, t_mean=t_mean, r_mean=r_mean)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                            pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, 
@@ -171,7 +170,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, t_mean=t_mean, r_mean=r_mean)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                            pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, 
@@ -198,7 +197,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
 res.names <- c(paste("No R per bed"),paste("R Thres per bed"))
 
 parameters_freq <- c("n.bed", "mean.max.los", "p.infect", "cum.r.1", "p.r.day1", 
-                          "K", "t_mean", "r_mean",
+                          "K", "total_prop", "r_prop",
                           "pi_r", "r_thres", "r_growth", "r_trans",
                           "abx.s", "abx.r",
                           "short_dur", "long_dur")

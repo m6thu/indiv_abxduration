@@ -271,7 +271,7 @@ for (i in 1:(n.parameters-1)){ #fill up matrix
 }
 
 #replace parameter values with min and max values 
-para='mu_r' 
+para='mu_r' #INSERT PARAMETER OF INTEREST HERE
 min.para= as.numeric(unlist(parameters)[which(unlist(parameters)==para)-2])
 max.para= as.numeric(unlist(parameters)[which(unlist(parameters)==para)-1])
 samples.matrix[,which(colnames(samples.matrix)==para)]=rep(c(min.para,min.para,max.para),each=N.iter)

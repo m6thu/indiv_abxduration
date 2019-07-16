@@ -21,8 +21,8 @@ parameters <- list(
     c(runif(1,min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=0.9), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c(runif(1,min=3, max=25), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
-    c(runif(1,min=1, max=20), "t_mean"),             # mean of total starting amount of e coli on log scale
-    c(runif(1,min=1,max=20), "r_mean"),              # mean of starting amount of resistant gut bacteria on log scale
+    c(runif(1,min=0.1, max=0.9), "total_prop"),             # mean of total starting amount of e coli on log scale
+    c(runif(1,min=0.1,max=0.9), "r_prop"),              # mean of starting amount of resistant gut bacteria on log scale
     c(runif(1,min=0,max=0.05), "pi_r"),              # pi_r = daily probability of transmitting resistant E coli
     c(runif(1,min=1,max=20), "r_thres"),             # r_thres = R threshold level for tranmissibility
     c(runif(1,min=0.1,max=5), "r_growth"),           # r_growth = growth constant for logistic growth
@@ -45,7 +45,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(paste('Calculating', i, 'in', (max(iterationstotry)*numberofrepeatsineachiteration), 'total runs'))
   old <- Sys.time() # get start time
   freq <- diff_prevalence(n.bed=values[1], mean.max.los=values[2], p.infect=values[3], cum.r.1=values[4], 
-                          p.r.day1=values[5],K=values[6], t_mean=values[7], r_mean=values[8], pi_r=values[9], 
+                          p.r.day1=values[5],K=values[6], total_prop=values[7], r_prop=values[8], pi_r=values[9], 
                           r_thres=values[10], r_growth=values[11], r_trans=values[12], 
                           abx.s=values[13], abx.r=values[14], short_dur = values[15], long_dur = values[16])
   samples<- values #sampled parameter combinations 

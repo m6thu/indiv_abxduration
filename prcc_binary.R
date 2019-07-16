@@ -1,7 +1,7 @@
 #######Modelling Day Project######
 #######Parameter exploration######
 ################################### Dependencies and functions ################################################
-setwd('Desktop/indiv_abxduration/')
+setwd('/Users/moyin/Desktop/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
@@ -41,8 +41,8 @@ parameters <- list(
     c("qunif", list(min=0, max=0.1), "pi_r2"),             #probability of being transmitted r to ss (ss—> ssr)
     c("qunif", list(min=0, max=0.05), "repop.s1"),         #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0, max=0.05), "repop.s2"),         #probability of regrowth of S  (sr—>Sr)
-    c("qunif", list(min=0, max=0.05), "repop.r1"),         #probability of regrowth of s (sr—> sR)
-    c("qunif", list(min=0, max=0.05), "repop.r2"),         #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0, max=0.4), "repop.r1"),         #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0, max=0.4), "repop.r2"),         #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0, max=0.05), "mu1"),              #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0, max=0.05), "mu2"),              #probability of being decolonised to S (sr—> s) 
     c("qunif", list(min=0, max=0.05), "mu.r"),             #probability of being decolonised to S (Sr—> S) 

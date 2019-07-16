@@ -31,14 +31,14 @@ modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter v
 #Error in if (max(abs(cor(vars)[l, 1:(l - 1)] - COR[l, 1:(l - 1)])) < eps) { : 
 #        missing value where TRUE/FALSE needed
 parameters <- list(
-    c("qunif", list(min=3, max=50), "n.bed"),              #n.bed; number of beds in the ward
-    c("qunif", list(min=3, max=30), "mean.max.los"),       #mean.max.los; mean of length of stay (normal distribution)
-    c("qunif", list(min=0.1, max=0.9), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
-    c("qunif", list(min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
-    c("qunif", list(min=0.1, max=0.9), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
+    c("qunif", list(min=3, max=50), "n.bed"),              # n.bed; number of beds in the ward
+    c("qunif", list(min=3, max=30), "mean.max.los"),       # mean.max.los; mean of length of stay (normal distribution)
+    c("qunif", list(min=0.1, max=0.9), "p.infect"),        # probability of being prescribed narrow spectrum antibiotic
+    c("qunif", list(min=10, max=10000), "cum.r.1"),        # admission day when cummulative prabability of HAI requiring abx.r is 1
+    c("qunif", list(min=0.1, max=0.9), "p.r.day1"),        # probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=3, max=25), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
-    c("qunif", list(min=1, max=20), "t_mean"),             # mean of total starting amount of e coli on log scale
-    c("qunif", list(min=1,max=20), "r_mean"),              # mean of starting amount of resistant gut bacteria on log scale
+    c("qunif", list(min=0.1, max=0.9), "total_prop"),             # mean of total starting amount of e coli on log scale
+    c("qunif", list(min=0.1,max=0.9), "r_prop"),              # mean of starting amount of resistant gut bacteria on log scale
     c("qunif", list(min=0,max=0.05), "pi_r"),              # pi_r = daily probability of transmitting resistant E coli
     c("qunif", list(min=1,max=20), "r_thres"),             # r_thres = R threshold level for tranmissibility
     c("qunif", list(min=0.1,max=5), "r_growth"),           # r_growth = growth constant for logistic growth
@@ -64,8 +64,8 @@ if(!(sum(factors == parameters_freq) ==  length(parameters_freq))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-N=300
-LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=100, cl=cl)
+N=400
+LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=100,cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
