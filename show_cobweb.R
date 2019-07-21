@@ -1,6 +1,6 @@
 library(epiR) #calculate p values for PRCC
 
-load('runs/XXXXX')
+load('runs/LHS_frequency_50017Jul2019_1721GMT.Rdata')
 LHS.output <- LHS.freq
 LHS.output.sbma <- LHS.binary2
 results.output <- get.results(LHS.freq)
@@ -15,7 +15,7 @@ plotscatter(LHS.output, ylab = 'Model output')
 ##### Hoeffding's D and Spearman's 
 library(xtable)
 parametersamples=LHS.output[['data']]
-output=LHS.output$res[,,1][,2]
+output=LHS.output$res[,,1][,1]
 hd=hd.p=c()
 spm=spm.p=c()
 for (i in 1:ncol(parametersamples)){
@@ -56,11 +56,11 @@ prcc.wo.pvalues<-LHS.output$prcc[[1]]$PRCC
 dat= cbind.data.frame(parametersamples, output)
 prcc=cbind.data.frame(prcc.wo.pvalues, pvalues= as.numeric(format(round(epi.prcc(dat = dat, sided.test = 2)$p.value, 5), nsmall = 5)))
 prcc<-prcc[order(prcc$original, decreasing = TRUE),]
-prcc$pvalues<-ifelse(prcc$pvalues<0.001, "<0.001", format(round(prcc$pvalues, 3), nsmall=3))
 prcc$hi_lo<-rep(NA, nrow(prcc))
-prcc$hi_lo[which(prcc$`min. c.i.`>0 & prcc$pvalues == "<0.001")]='Above'
-prcc$hi_lo[which(prcc$`max. c.i.`<0 & prcc$pvalues == "<0.001")]='Below'
+prcc$hi_lo[which(prcc$`min. c.i.`>0 & prcc$pvalues <0.001)]='Above'
+prcc$hi_lo[which(prcc$`max. c.i.`<0 & prcc$pvalues <0.001)]='Below'
 prcc$hi_lo[is.na(prcc$hi_lo)]='None'
+prcc$p.values<-ifelse(prcc$pvalues<0.001, "<0.001", format(round(prcc$pvalues, 3), nsmall=3))
 rownames.prcc<-factor(as.factor(rownames(prcc)), levels = rownames(prcc))
 
 ggplot(data=prcc, mapping = aes(x = rownames.prcc, y = original)) +
@@ -73,7 +73,7 @@ ggplot(data=prcc, mapping = aes(x = rownames.prcc, y = original)) +
   scale_x_discrete(rownames.prcc)+
   scale_y_continuous(limits = c(-1,1))+
   ylab(expression("Partial Ranking Correlation Coefficients"))+
-  geom_text(aes(label=prcc$pvalues, y= prcc$original+ (prcc$`std. error`/1.8)), vjust=-1.5)+
+  geom_text(aes(label=prcc$p.values, y= prcc$original+ (prcc$`std. error`/1.8)), vjust=-1.5)+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_blank())
   

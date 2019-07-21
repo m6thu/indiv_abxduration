@@ -21,7 +21,7 @@ modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter v
                   data.df[,7], data.df[,8], data.df[,9], 
                   data.df[,10], data.df[,11], data.df[,12], 
                   data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16]
+                  data.df[,16],data.df[,17]
     ))
 }
 
@@ -37,16 +37,17 @@ parameters <- list(
     c("qunif", list(min=10, max=10000), "cum.r.1"),        # admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=0.9), "p.r.day1"),        # probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=3, max=25), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
-    c("qunif", list(min=0.1, max=0.9), "total_prop"),             # mean of total starting amount of e coli on log scale
-    c("qunif", list(min=0.1,max=0.9), "r_prop"),              # mean of starting amount of resistant gut bacteria on log scale
-    c("qunif", list(min=0,max=0.05), "pi_r"),              # pi_r = daily probability of transmitting resistant E coli
+    c("qunif", list(min=0.1, max=0.9), "total_prop"),      # mean of total starting amount of e coli on log scale
+    c("qunif", list(min=0.1,max=0.9), "r_prop"),           # mean of starting amount of resistant gut bacteria on log scale
+    c("qunif", list(min=0,max=0.05), "pi_ssr"),            # pi_ssr = daily probability of transmitting resistant E coli
     c("qunif", list(min=1,max=20), "r_thres"),             # r_thres = R threshold level for tranmissibility
     c("qunif", list(min=0.1,max=5), "r_growth"),           # r_growth = growth constant for logistic growth
     c("qunif", list(min=1,max=10), "r_trans"),             # r_trans = amount transmitted on log scale
+    c("qunif", list(min=0.1,max=5), "s_growth"),           # s_growth = amount transmitted on log scale
     c("qunif", list(min=1,max=20), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-    c("qunif", list(min=1,max=20), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
-    c("qunif", list(min=3, max=7), "short_dur"),           #mean short duration of narrow spectrum antibiotics (normal distribution) 
-    c("qunif", list(min=14, max=21), "long_dur")           #mean long duration of narrow spectrum antibiotics (normal distribution)
+    c("qunif", list(min=0.00001,max=0.001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+    c("qunif", list(min=3, max=7), "short_dur"),           # mean short duration of narrow spectrum antibiotics (normal distribution) 
+    c("qunif", list(min=14, max=21), "long_dur")           # mean long duration of narrow spectrum antibiotics (normal distribution)
     )
 
 # arrange parameters in a way LHS will be happy with
@@ -64,8 +65,8 @@ if(!(sum(factors == parameters_freq) ==  length(parameters_freq))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-N=400
-LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=100,cl=cl)
+N=500
+LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=1000,cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format

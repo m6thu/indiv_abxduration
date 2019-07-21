@@ -37,17 +37,17 @@ parameters <- list(
     c("qunif", list(min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
     c("qunif", list(min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
     c("qunif", list(min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
-    c("qunif", list(min=0, max=1), "bif"),                 #bacterial interference factor (pi_r2 = pi_r1 * bif )
-    c("qunif", list(min=0, max=0.1), "pi_r2"),             #probability of being transmitted r to ss (ss—> ssr)
+    c("qunif", list(min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
+    c("qunif", list(min=0, max=0.1), "pi_ssr"),             #probability of being transmitted r to ss (ss—> ssr)
     c("qunif", list(min=0, max=0.05), "repop.s1"),         #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0, max=0.05), "repop.s2"),         #probability of regrowth of S  (sr—>Sr)
-    c("qunif", list(min=0, max=0.4), "repop.r1"),         #probability of regrowth of s (sr—> sR)
-    c("qunif", list(min=0, max=0.4), "repop.r2"),         #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0, max=0.5), "repop.r1"),         #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0, max=0.5), "repop.r2"),         #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0, max=0.05), "mu1"),              #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0, max=0.05), "mu2"),              #probability of being decolonised to S (sr—> s) 
-    c("qunif", list(min=0, max=0.05), "mu.r"),             #probability of being decolonised to S (Sr—> S) 
-    c("qunif", list(min=0.1, max=0.6), "abx.s"),           #probability of clearing S to become s
-    c("qunif", list(min=0, max=0.00001), "abx.r"),        #probability of clearing R to become r
+    c("qunif", list(min=0, max=0.05), "mu_r"),             #probability of being decolonised to S (Sr—> S) 
+    c("qunif", list(min=0.1, max=0.7), "abx.s"),           #probability of clearing S to become s
+    c("qunif", list(min=0.1, max=0.7), "abx.r"),        #probability of clearing R to become r
     c("qunif", list(min=0.1, max=0.9), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=0.9), "p.r.day1"),        #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
@@ -69,7 +69,7 @@ if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
 }
 
 old <- Sys.time() # get start time
-N=300
+N=500
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 results.binary <- get.results(LHS.binary)
 new <- Sys.time() - old # calculate difference

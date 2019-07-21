@@ -39,11 +39,11 @@ colo.table <- function(patient.matrix, los.array, total_prop, r_prop, K){
 
 # Update values for every day (define function)
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    pi_r, K, r_thres, r_growth, r_trans, 
+                    pi_ssr, K, r_thres, r_growth, r_trans, s_growth,
                     abx.s, abx.r, timestep){
     
     # K: loading capacity, and r_thres:threshold for infectiousness does not change with time
-    pi_r = 1-(1-pi_r)^(1/timestep)
+    pi_ssr = 1-(1-pi_ssr)^(1/timestep)
     
     if (abx.r < 0.1) { 
         abxr_killr = abx.r
@@ -63,7 +63,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         # calculate how many people has R above transmission level
         r_num = sum(R_table[i-1,] > r_thres)
         # from number of r, calculate probability of transmission
-        prob_r = 1-((1-pi_r)^r_num)
+        prob_r = 1-((1-pi_ssr)^r_num)
         
         ###### Convert all log scale parameters into normal scale for addition, then convert back to log
         #for each person:
@@ -92,7 +92,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 }
                 
                 # calculate effect of S logistic bacteria growth 
-                S_grow = r_growth*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/K)
+                S_grow = s_growth*exp(S_table[i-1, j])*(1 - (exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/K)
                 # calculate effect of death antibiotics R and effect of death by abx S
                 S_abx_s = -(abx.matrix[i-1, j] == 1)*exp(abxs_kills)
                 S_abx_r = -(abx.matrix[i-1, j] == 2)*exp(abxr_kills)
@@ -118,13 +118,13 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
 }
 
 diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
-                            K, total_prop, r_prop, pi_r, r_thres, r_growth, r_trans, 
+                            K, total_prop, r_prop, pi_ssr, r_thres, r_growth, r_trans, s_growth,
                             abx.s, abx.r, short_dur,long_dur){
     
     old = Sys.time() # get start time
     # DEBUG
     print(paste(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
-                K, total_prop, r_prop, pi_r, r_thres, r_growth, r_trans, 
+                K, total_prop, r_prop, pi_ssr, r_thres, r_growth, r_trans, s_growth,
                 abx.s, abx.r, short_dur,long_dur))
     
     timestep = 1
@@ -145,7 +145,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
         colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                           pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, 
+                                           pi_ssr=pi_ssr, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                            abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
@@ -173,7 +173,7 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
         colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                           pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, 
+                                           pi_ssr=pi_ssr, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                            abx.s=abx.s, abx.r=abx.r, timestep=timestep)
 
         #Summary 
@@ -198,7 +198,7 @@ res.names <- c(paste("No R per bed"),paste("R Thres per bed"))
 
 parameters_freq <- c("n.bed", "mean.max.los", "p.infect", "cum.r.1", "p.r.day1", 
                           "K", "total_prop", "r_prop",
-                          "pi_r", "r_thres", "r_growth", "r_trans",
+                          "pi_ssr", "r_thres", "r_growth", "r_trans", 's_growth',
                           "abx.s", "abx.r",
                           "short_dur", "long_dur")
 
