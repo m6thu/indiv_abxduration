@@ -61,12 +61,11 @@ los.abx.table <- function(n.bed, n.day, mean.max.los,
                                                no.abx.none.day1))))
     id.abx.r.day1=id.abx$`1`
     id.abx.s.day1=id.abx$`2`
-    id.abx.none.day1=id.abx$`3`
     
     all_abx[id.abx.r.day1]= rep2(2,times=sample(abx_days.r,length(id.abx.r.day1), replace = T))
     all_abx[id.abx.s.day1]= rep2(1,times=sample(abx_days.s,length(id.abx.s.day1), replace = T))
     for (i in 1:length(all_abx)){
-        all_abx[[i]]=all_abx[[i]][1:all_los[i]] #extend length to los
+        all_abx[[i]]=all_abx[[i]][1:all_los[i]] #extend length to los ##SLOW
         all_abx[[i]][is.na(all_abx[[i]])]=0 #those NA to be replaced by 0 
     }
     
@@ -74,17 +73,17 @@ los.abx.table <- function(n.bed, n.day, mean.max.los,
     # (cumulative normal distribution)
     all_admission_days = seq2(all_los) #patients' admission dates in sequence
     
-    probs=rnorm(10000) #randomly draw 100 probabilities from a normal distribution
+    probs=rnorm(10000) #randomly draw 10000 probabilities from a normal distribution
     probs.normalized = (probs - min(probs))/(max(probs)- min(probs)) #normalised probabilities
-    p=ecdf(probs.normalized) #cumulative distribution
+    p=ecdf(probs.normalized) #cumulative distribution ##SLOW
     
     for (i in 1:length(all_los)){ # for every patient 
         # probs=rnorm(100) #randomly draw 100 probabilities from a normal distribution
         # probs.normalized = (probs - min(probs))/(max(probs)- min(probs)) #normalised probabilities
         # p=ecdf(probs.normalized) #cumulative distribution
-        prob.r.after=p((1/cum.r.1)*all_admission_days[[i]])
+        prob.r.after= p((1/cum.r.1)*all_admission_days[[i]])
         prob.r.after= c(0,0,prob.r.after [-c(1,2)])#abx r only can start after 48h
-        abx.r.after.binary=rbinom(all_los[i],1,prob = prob.r.after)
+        abx.r.after.binary= rbinom(all_los[i],1, prob = prob.r.after)
         
         if (sum(abx.r.after.binary)>0) { #if abx.r.after is not NA i.e. abx.r started after admission
             abx.r.after= which(abx.r.after.binary==1) 
@@ -161,7 +160,7 @@ los.abx.table <- function(n.bed, n.day, mean.max.los,
 summary.los <- function(patient.matrix){    
     
     # Summarize how often each patient.id is encountered to get days for each id
-    los.dur = table(patient.matrix)
+    los.dur = table(patient.matrix) ##SLOW
     los_duration = array(dim = c(2, max(patient.matrix)))
     # Attach patient ID on 1st row
     los_duration[1,] = 1:max(patient.matrix)

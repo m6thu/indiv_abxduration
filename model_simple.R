@@ -42,7 +42,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     abx.r1 =abx.r 
     abx.r2 =abx.r 
     
-    if (abx.r < 0.01) { 
+    if (abx.r < 0.01) { #LHS unable to sample from 0 to 0, needs to be 0 to 0.01
         abx.matrix[abx.matrix==2]=1
     }
     
