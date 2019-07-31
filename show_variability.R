@@ -1,20 +1,22 @@
-# Adapted from MDP_individualmodel_110918.R
-
+setwd("/Users/moyin/Desktop/indiv_abxduration")
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
 model <- "frequency"
 
 source("default_params.R")
+source("los_abx_matrix.R")
 source(paste0("model_", model,".R"))
+
+iterations <- 100
 
 #########################################################################
 #######Effect of antibiotic duration on hospitalised patients############
 #########################################################################
 
 if(model == "simple"){
+    
     ################################## Multiple runs comparing between both ####################################
-    iterations <- 100
     
     patient.matrix<-list()
     los.array<-list()
@@ -29,6 +31,8 @@ if(model == "simple"){
     for (i in 1:iterations){
         
         print(i)
+        
+        
        
         patient.matrix[[i]]<-patient.table(n.bed = n.bed, n.day=n.day, mean.max.los=mean.max.los, timestep=1)
         los.array[[i]]<-summary.los(patient.matrix=patient.matrix[[i]])
@@ -81,8 +85,8 @@ if(model == "simple"){
 
 
 }else if(model == "binary"){
+    
     ################################## Multiple runs comparing between both ####################################
-    iterations <- 100
 
     patient.matrix<-list()
     los.array<-list()
@@ -153,8 +157,8 @@ if(model == "simple"){
     abline(h = mean(rowSums(long_totalR)/iterations/n.bed), col=2, lwd=2)
 
 }else if(model == "frequency"){
+    
     ################################## Multiple runs comparing between both ####################################
-    iterations <- 100
     
     patient.matrix<-list()
     los.array<-list()

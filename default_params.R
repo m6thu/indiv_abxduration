@@ -10,7 +10,7 @@ long_dur = 21
 
 p.infect = 0.4                   # p=probability of receiving antibiotic
 p.r.day1 =0.2
-prob_StartBact_R = 0.4           # Probability of being colonized with resistant strain on admission
+prob_StartBact_R = 0.01           # Probability of being colonized with resistant strain on admission
 prop_S_nonR = 0.8                # Proportion of large S within non-resistant states (S+s)
 bif = 0.3                        # bacterial interference factor 
 pi_ssr = 0.005                   # pi_s= probability of R transmitting to ss
@@ -21,7 +21,7 @@ abx.r = 0.5
 cum.r.1=1000
 
 ############## Binary model ###################
-prob_StartBact_R = 0.4               # Probability of being colonized with resistant strain on admission
+prob_StartBact_R = 0.01               # Probability of being colonized with resistant strain on admission
 prop_S_nonR = 0.8                    # Proportion of large S within non-resistant states (S+s)
 prop_Sr_inR = 0.8                  
 prop_sr_inR = 0.1                     
