@@ -6,6 +6,7 @@ rm(list=ls()) # Clean working environment
 
 library(ggplot2)
 library(ggpubr)
+library(reshape)
 
 # model can be "simple", "binary", or "frequency"
 model <- "frequency"
@@ -405,7 +406,7 @@ if(model == "simple"){
         theme_bw(base_size = base_size) + 
         labs(title= 'Short antibiotic treatment duration',
              x = "Time (days)", y="Bed number")+ 
-        scale_x_continuous(expand = c(0, 0), breaks= c(1000,2000,3000), labels = c('100','200','300')) +
+        scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
         scale_y_continuous(expand = c(0, 0)) + 
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size=14),
               legend.position = "bottom", 
@@ -421,7 +422,7 @@ if(model == "simple"){
         theme_bw(base_size = base_size) + 
         labs(title= 'Long antibiotic treatment duration',
              x = "Time (days)", y="")+ 
-        scale_x_continuous(expand = c(0, 0), breaks= c(1000,2000,3000), labels = c('100','200','300')) +
+        scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
         scale_y_continuous(expand = c(0, 0)) + 
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size=14),
               legend.position = "bottom", 
@@ -435,20 +436,20 @@ if(model == "simple"){
     
     ##Carriage mosaic 
     mosaicdata.car.short = dataformosaic(data=colo_table_filled_short,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.short$R=rep('Below R threshold for transmission', nrow(mosaicdata.car.short))
-    mosaicdata.car.short$R[which(as.numeric(mosaicdata.car.short$`Number of R`)>=r_thres)]='Above R threshold for transmission'
+    mosaicdata.car.short$`Carriage status`=rep('Below R threshold for transmission', nrow(mosaicdata.car.short))
+    mosaicdata.car.short$`Carriage status`[which(as.numeric(mosaicdata.car.short$`Number of R`)>=r_thres)]='Above R threshold for transmission'
     mosaicdata.car.long = dataformosaic(data=colo_table_filled_long,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.long$R=rep('Below R threshold for transmission', nrow(mosaicdata.car.long))
-    mosaicdata.car.long$R[which(as.numeric(mosaicdata.car.long$`Number of R`)>=r_thres)]='Above R threshold for transmission'
+    mosaicdata.car.long$`Carriage status`=rep('Below R threshold for transmission', nrow(mosaicdata.car.long))
+    mosaicdata.car.long$`Carriage status`[which(as.numeric(mosaicdata.car.long$`Number of R`)>=r_thres)]='Above R threshold for transmission'
     
     sunflower=c('#ee7a12', "#d6e1d9")
     
     p.car.short=ggplot(mosaicdata.car.short, aes(`Time (days)`, `Bed number`)) + 
-        geom_tile(aes(fill = R)) + 
+        geom_tile(aes(fill = `Carriage status`)) + 
         scale_fill_manual(values=sunflower)+
         theme_bw(base_size = base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
-        scale_x_continuous(expand = c(0, 0), breaks= c(1000,2000,3000), labels = c('100','200','300')) +
+        scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
         scale_y_continuous(expand = c(0, 0)) + 
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size=14),
               legend.position = "bottom", 
@@ -459,11 +460,11 @@ if(model == "simple"){
               axis.title = element_text(size=base_size))
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
-        geom_tile(aes(fill = R)) + 
+        geom_tile(aes(fill = `Carriage status`)) + 
         scale_fill_manual(values=sunflower)+
         theme_bw(base_size = base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
-        scale_x_continuous(expand = c(0, 0), breaks= c(1000,2000,3000), labels = c('100','200','300')) +
+        scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
         scale_y_continuous(expand = c(0, 0)) + 
         theme(plot.title = element_text(hjust = 0.5, face = "bold", size=14),
               legend.position = "bottom", 
@@ -476,7 +477,7 @@ if(model == "simple"){
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
     ##total R per day 
-    totalRperday.short=apply(colo_table_filled_short, 1, function(x) length(which(x>r_thres)))
+    totalRperday.short=apply(colo_table_filled_short, 1, function(x) length(which(x>=r_thres)))
     totalRperday.short.avg= rowMeans(matrix(totalRperday.short, ncol=timestep, byrow=T))
     Rperdaydata.short=data.frame(`Time (days)`= 1:n.day, 
                                  `Total R per day`= totalRperday.short.avg)
@@ -488,7 +489,7 @@ if(model == "simple"){
         theme(axis.text = element_text(size = base_size, colour = "grey50"), 
               axis.title = element_text(size=base_size))
     
-    totalRperday.long=apply(colo_table_filled_long, 1, function(x) length(which(x>r_thres)))
+    totalRperday.long=apply(colo_table_filled_long, 1, function(x) length(which(x>=r_thres)))
     totalRperday.long.avg= rowMeans(matrix(totalRperday.long, ncol=timestep, byrow=T))
     Rperdaydata.long=data.frame(`Time (days)`= 1:n.day, 
                                 `Total R per day`= totalRperday.long.avg)
