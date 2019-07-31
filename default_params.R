@@ -2,7 +2,7 @@
 #fixed parameters 
 n.bed=30                            # n.bed= number of beds in the ward
 mean.max.los=7                      # mean.max.los= mean of max length of stay (exponential distribution)
-n.day=440
+n.day=365
 
 ############# Simple model #################
 short_dur = 5
@@ -46,3 +46,12 @@ r_trans = 10                          # r_trans = amount transmitted
 abx.s = 10                       # abxr_killr = amount of r killed by broad spectrum abx r
 abx.r = 10                       # abxs_kills = amount of s killed by narrow spectrum abx s
 
+
+if (model=='simple' | model=='binary'){
+    abx.s = 0.5                      # probability of clearing S to become ss under antibiotic treatment 
+    abx.r = 0.5
+} else {
+    abx.s = 10                       # abxr_killr = amount of r killed by broad spectrum abx r
+    abx.r = 10                       # abxs_kills = amount of s killed by narrow spectrum abx s
+}
+    
