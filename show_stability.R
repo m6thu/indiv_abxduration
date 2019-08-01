@@ -15,11 +15,10 @@ source(paste0("model_", model,".R"))
 if(model == "simple"){
     
     timestep = 10
-    n.day=1000
     sdDur=1
     iterations=100
     
-    iter_totalR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -38,11 +37,11 @@ if(model == "simple"){
         
         #Summary
         df = data.frame(colo_table_filled_iter)
-        iter_totalR[, iter] = rowSums(df == "R")    
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R")/n.bed, ncol=timestep, byrow = T))
     }
-    cumsum_short = cumsum(rowMeans(iter_totalR[1:nrow(iter_totalR),])/iterations/n.bed)
+    cumsum_short = apply(iter_totalR, 2, cumsum)
     
-    iter_totalR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -61,20 +60,149 @@ if(model == "simple"){
         
         #Summary
         df = data.frame(colo_table_filled_iter)
-        iter_totalR[, iter] = rowSums(df == "R")    
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R")/n.bed, ncol=timestep, byrow = T))
     }
-    cumsum_long = cumsum(rowMeans(iter_totalR[1:nrow(iter_totalR),])/iterations/n.bed)
-    stabilitydata= data.frame(y=cumsum_long-cumsum_short,
-                              x=1:(n.day*timestep))
-    (stability.p=ggplot(stabilitydata, aes(x=x, y=y))+
-        geom_point())
+    cumsum_long = apply(iter_totalR, 2, cumsum)
     
-} else if (model == "Binary") {
+    stabilitydata = data.frame(x=1:(n.day),y=(cumsum_long-cumsum_short)/c(1:n.day))
+    colnames(stabilitydata) = c('x', 1:(ncol(stabilitydata)-1))
+    stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
+    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
+            geom_line(size=0.25, alpha=0.25)+
+            scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
+            labs(y='Difference in number of R carriers in long vs short duration/bed/day',
+                 x='Time (days)')+
+            theme_bw()+
+            theme(legend.position = 'none'))
     
+} else if (model == "binary") {
     
-} else {
+    timestep = 10
+    sdDur=1
+    iterations=100
     
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
+    for(iter in 1:iterations){
+        
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= short_dur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
+                                 prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+        colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                         pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
+                                         repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
+        
+        #Summary
+        df = data.frame(colo_table_filled_iter)
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "sR")/n.bed, ncol=timestep, byrow = T))
+    }
+    cumsum_short = apply(iter_totalR, 2, cumsum)
+    
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
+    
+    for(iter in 1:iterations){
+        
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= long_dur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
+                                 prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+        colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                         pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
+                                         repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
+        
+        #Summary
+        df = data.frame(colo_table_filled_iter)
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "sR")/n.bed, ncol=timestep, byrow = T))
+    }
+    cumsum_long = apply(iter_totalR, 2, cumsum)
+    
+    stabilitydata = data.frame(x=1:(n.day),y=(cumsum_long-cumsum_short)/c(1:n.day))
+    colnames(stabilitydata) = c('x', 1:(ncol(stabilitydata)-1))
+    stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
+    
+    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
+            geom_line(size=0.25, alpha=0.25)+
+            scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
+            labs(y='Difference in number of R carriers in long vs short duration/bed/day',
+                 x='Time (days)')+
+            theme_bw()+
+            theme(legend.position = 'none'))
+    
+} else { #frequency 
+    
+    iterations = 100
+    timestep=1
+    
+    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
+    
+    for(iter in 1:iterations){
+        
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= short_dur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
+        
+        colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                          pi_ssr=pi_ssr, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          abx.s=abx.s, abx.r=abx.r, timestep=timestep)
+        # Summary
+        df.R = data.frame(colo.matrix_filled_iter[[2]])
+        
+        #for number of people who reached R threshold on a day
+        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_thres)/n.bed, ncol=timestep, byrow = T))
+    }
+    cumsum_short = apply(iter_totalR.thres, 2, cumsum)
+    
+    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
+    
+    for(iter in 1:iterations){
+        
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= long_dur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
+        
+        colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                          pi_ssr=pi_ssr, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          abx.s=abx.s, abx.r=abx.r, timestep=timestep)
+        
+        # Summary
+        df.R = data.frame(colo.matrix_filled_iter[[2]])
+        
+        #for number of people who reached R threshold on a day
+        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_thres)/n.bed, ncol=timestep, byrow = T))
+        
+    }
+    cumsum_long = apply(iter_totalR.thres, 2, cumsum)
+    
+    stabilitydata = data.frame(x=1:(n.day),y=(cumsum_long-cumsum_short)/c(1:n.day))
+    colnames(stabilitydata) = c('x', 1:(ncol(stabilitydata)-1))
+    stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
+    
+    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
+            geom_line(size=0.25, alpha=0.25)+
+            scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
+            labs(y='Difference in number of R carriers in long vs short duration/bed/day',
+                 x='Time (days)')+
+            theme_bw()+
+            theme(legend.position = 'none'))
     
 }

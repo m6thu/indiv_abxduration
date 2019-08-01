@@ -9,7 +9,7 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "frequency"
+model <- "simple"
 
 source("default_params.R")
 source('los_abx_matrix.R')
@@ -530,3 +530,4 @@ if(model == "simple"){
 
 }
 
+allplots
