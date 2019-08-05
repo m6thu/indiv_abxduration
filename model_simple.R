@@ -263,9 +263,9 @@ diff_prevalence <- function(n.bed, mean.max.los,
                 bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
                 p.infect, cum.r.1, p.r.day1, short_dur, long_dur))
     
-    timestep = 10
-    iterations = 50
-    n.day=350
+    timestep = 3
+    iterations = 1
+    n.day=300
     sdDur=1
     
     iter_totalR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
@@ -290,7 +290,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         iter_totalR[, iter] = rowSums(df == "R")    
     }
     # Discard first 1/7 runs as burn-in
-    totalR_short = mean(rowSums(iter_totalR[ceiling(n.day*1/7):nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
+    totalR_short = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
     
     iter_totalR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
     
@@ -314,7 +314,7 @@ diff_prevalence <- function(n.bed, mean.max.los,
         iter_totalR[, iter] = rowSums(df == "R")    
     }
     # Discard first 1/7 runs as burn-in
-    totalR_long = mean(rowSums(iter_totalR[ceiling(n.day*1/7):nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
+    totalR_long = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
     
     #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
     # print elapsed time

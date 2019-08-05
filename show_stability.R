@@ -1,3 +1,8 @@
+#########################################################################
+#######Effect of antibiotic duration on hospitalised patients############
+######################Show difference over time##########################
+#########################################################################
+
 setwd("/Users/moyin/Desktop/indiv_abxduration")
 rm(list=ls()) # Clean working environment
 
@@ -8,13 +13,9 @@ source("default_params.R")
 source("los_abx_matrix.R")
 source(paste0("model_", model,".R"))
 
-#########################################################################
-######################Show difference over time##########################
-#########################################################################
-
 if(model == "simple"){
     
-    timestep = 10
+    timestep = 3
     sdDur=1
     iterations=100
     
@@ -69,16 +70,19 @@ if(model == "simple"){
     stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
     (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
-            geom_line(size=0.25, alpha=0.25)+
+            geom_line(size=0.4, alpha=0.4)+
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',
                  x='Time (days)')+
+            geom_vline(xintercept=150, linetype='dashed', size=0.7, colour='red')+
             theme_bw()+
-            theme(legend.position = 'none'))
+            theme(legend.position = 'none', 
+                  axis.text = element_text(size = 15, colour = "grey50"), 
+                  axis.title = element_text(size=15)))
     
 } else if (model == "binary") {
     
-    timestep = 10
+    timestep = 3
     sdDur=1
     iterations=100
     
@@ -131,12 +135,15 @@ if(model == "simple"){
     stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
     (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
-            geom_line(size=0.25, alpha=0.25)+
+            geom_line(size=0.4, alpha=0.4)+
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',
                  x='Time (days)')+
+            geom_vline(xintercept=150, linetype='dashed', size=0.7, colour='red')+
             theme_bw()+
-            theme(legend.position = 'none'))
+            theme(legend.position = 'none', 
+                  axis.text = element_text(size = 15, colour = "grey50"), 
+                  axis.title = element_text(size=15)))
     
 } else { #frequency 
     
@@ -157,7 +164,7 @@ if(model == "simple"){
         colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop,K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
@@ -181,7 +188,7 @@ if(model == "simple"){
         colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         
         # Summary
@@ -198,11 +205,13 @@ if(model == "simple"){
     stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
     (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
-            geom_line(size=0.25, alpha=0.25)+
+            geom_line(size=0.4, alpha=0.4)+
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',
                  x='Time (days)')+
+            geom_vline(xintercept=50, linetype='dashed', size=0.7, colour='red')+
             theme_bw()+
-            theme(legend.position = 'none'))
-    
+            theme(legend.position = 'none', 
+                  axis.text = element_text(size = 15, colour = "grey50"), 
+                  axis.title = element_text(size=15)))
 }
