@@ -2,6 +2,8 @@
 #######Effect of antibiotic duration on hospitalised patients############
 ######################Show difference over time##########################
 #########################################################################
+library(reshape)
+library(ggplot2)
 
 setwd("/Users/moyin/Desktop/indiv_abxduration")
 rm(list=ls()) # Clean working environment
@@ -17,7 +19,7 @@ if(model == "simple"){
     
     timestep = 3
     sdDur=1
-    iterations=100
+    iterations=2
     
     iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
@@ -69,7 +71,7 @@ if(model == "simple"){
     colnames(stabilitydata) = c('x', 1:(ncol(stabilitydata)-1))
     stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
-    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
+    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=as.factor(iter)))+
             geom_line(size=0.4, alpha=0.4)+
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',
@@ -126,7 +128,7 @@ if(model == "simple"){
         
         #Summary
         df = data.frame(colo_table_filled_iter)
-        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "sR")/n.bed, ncol=timestep, byrow = T))
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "sR")/n.bed, ncol=timestep, byrow = T)) #averaged over timesteps
     }
     cumsum_long = apply(iter_totalR, 2, cumsum)
     
@@ -134,7 +136,7 @@ if(model == "simple"){
     colnames(stabilitydata) = c('x', 1:(ncol(stabilitydata)-1))
     stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
-    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
+    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=as.factor(iter)))+
             geom_line(size=0.4, alpha=0.4)+
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',
@@ -204,7 +206,7 @@ if(model == "simple"){
     colnames(stabilitydata) = c('x', 1:(ncol(stabilitydata)-1))
     stabilitydata.melt=melt(stabilitydata,id.vars='x', variable_name='iter')
     
-    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=iter))+
+    (stability.p=ggplot(stabilitydata.melt, aes(x=x, y=value, colour=as.factor(iter)))+
             geom_line(size=0.4, alpha=0.4)+
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',

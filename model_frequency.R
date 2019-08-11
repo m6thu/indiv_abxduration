@@ -136,10 +136,10 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
     
     timestep = 1
     n.day = 100
-    iterations = 1
+    iterations = 100
     
-    iter_totalR.no = matrix(NA, nrow = n.day*timestep, ncol = iterations)
-    iter_totalR.thres = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -157,17 +157,17 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
         #print(df.R)
-        iter_totalR.no[, iter] = rowSums(df.R)
+        iter_totalR.no[, iter] = rowMeans(matrix(rowSums(df.R), ncol=timestep, byrow=T))
         
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]=rowSums(df.R >= r_thres)
+        iter_totalR.thres[, iter]=rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalR_no_short = mean(rowSums(iter_totalR.no)/iterations/n.bed)
-    totalR_thres_short = mean(rowSums(iter_totalR.thres)/iterations/n.bed)
+    totalR_no_short = mean(rowSums(iter_totalR.no[51:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
+    totalR_thres_short = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
-    iter_totalR.no = matrix(NA, nrow = n.day*timestep, ncol = iterations)
-    iter_totalR.thres = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -186,24 +186,74 @@ diff_prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
         #Summary 
         #for total units of R bacteria on a day
         df.R = data.frame(colo.matrix_filled_iter[[2]])
-        iter_totalR.no[, iter] = rowSums(df.R)
-        
+        iter_totalR.no[, iter] = rowMeans(matrix(rowSums(df.R), ncol=timestep, byrow=T))
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter] = rowSums(df.R >= r_thres)
+        iter_totalR.thres[, iter] = rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalR_no_long = mean(rowSums(iter_totalR.no)/iterations/n.bed)
-    totalR_thres_long = mean(rowSums(iter_totalR.thres)/iterations/n.bed)
+    totalR_no_long = mean(rowSums(iter_totalR.no[51:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
+    totalR_thres_long = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
     # print elapsed time
     new = Sys.time() - old # calculate difference
     print(new) # print in nice format
     
-    return(array(c((totalR_no_long - totalR_no_short), (totalR_thres_long-totalR_thres_short))))
+    return(array(c(totalR_thres_long, totalR_thres_short, totalR_thres_long-totalR_thres_short)))
 }
-res.names <- c(paste("No R per bed"),paste("R Thres per bed"))
 
-parameters_freq <- c("n.bed", "mean.max.los", "p.infect", "cum.r.1", "p.r.day1", 
+prevalence <- function(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
+                            K, total_prop, r_prop, pi_ssr, r_thres, r_growth, r_trans, s_growth,
+                            abx.s, abx.r, meanDur){
+    
+    old = Sys.time() # get start time
+    # DEBUG
+    print(paste(n.bed, mean.max.los, p.infect, cum.r.1, p.r.day1,
+                K, total_prop, r_prop, pi_ssr, r_thres, r_growth, r_trans, s_growth,
+                abx.s, abx.r, meanDur))
+    
+    timestep = 1
+    n.day = 100
+    iterations = 100
+    
+    iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
+    
+    for(iter in 1:iterations){
+        
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= meanDur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
+        
+        colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                          pi_ssr=pi_ssr, total_prop=total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          abx.s=abx.s, abx.r=abx.r, timestep=timestep)
+        # Summary
+        df.R = data.frame(colo.matrix_filled_iter[[2]])
+        
+        #for number of people who reached R threshold on a day
+        iter_totalR.thres[, iter]=rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
+        #print("end iteration loop")
+    }
+
+    totalR_thres = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
+    
+    # print elapsed time
+    new = Sys.time() - old # calculate difference
+    print(new) # print in nice format
+    
+    return(totalR_thres)
+}
+
+parameters_prevalence_freq <- c("n.bed", "mean.max.los", "p.infect", "cum.r.1", "p.r.day1", 
+                     "K", "total_prop", "r_prop",
+                     "pi_ssr", "r_thres", "r_growth", "r_trans", 's_growth',
+                     "abx.s", "abx.r",
+                     "meanDur")
+
+parameters_diff_prevalence_freq <- c("n.bed", "mean.max.los", "p.infect", "cum.r.1", "p.r.day1", 
                      "K", "total_prop", "r_prop",
                      "pi_ssr", "r_thres", "r_growth", "r_trans", 's_growth',
                      "abx.s", "abx.r",

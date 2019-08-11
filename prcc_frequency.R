@@ -15,13 +15,13 @@ model <- 'frequency'
 clusterCall(cl, function() {source('model_frequency.R')})
 
 modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
-    return(mapply(diff_prevalence, 
+    return(mapply(prevalence, 
                   data.df[,1], data.df[,2], data.df[,3], 
                   data.df[,4], data.df[,5], data.df[,6], 
                   data.df[,7], data.df[,8], data.df[,9], 
                   data.df[,10], data.df[,11], data.df[,12], 
                   data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16],data.df[,17]
+                  data.df[,16]
     ))
 }
 
@@ -45,10 +45,9 @@ parameters <- list(
     c("qunif", list(min=1,max=10), "r_trans"),             # r_trans = amount transmitted on log scale
     c("qunif", list(min=0.3,max=1.5), "s_growth"),         # s_growth = amount transmitted on log scale
     c("qunif", list(min=5,max=15), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-    c("qunif", list(min=5,max=15), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
-    c("qunif", list(min=3, max=7), "short_dur"),           # mean short duration of narrow spectrum antibiotics (normal distribution) 
-    c("qunif", list(min=14, max=21), "long_dur")           # mean long duration of narrow spectrum antibiotics (normal distribution)
-    )
+    c("qunif", list(min=0,max=0.0001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+    c("qunif", list(min=1, max=30), "meanDur")           # mean duration of narrow spectrum antibiotics (normal distribution) 
+)
 
 # arrange parameters in a way LHS will be happy with
 q <- unlist(lapply(parameters, function(l) l[[1]]))
@@ -59,29 +58,31 @@ factors <- unlist(lapply(parameters, function(l) l[[4]]))
 # if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
 # MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
 source(paste0("model_frequency.R"))
-if(!(sum(factors == parameters_freq) ==  length(parameters_freq))){
-    stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
+if(!(sum(factors == parameters_prevalence_freq) ==  length(parameters_prevalence_freq))){
+    stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by prevalence function.")
 }
 
 # Use the LHD function to generate a hypercube 
+##run 1
+abxr='zero'
+N=1300
 old <- Sys.time() # get start time
-N=500
-LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=1000,cl=cl)
+LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-
 # Save run to disk
-image_name <- paste0("./runs/LHS_", model, "_", N, format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save(LHS.freq,file=paste0(image_name, ".Rdata"))
+image_name <- paste0("LHS_", model, "_", N, "_",abxr,"_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.freq,file=paste0("./runs/", image_name, ".Rdata"))
 
+##run 2
+N=N+100
 old <- Sys.time() # get start time
-LHS.freq2 <- LHS(modelRun.freq, factors, N=N-100, q, q.arg, res.names, nboot=1000, cl=cl)
+LHS.freq2 <- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-
 # Save run to disk
-image_name <- paste0("./runs/LHS_", model, "_", N,format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save(LHS.freq2,file=paste0(image_name, ".Rdata"))
+image_name <- paste0("LHS_", model, "_", N,"_",abxr,"_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.freq2,file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)

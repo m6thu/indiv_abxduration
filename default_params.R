@@ -7,6 +7,7 @@ n.day=365
 ############# Simple model #################
 short_dur = 5
 long_dur = 14
+meanDur=10
 
 p.infect = 0.2                   # p=probability of receiving antibiotic
 p.r.day1 =0.1
@@ -34,14 +35,14 @@ repop.s2= 0.005                   # probability of repopulation of sr to become 
 
 ############# Frequency model #################
 K = 11                             # gut holding capacity
-total_prop = 0.03                   # mean of total starting amount of gut bacteria on log scale
-t_sd = 1.1218                       # sd of total starting amount of gut bacteria on log scale
+total_prop = 0.02                   # mean of total starting amount of gut bacteria on log scale
+#t_sd = 1.1218                       # sd of total starting amount of gut bacteria on log scale
 r_prop = 0.3                        # mean of starting amount of resistant gut bacteria on log scale
-r_sd = 1.8921                       # sd of starting amount of resistant gut bacteria on log scale
-r_growth = 0.3                        # r_growth = growth constant for logistic growth
+#r_sd = 1.8921                       # sd of starting amount of resistant gut bacteria on log scale
+r_growth = 0.4                        # r_growth = growth constant for logistic growth
 s_growth = 0.3
-r_thres = 7                        # r_thres = R threshold level for tranmissibility
-r_trans = 7                        # r_trans = amount transmitted
+r_thres = 5                        # r_thres = R threshold level for tranmissibility
+r_trans = 6                        # r_trans = amount transmitted
 abx.s = 10                          # abxr_killr = amount of r killed by broad spectrum abx r
 abx.r = 10                          # abxs_kills = amount of s killed by narrow spectrum abx s
 

@@ -373,10 +373,10 @@ diff_prevalence <- function(n.bed, mean.max.los,
     
     timestep = 3
     n.day = 300
-    iterations = 1
+    iterations = 2
     
-    iter_totalsR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
-    iter_totalr_or_R= matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalr_or_R= matrix(NA, nrow = n.day, ncol = iterations)
     for(iter in 1:iterations){
         matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
@@ -393,15 +393,17 @@ diff_prevalence <- function(n.bed, mean.max.los,
         
         #Summary
         df = data.frame(colo.matrix_filled_iter)
-        iter_totalsR[, iter] = rowSums(df == "sR")
-        iter_totalr_or_R[, iter] = rowSums(df == "sR" | df == "sr" |df == "Sr")
+        iter_totalsR[, iter] = rowMeans(matrix(rowSums(df == "sR"), ncol=timestep, byrow=T))
+        iter_totalr_or_R[, iter] = rowMeans(matrix(rowSums(df == "sR" | df == "sr" |df == "Sr"), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalsR_short = mean(rowSums(iter_totalsR[ceiling(n.day*1/7):nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
-    totalr_or_R_short = mean(rowSums(iter_totalr_or_R[ceiling(n.day*1/7):nrow(iter_totalr_or_R),, drop=FALSE])/iterations/n.bed)
     
-    iter_totalsR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
-    iter_totalr_or_R = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    totalsR_short = mean(rowSums(iter_totalsR[151:nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
+    totalr_or_R_short = mean(rowSums(iter_totalr_or_R[151:nrow(iter_totalr_or_R),, drop=FALSE])/iterations/n.bed)
+    
+    iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)
+    iter_totalr_or_R = matrix(NA, nrow = n.day, ncol = iterations)
+    
     for(iter in 1:iterations){
         matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
@@ -417,23 +419,72 @@ diff_prevalence <- function(n.bed, mean.max.los,
                                           repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
         #Summary
         df = data.frame(colo.matrix_filled_iter)
-        iter_totalsR[,iter] = rowSums(df == "sR")
-        iter_totalr_or_R[, iter] = rowSums(df == "sR" | df == "sr" |df == "Sr")
+        iter_totalsR[,iter] = rowMeans(matrix(rowSums(df == "sR"), ncol=timestep, byrow=T))
+        iter_totalr_or_R[, iter] = rowMeans(matrix(rowSums(df == "sR" | df == "sr" |df == "Sr"), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalsR_long = mean(rowSums(iter_totalsR[ceiling(n.day*1/7):nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
-    totalr_or_R_long = mean(rowSums(iter_totalr_or_R[ceiling(n.day*1/7):nrow(iter_totalr_or_R),, drop=FALSE])/iterations/n.bed)
+    totalsR_long = mean(rowSums(iter_totalsR[151:nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
+    totalr_or_R_long = mean(rowSums(iter_totalr_or_R[151:nrow(iter_totalr_or_R),, drop=FALSE])/iterations/n.bed)
     
     #print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
     # print elapsed time
     new = Sys.time() - old # calculate difference
     print(new) # print in nice format
     
-    return(array(c((totalsR_long - totalsR_short),(totalr_or_R_long-totalr_or_R_short))))
+    return(array(c(totalsR_long, totalsR_short,totalsR_long - totalsR_short)))
 }
-res.names <- c(paste("No sr/sR/Sr per bed"),paste("sR per bed"))
 
-parameters_binary <- c("n.bed", "mean.max.los", 
+prevalence <- function(n.bed, mean.max.los, 
+                            prob_StartBact_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+                            bif, pi_ssr, repop.s1, repop.s2, repop.r1, repop.r2,
+                            mu1, mu2, mu_r, abx.s, abx.r, 
+                            p.infect, cum.r.1, p.r.day1, meanDur){
+    
+    old = Sys.time() # get start time
+
+    timestep = 3
+    n.day = 300
+    iterations = 125
+    
+    iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)
+    for(iter in 1:iterations){
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= meanDur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
+                                 prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+        
+        colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                          pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
+                                          repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
+        
+        #Summary
+        df = data.frame(colo.matrix_filled_iter)
+        iter_totalsR[, iter] = rowMeans(matrix(rowSums(df == "sR"), ncol=timestep, byrow=T))
+        #print("end iteration loop")
+    }
+    
+    totalsR = mean(rowSums(iter_totalsR[151:nrow(iter_totalsR),, drop=FALSE])/iterations/n.bed)
+    
+    #print(paste("totalsR_long", totalsR_long, "totalsR_short", totalsR_short))
+    # print elapsed time
+    new = Sys.time() - old # calculate difference
+    print(new) # print in nice format
+    
+    return(totalsR)
+}
+
+parameters_prevalence_binary <- c("n.bed", "mean.max.los", 
+                                       "prob_StartBact_R", "prop_S_nonR", "prop_Sr_inR", "prop_sr_inR",
+                                       "bif", "pi_ssr", "repop.s1", "repop.s2", "repop.r1","repop.r2",
+                                       "mu1", "mu2", "mu_r", "abx.s", "abx.r",
+                                       "p.infect", "cum.r.1", "p.r.day1",
+                                       "meanDur")
+
+parameters_diff_prevalence_binary <- c("n.bed", "mean.max.los", 
                       "prob_StartBact_R", "prop_S_nonR", "prop_Sr_inR", "prop_sr_inR",
                       "bif", "pi_ssr", "repop.s1", "repop.s2", "repop.r1","repop.r2",
                       "mu1", "mu2", "mu_r", "abx.s", "abx.r",

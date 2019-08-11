@@ -47,7 +47,7 @@ values <- as.numeric(unlist(lapply(parameters, function(l) l[[1]])))
 factors <- unlist(lapply(parameters, function(l) l[[2]]))
 
 # Use the LHS function to generate a hypercube 
-iterationstotry= c(1, 50, 100, 125, 150, 200) #iterations we are going to test 
+iterationstotry= c(1, 50, 100, 125, 150) #iterations we are going to test 
 numberofrepeatsineachiteration=20 
 aa_data_simple_diff<-list() 
 for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
@@ -60,7 +60,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
                             cum.r.1=values[12], p.r.day1=values[13], short_dur=values[14], long_dur = values[15])
   samples<- values #sampled parameter combinations 
   results <- simple #save results of the simulations
-  aa_data_simple_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 16) #combine sampled parameter combinations and results in one file 
+  aa_data_simple_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 18) #combine sampled parameter combinations and results in one file 
   colnames(aa_data_simple_diff[[i]])=c(parameters_simple, 'results')
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
@@ -103,9 +103,9 @@ NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
 RESULTFILENAME <- "aa_data_simple.csv"
 # Notes the column in the CSV results file where the results start.
-OUTPUTFILECOLSTART <- 16
+OUTPUTFILECOLSTART <- 18
 # Last column of the output measure results
-OUTPUTFILECOLEND <- 16
+OUTPUTFILECOLEND <- 18
 # The A-Test value either side of 0.5 which should be considered a 'large difference'
 # between two sets of results. Use of 0.23 was taken from the Vargha-Delaney publication
 LARGEDIFFINDICATOR <- 0.23

@@ -12,18 +12,17 @@ require(parallel) # load parallel processing package to use multiple cores on co
 cl <- makeCluster(detectCores()-1)
 
 model <- 'binary'
-#source(paste0("model_binary.R"))
 
 clusterCall(cl, function() {source('model_binary.R')})
 
 # source functions on all cores
 modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter values in columns 
-    return(mapply(diff_prevalence, 
+    return(mapply(prevalence, 
                   data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
-                  data.df[,6], data.df[,7], data.df[,8], data.df[,9], 
-                  data.df[,10], data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],
-                  data.df[,20], data.df[,21], data.df[,22]
+                  data.df[,6], data.df[,7], data.df[,8], data.df[,9], data.df[,10], 
+                  data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
+                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],data.df[,20], 
+                  data.df[,21]
     ))
 }
 
@@ -47,13 +46,12 @@ parameters <- list(
     c("qunif", list(min=0.002, max=0.02), "mu2"),          #probability of being decolonised to S (sr—> s) 
     c("qunif", list(min=0.002, max=0.02), "mu_r"),         #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0.1, max=0.7), "abx.s"),           #probability of clearing S to become s
-    c("qunif", list(min=0.1, max=0.7), "abx.r"),           #probability of clearing R to become r
+    c("qunif", list(min=0, max=0.000001), "abx.r"),        #probability of clearing R to become r
     c("qunif", list(min=0.1, max=1), "p.infect"),          #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-    c("qunif", list(min=3, max=7), "short_dur"),           #mean short duration of antibiotics (normal distribution) 
-    c("qunif", list(min=14, max=21), "long_dur")           #mean long duration of antibiotics (normal distribution) 
-    )
+    c("qunif", list(min=1, max=30), "meanDur")             #mean duration of antibiotics (normal distribution)
+)
 
 # arrange parameters in a way LHS will be happy with
 q <- unlist(lapply(parameters, function(l) l[[1]]))
@@ -63,30 +61,30 @@ factors <- unlist(lapply(parameters, function(l) l[[4]]))
 # Test
 source(paste0("model_binary.R"))
 # if they don't follow the exact listing of function variables, they seem to feed the wrong range to the wrong variable...
-# MAKE SURE the variable listing and ORDER MATCHES the variable listing input into diff_prevalence
-if(!(sum(factors == parameters_binary) ==  length(parameters_binary))){
-    stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by diff_prevalence function.")
+# MAKE SURE the variable listing and ORDER MATCHES the variable listing input into prevalence
+if(!(sum(factors == parameters_prevalence_binary) ==  length(parameters_prevalence_binary))){
+    stop("Test Error: Listing of parameters in cobweb does not match parameters accepted by prevalence function.")
 }
 
+#Run model and save runs 
+##run 1
+abxr='zero'
 old <- Sys.time() # get start time
-N=500
+N=700
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
-results.binary <- get.results(LHS.binary)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
+# Save run to disk
+image_name <- paste0("LHS_", model, "_", N, "_",abxr, "_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+save(LHS.binary, file=paste0("./runs/", image_name, ".Rdata"))
 
+N=N+100
 old <- Sys.time() # get start time
-LHS.binary2 <- LHS(modelRun.binary, factors, N=N-100, q, q.arg, nboot=1000, cl=cl)
-results.binary2 <- get.results(LHS.binary2)
+LHS.binary2 <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-
-# Save run to disk
-image_name <- paste0("./runs/LHS_", model, "_", N, format(Sys.time(), "%d%b%Y_%H%M%Z"))
-save(LHS.binary, file=paste0(image_name, ".Rdata"))
-
-image_name <- paste0("LHS2_", model, "_", N-100, format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("LHS_", model, "_", N, "_",abxr, "_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save(LHS.binary2, file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)

@@ -10,7 +10,7 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "frequency"
+model <- "binary"
 
 source("default_params.R")
 source('los_abx_matrix.R')
@@ -29,6 +29,16 @@ dataformosaic<-function(data,label,n.bed=n.bed, n.day=n.day, timestep=timestep){
     
 }
 
+admitdays<-function(patient.matrix){
+    
+    change=apply(patient.matrix, 2, function (v) c(1,1+which(diff(v)!=0))-1)
+    x =x.end= as.vector(unlist(change))
+    y = rep(1:ncol(patient.matrix), lengths(change))-0.5
+    df= data.frame(x=x, x.end=x.end, y=y, y.end=y+1)
+    
+    return(df)
+}
+
 ####################6. Visualisation #####################
 
 if(model == "simple"){
@@ -42,6 +52,7 @@ if(model == "simple"){
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
     patient.matrix.short=matrixes.short[[1]]
+    day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes.short[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los=los.array.short, 
@@ -55,6 +66,7 @@ if(model == "simple"){
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= long_dur, timestep=timestep)
     patient.matrix.long=matrixes.long[[1]]
+    day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes.long[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los=los.array.long, 
@@ -87,7 +99,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size= base_size+2))
+              axis.title = element_text(size= base_size+2))+
+        geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.abx.long=ggplot(mosaicdata.abx.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
@@ -103,7 +116,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     abx.mosaic=ggarrange(p.abx.short, p.abx.long, ncol=2, common.legend = T, legend = 'bottom')
     
@@ -126,7 +140,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage type`)) + 
@@ -141,7 +156,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
@@ -172,7 +188,7 @@ if(model == "simple"){
     
     totalRline=ggarrange(Rperdayline.short, Rperdayline.long, ncol=2, common.legend = T, legend = 'bottom')
     
-    ##cummulative R 
+    ##Cumulative R 
     cumsum.short=cumsum(totalRperday.short.avg)/n.bed*30
     cumsumdata.short=data.frame(`Time (days)`= 1:n.day, 
                                 cumsum= cumsum.short)
@@ -184,7 +200,7 @@ if(model == "simple"){
     cumsumdata=rbind.data.frame(cumsumdata.short,cumsumdata.long)
     sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = dur))+
         geom_line()+
-        labs(x = "Time (days)", y="Cummulative sum of\nR in a 30-bed ward")+
+        labs(x = "Time (days)", y="Cumulative sum of\nR in a 30-bed ward")+
         scale_color_manual(values =  c('#A0495B', '#0096BC'))+
         theme_bw()+
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
@@ -208,6 +224,8 @@ if(model == "simple"){
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
     patient.matrix.short=matrixes[[1]]
+    day1.short= admitdays(patient.matrix.short)
+    
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los=los.array.short, 
@@ -221,6 +239,8 @@ if(model == "simple"){
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= long_dur, timestep=timestep)
     patient.matrix.long=matrixes[[1]]
+    day1.long= admitdays(patient.matrix.long)
+    
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los=los.array.long, 
@@ -253,7 +273,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.abx.long=ggplot(mosaicdata.abx.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
@@ -269,7 +290,9 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
+    
     
     abx.mosaic=ggarrange(p.abx.short, p.abx.long, ncol=2, common.legend = T, legend = 'bottom')
     
@@ -294,7 +317,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage type`)) + 
@@ -309,7 +333,9 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
+    
     
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
@@ -340,7 +366,7 @@ if(model == "simple"){
     
     totalRline=ggarrange(Rperdayline.short, Rperdayline.long, ncol=2, common.legend = T, legend = 'bottom')
     
-    ##cummulative R 
+    ##Cumulative R 
     cumsum.short=cumsum(totalRperday.short.avg)/n.bed*30
     cumsumdata.short=data.frame(`Time (days)`= 1:n.day, 
                                 cumsum= cumsum.short)
@@ -352,7 +378,7 @@ if(model == "simple"){
     cumsumdata=rbind.data.frame(cumsumdata.short,cumsumdata.long)
     sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = dur))+
         geom_line()+
-        labs(x = "Time (days)", y="Cummulative sum of\nsR in a 30-bed ward")+
+        labs(x = "Time (days)", y="Cumulative sum of\nsR in a 30-bed ward")+
         scale_color_manual(values =  c('#A0495B', '#0096BC'))+
         theme_bw()+
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
@@ -374,6 +400,7 @@ if(model == "simple"){
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
     patient.matrix.short=matrixes[[1]]
+    day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, r_prop=r_prop,K=K)
@@ -385,6 +412,7 @@ if(model == "simple"){
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= long_dur, timestep=timestep)
     patient.matrix.long=matrixes[[1]]
+    day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, r_prop=r_prop,K=K)
@@ -415,7 +443,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.abx.long=ggplot(mosaicdata.abx.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
@@ -431,7 +460,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     abx.mosaic=ggarrange(p.abx.short, p.abx.long, ncol=2, common.legend = T, legend = 'bottom')
     
@@ -458,7 +488,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage status`)) + 
@@ -473,7 +504,8 @@ if(model == "simple"){
               legend.title = element_text(size = base_size+2), 
               legend.text  = element_text(size = base_size+2),
               axis.text = element_text(size = base_size+2, colour = "grey50"), 
-              axis.title = element_text(size=base_size+2))
+              axis.title = element_text(size=base_size+2))+
+        geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
@@ -504,7 +536,7 @@ if(model == "simple"){
     
     totalRline=ggarrange(Rperdayline.short, Rperdayline.long, ncol=2, common.legend = T, legend = 'bottom')
     
-    ##cummulative R 
+    ##Cumulative R 
     cumsum.short=cumsum(totalRperday.short.avg)/n.bed*30
     cumsumdata.short=data.frame(`Time (days)`= 1:n.day, 
                                 cumsum= cumsum.short)
@@ -516,7 +548,7 @@ if(model == "simple"){
     cumsumdata=rbind.data.frame(cumsumdata.short,cumsumdata.long)
     sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = dur))+
         geom_line()+
-        labs(x = "Time (days)", y="Cummulative sum of\nR in a 30-bed ward")+
+        labs(x = "Time (days)", y="Cumulative sum of\nR in a 30-bed ward")+
         scale_color_manual(values =  c('#A0495B', '#0096BC'))+
         theme_bw()+
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 

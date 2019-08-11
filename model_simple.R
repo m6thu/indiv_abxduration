@@ -264,11 +264,11 @@ diff_prevalence <- function(n.bed, mean.max.los,
                 p.infect, cum.r.1, p.r.day1, short_dur, long_dur))
     
     timestep = 3
-    iterations = 1
+    iterations = 125
     n.day=300
     sdDur=1
     
-    iter_totalR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -287,12 +287,12 @@ diff_prevalence <- function(n.bed, mean.max.los,
         
         #Summary
         df = data.frame(colo_table_filled_iter)
-        iter_totalR[, iter] = rowSums(df == "R")    
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R"), ncol=timestep, byrow=T))
     }
-    # Discard first 1/7 runs as burn-in
+    # Discard first 150 runs as burn-in
     totalR_short = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
     
-    iter_totalR = matrix(NA, nrow = n.day*timestep, ncol = iterations)
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
@@ -311,20 +311,72 @@ diff_prevalence <- function(n.bed, mean.max.los,
         
         #Summary
         df = data.frame(colo_table_filled_iter)
-        iter_totalR[, iter] = rowSums(df == "R")    
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R"), ncol=timestep, byrow=T))
     }
-    # Discard first 1/7 runs as burn-in
+    # Discard first 150 runs as burn-in
     totalR_long = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
     
     #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
     # print elapsed time
     new = Sys.time() - old # calculate difference
     print(new) # print in nice format
-    
-    return(totalR_long - totalR_short)
+    return(array(c(totalR_long, totalR_short, totalR_long - totalR_short)))
 }
 
-parameters_simple<- c("n.bed", "mean.max.los", 
+prevalence <- function(n.bed, mean.max.los, 
+                            prob_StartBact_R, prop_S_nonR, 
+                            bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
+                            p.infect, cum.r.1, p.r.day1, meanDur){
+    
+    old = Sys.time() # get start time
+    # DEBUG
+    print(paste(n.bed, mean.max.los, 
+                prob_StartBact_R, prop_S_nonR, 
+                bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
+                p.infect, cum.r.1, p.r.day1, meanDur))
+    
+    timestep = 3
+    iterations = 125
+    n.day=300
+    sdDur=1
+    
+    iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
+    
+    for(iter in 1:iterations){
+        
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+                                 p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
+                                 meanDur= meanDur, timestep=timestep)
+        patient.matrix=matrixes[[1]]
+        abx.matrix=matrixes[[2]]
+        los.array = summary.los(patient.matrix=patient.matrix)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
+                                 prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+        
+        colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
+                                         abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
+                                         bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
+        
+        #Summary
+        df = data.frame(colo_table_filled_iter)
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R"), ncol=timestep, byrow=T))
+    }
+    # Discard first 150 runs as burn-in
+    totalR = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
+    
+    #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
+    # print elapsed time
+    new = Sys.time() - old # calculate difference
+    print(new) # print in nice format
+    return(totalR)
+}
+
+parameters_prevalence_simple<- c("n.bed", "mean.max.los", 
+                           "prob_StartBact_R", "prop_S_nonR", 
+                           "bif", "pi_ssr", "repop.s1", "mu_r", 
+                           "abx.s", "abx.r", "p.infect", "cum.r.1", 'p.r.day1', "meanDur")
+
+parameters_diff_prevalence_simple<- c("n.bed", "mean.max.los", 
                       "prob_StartBact_R", "prop_S_nonR", 
                       "bif", "pi_ssr", "repop.s1", "mu_r", 
                       "abx.s", "abx.r", "p.infect", "cum.r.1", 'p.r.day1', "short_dur", "long_dur")
