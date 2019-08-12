@@ -1,7 +1,7 @@
 #######Modelling Day Project######
 #######Parameter exploration######
 ################################### Dependencies and functions ################################################
-setwd('/Users/moyin/Desktop/indiv_abxduration/')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
@@ -32,11 +32,11 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 #list parameters together with name, so they are "linked" or not easily confused
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"),              #n.bed; number of beds in the ward
-    c("qunif", list(min=3, max=20), "mean.max.los"),       #mean.max.los; mean of length of stay (exponential distribution)
-    c("qunif", list(min=0, max=1), "prob_StartBact_R"),    #probability of initial carriage of resistant organisms
-    c("qunif", list(min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-    c("qunif", list(min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-    c("qunif", list(min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
+    c("qunif", list(min=3, max=20), "max.los"),       #max.los; mean of length of stay (exponential distribution)
+    c("qunif", list(min=0, max=1), "prop_R"),    #probability of initial carriage of resistant organisms
+    c("qunif", list(min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
+    c("qunif", list(min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
+    c("qunif", list(min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c("qunif", list(min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
     c("qunif", list(min=0, max=0.05), "pi_ssr"),            #probability of being transmitted r to ss (ss—> ssr)
     c("qunif", list(min=0.005, max=0.02), "repop.s1"),     #probability of regrowth of S  (s—>S)
@@ -78,7 +78,7 @@ LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 # Save run to disk
-image_name <- paste0("LHS_", model, "_", N, "_",abxr, "_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("LHSdiff_", model, "_", N, "_",abxr, "_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save(LHS.binary, file=paste0("./runs/", image_name, ".Rdata"))
 
 N=N+100
@@ -87,7 +87,7 @@ LHS.binary2 <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
-image_name <- paste0("LHS_", model, "_", N, "_",abxr, "_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("LHSdiff_", model, "_", N, "_",abxr, "_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save(LHS.binary2, file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)

@@ -1,4 +1,4 @@
-setwd('/Users/moyin/Desktop/indiv_abxduration')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
 ####Plot a heatmap of the parameters against models 
 #libraries
@@ -13,12 +13,12 @@ source('model_simple.R')
 source('model_binary.R')
 source('model_frequency.R')
 
-parameters=as.factor(unique(c(parameters_simple, parameters_binary, parameters_freq)))
-levels(parameters) =  rev(c("n.bed", "mean.max.los", #ward 
-                            "prob_StartBact_R", "prop_S_nonR","prop_Sr_inR","prop_sr_inR","r_prop", "total_prop", "K", #patient characteristics 
+parameters=as.factor(unique(c(parameters_diff_prevalence_simple, parameters_diff_prevalence_binary, parameters_diff_prevalence_freq)))
+levels(parameters) =  rev(c("n.bed", "max.los", #ward 
+                            "prop_R", "prop_S_nonR","prop_Sr_inR","prop_sr_inR", "total_prop", "K", #patient characteristics 
                             "repop.s1", "repop.s2", "s_growth","repop.r1", "repop.r2", "r_growth", #within host dynamics 
                             "r_thres", "r_trans","pi_ssr","bif", #transmission dynamics
-                            "mu1","mu2","mu_r",#decolonisation 
+                            "mu_r","mu1","mu2",#decolonisation 
                             "abx.s", "abx.r","p.infect", "p.r.day1", "cum.r.1", "short_dur", "long_dur"))
 labs.df=data.frame(parameters=parameters, values=NA)
 models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3', 
@@ -52,12 +52,12 @@ getposition<-function(data,labs=labs.df){
     return(out)
 }
 
-Amodel1=get(load('runs/LHS_simple_50014Jul2019_0747GMT.Rdata'))
-Amodel2=get(load('runs/LHS_binary_50017Jul2019_0706GMT.Rdata'))
-Amodel3=get(load('runs/LHS_frequency_80017Jul2019_1520GMT.Rdata'))
-Bmodel1=get(load('runs/LHS_simple_50013Jul2019_0057GMT.Rdata'))
-Bmodel2=get(load('runs/LHS_binary_50017Jul2019_0042GMT.Rdata')) 
-Bmodel3=get(load('runs/LHS_frequency_50017Jul2019_1721GMT.Rdata'))
+Amodel1=get(load('runs/LHS2_simple_60005Aug2019_2050GMT.Rdata')) #abx_r>0
+Amodel2=get(load('runs/LHS2_binary_60006Aug2019_0414GMT.Rdata'))
+Amodel3=get(load('runs/LHS_frequency_130006Aug2019_1900GMT.Rdata'))
+Bmodel1=get(load('runs/LHS2_simple_70007Aug2019_1602GMT.Rdata')) #abx_r>0
+Bmodel2=get(load('runs/LHS2_binary_80007Aug2019_0819GMT.Rdata')) 
+Bmodel3=get(load('runs/LHS_frequency_150008Aug2019_0008GMT.Rdata'))
 
 #Amodel1.p=getp(Amodel1, para.list=parameters_simple, 500)
 # Amodel2.p=getp(Amodel2, para.list=parameters_binary, 500)
@@ -97,3 +97,4 @@ ggplot(forplot, aes(model, parameters)) +
           axis.ticks = element_blank(), 
           axis.text.x = element_text(size = base_size, angle = 330, hjust = 0, colour = "grey50"))+
         geom_vline(xintercept = 3.5,  color = "black", size=0.5)
+

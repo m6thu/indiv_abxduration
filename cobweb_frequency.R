@@ -34,7 +34,7 @@ modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter v
 #        missing value where TRUE/FALSE needed
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"), #n.bed; number of beds in the ward
-    c("qunif", list(min=3, max=10), "mean.max.los"), #mean.max.los; mean of length of stay (normal distribution)
+    c("qunif", list(min=3, max=10), "max.los"), #max.los; mean of length of stay (normal distribution)
     c("qunif", list(min=0.1, max=0.9), "p.s"), #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=0.1, max=0.9), "p.r.day1"),           #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=0.0001, max=0.1), "p.r.dayafter"),       #probability of being prescribed broad spectrum antibiotic after admission (daily probability)

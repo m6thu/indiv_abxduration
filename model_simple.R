@@ -2,19 +2,18 @@ source('msm_util_rtnorm.R')
 source('los_abx_matrix.R')
 
 #table of initial states of each patient 
-colo.table <- function(patient.matrix, los.array, prob_StartBact_R, prop_S_nonR){
+colo.table <- function(patient.matrix, los.array, prop_R, prop_S_nonR){
     
     # define probabilities of importing Sensitive(S) or Resistant(R) bacteria, or low levels of sensitive (ss)
-    prob_start_S = prop_S_nonR*(1-prob_StartBact_R)
-    prob_StartBact = c(prob_start_S,prob_StartBact_R)
+    prop_start_S = prop_S_nonR*(1-prop_R)
     
     #Generating a vector of random status with runif (change for other distribution)
     number_of_patients = dim(los.array)[2]
     Patient_unif = runif(number_of_patients,0,1)
     Patient_StartBact = rep(NA, number_of_patients)
-    Patient_StartBact[Patient_unif > (prob_start_S+prob_StartBact_R)] = 'ss'
-    Patient_StartBact[(Patient_unif <= (prob_start_S+prob_StartBact_R)) & (Patient_unif > prob_StartBact_R)] = 'S'
-    Patient_StartBact[Patient_unif <= prob_StartBact_R] = 'R'
+    Patient_StartBact[Patient_unif > (prop_start_S+prop_R)] = 'ss'
+    Patient_StartBact[(Patient_unif <= (prop_start_S+prop_R)) & (Patient_unif > prop_R)] = 'S'
+    Patient_StartBact[Patient_unif <= prop_R] = 'R'
     
     #Creating array for carriage status
     array_StartBact = matrix(NA, nrow=nrow(patient.matrix), ncol=ncol(patient.matrix))
@@ -94,13 +93,13 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         # if there is any S (number of S > 0) in the previous day
         if(length(S)){
             # probability for transmission of R
-            prob_r = 1-((1-pi_Sr)^r_num)
+            prop_R = 1-((1-pi_Sr)^r_num)
             
             # Roll a random number for each S on the previous day for clearance
             roll= runif(length(S), 0, 1)
             
-            r_idx = S[roll < prob_r]
-            same_idx= S[roll >= prob_r]
+            r_idx = S[roll < prop_R]
+            same_idx= S[roll >= prop_R]
             colo.matrix[i, r_idx] = "R"
             colo.matrix[i, same_idx] = "S"
         }
@@ -110,16 +109,16 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         ss = ss[!(ss %in% already_filled)]
         if(length(ss)){
             # roll for transmission of R
-            prob_r = 1-((1-pi_ssr)^r_num)
+            prop_R = 1-((1-pi_ssr)^r_num)
             
             roll = runif(length(ss), 0, 1)
             
-            r_idx = ss[roll < prob_r]
-            s_idx = ss[(roll >= prob_r) & (roll < (repop.s1+prob_r))]
+            r_idx = ss[roll < prop_R]
+            s_idx = ss[(roll >= prop_R) & (roll < (repop.s1+prop_R))]
             same_idx = ss[!(ss %in% c(r_idx, s_idx))]
             
-            if((repop.s1+prob_r > 1)){
-                stop(paste("Error stopifnot: repop.s1+prob_r >1 in First scenario: those with no antibiotics on previous day"))
+            if((repop.s1+prop_R > 1)){
+                stop(paste("Error stopifnot: repop.s1+prop_R >1 in First scenario: those with no antibiotics on previous day"))
             }
             
             colo.matrix[i, s_idx] = "S"
@@ -150,17 +149,17 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         # if there is any S (number of S > 0) in the previous day
         if(length(S)){
             # probability for transmission of R
-            prob_r = 1-((1-pi_Sr)^r_num)
+            prop_R = 1-((1-pi_Sr)^r_num)
             
             # Roll a random number for each S on the previous day for clearance
             roll= runif(length(S), 0, 1)
             
-            r_idx = S[roll < prob_r]
-            ss_idx = S [(roll >= prob_r) & (roll < (abx.s+prob_r))]
+            r_idx = S[roll < prop_R]
+            ss_idx = S [(roll >= prop_R) & (roll < (abx.s+prop_R))]
             same_idx= S[!(S %in% c(r_idx, ss_idx))]
             
-            if((abx.s+prob_r > 1)){
-                stop(paste("Error stopifnot: abx.s+prob_r >1 in Second scenario: those with narrow antibiotics on previous day"))
+            if((abx.s+prop_R > 1)){
+                stop(paste("Error stopifnot: abx.s+prop_R >1 in Second scenario: those with narrow antibiotics on previous day"))
             }
             
             colo.matrix[i, ss_idx] = "ss"
@@ -173,12 +172,12 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         ss = ss[!(ss %in% already_filled)]
         if(length(ss)){
             # roll for transmission of R
-            prob_r = 1-((1-pi_ssr)^r_num)
+            prop_R = 1-((1-pi_ssr)^r_num)
             
             roll = runif(length(ss), 0, 1)
             
-            r_idx = ss[roll < prob_r]
-            same_idx = ss[roll >= prob_r]
+            r_idx = ss[roll < prop_R]
+            same_idx = ss[roll >= prop_R]
             
             colo.matrix[i, r_idx] = "R"
             colo.matrix[i, same_idx] = "ss"
@@ -213,17 +212,17 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         # if there is any S (number of S > 0) in the previous day
         if(length(S)){
             # probability for transmission of R
-            prob_r = 1-((1-pi_Sr)^r_num)
+            prop_R = 1-((1-pi_Sr)^r_num)
             
             # Roll a random number for each S on the previous day for clearance
             roll= runif(length(S), 0, 1)
             
-            r_idx = S[roll < prob_r]
-            ss_idx = S [(roll >= prob_r) & (roll < (abx.r1+prob_r))]
+            r_idx = S[roll < prop_R]
+            ss_idx = S [(roll >= prop_R) & (roll < (abx.r1+prop_R))]
             same_idx= S[!(S %in% c(r_idx, ss_idx))]
             
-            if((abx.r1+prob_r > 1)){
-                stop(paste("Error stopifnot: abx.r1+prob_r >1 in Third scenario: those with broad antibiotics on previous day "))
+            if((abx.r1+prop_R > 1)){
+                stop(paste("Error stopifnot: abx.r1+prop_R >1 in Third scenario: those with broad antibiotics on previous day "))
             }
             
             colo.matrix[i, ss_idx] = "ss"
@@ -236,12 +235,12 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         ss = ss[!(ss %in% already_filled)]
         if(length(ss)){
             # roll for transmission of R
-            prob_r = 1-((1-pi_ssr)^r_num)
+            prop_R = 1-((1-pi_ssr)^r_num)
             
             roll = runif(length(ss), 0, 1)
             
-            r_idx = ss[roll < prob_r]
-            same_idx = ss[roll >= prob_r]
+            r_idx = ss[roll < prop_R]
+            same_idx = ss[roll >= prop_R]
             
             colo.matrix[i, r_idx] = "R"
             colo.matrix[i, same_idx] = "ss"
@@ -251,20 +250,20 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     return(colo.matrix)
 }
 
-diff_prevalence <- function(n.bed, mean.max.los, 
-                            prob_StartBact_R, prop_S_nonR, 
+diff_prevalence <- function(n.bed, max.los, 
+                            prop_R, prop_S_nonR, 
                             bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
                             p.infect, cum.r.1, p.r.day1, short_dur, long_dur){
     
     old = Sys.time() # get start time
     # DEBUG
-    print(paste(n.bed, mean.max.los, 
-                prob_StartBact_R, prop_S_nonR, 
+    print(paste(n.bed, max.los, 
+                prop_R, prop_S_nonR, 
                 bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
                 p.infect, cum.r.1, p.r.day1, short_dur, long_dur))
     
     timestep = 3
-    iterations = 125
+    iterations = 1
     n.day=300
     sdDur=1
     
@@ -272,14 +271,14 @@ diff_prevalence <- function(n.bed, mean.max.los,
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= short_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                 prop_R=prop_R,prop_S_nonR=prop_S_nonR)
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -296,14 +295,14 @@ diff_prevalence <- function(n.bed, mean.max.los,
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= long_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                 prop_R=prop_R,prop_S_nonR=prop_S_nonR)
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -323,15 +322,15 @@ diff_prevalence <- function(n.bed, mean.max.los,
     return(array(c(totalR_long, totalR_short, totalR_long - totalR_short)))
 }
 
-prevalence <- function(n.bed, mean.max.los, 
-                            prob_StartBact_R, prop_S_nonR, 
+prevalence <- function(n.bed, max.los, 
+                            prop_R, prop_S_nonR, 
                             bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
                             p.infect, cum.r.1, p.r.day1, meanDur){
     
     old = Sys.time() # get start time
     # DEBUG
-    print(paste(n.bed, mean.max.los, 
-                prob_StartBact_R, prop_S_nonR, 
+    print(paste(n.bed, max.los, 
+                prop_R, prop_S_nonR, 
                 bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
                 p.infect, cum.r.1, p.r.day1, meanDur))
     
@@ -344,14 +343,14 @@ prevalence <- function(n.bed, mean.max.los,
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= meanDur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                 prop_R=prop_R,prop_S_nonR=prop_S_nonR)
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -371,12 +370,12 @@ prevalence <- function(n.bed, mean.max.los,
     return(totalR)
 }
 
-parameters_prevalence_simple<- c("n.bed", "mean.max.los", 
-                           "prob_StartBact_R", "prop_S_nonR", 
+parameters_prevalence_simple<- c("n.bed", "max.los", 
+                           "prop_R", "prop_S_nonR", 
                            "bif", "pi_ssr", "repop.s1", "mu_r", 
                            "abx.s", "abx.r", "p.infect", "cum.r.1", 'p.r.day1', "meanDur")
 
-parameters_diff_prevalence_simple<- c("n.bed", "mean.max.los", 
-                      "prob_StartBact_R", "prop_S_nonR", 
+parameters_diff_prevalence_simple<- c("n.bed", "max.los", 
+                      "prop_R", "prop_S_nonR", 
                       "bif", "pi_ssr", "repop.s1", "mu_r", 
                       "abx.s", "abx.r", "p.infect", "cum.r.1", 'p.r.day1', "short_dur", "long_dur")

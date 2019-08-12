@@ -1,5 +1,5 @@
 ########Show magnitude of difference over all parameter space#############
-setwd('/Users/moyin/Desktop/indiv_abxduration/')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 rm(list=ls()) # Clean working environment
 
 library(ggplot2)
@@ -42,3 +42,4 @@ ggplot(d, aes(x,y, colour=type))+
          y='Number of resistant Enterobacteriaceae carriers/bed/day')+
     theme_minimal()+
     theme(legend.position = 'bottom')
+

@@ -6,7 +6,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-setwd('/Users/moyin/Desktop/indiv_abxduration')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
 cl <- makeCluster(detectCores()-1)
 
@@ -32,13 +32,13 @@ modelRun.freq <- function (data.df) { #data.df is a dataframe of the parameter v
 #        missing value where TRUE/FALSE needed
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"),              # n.bed; number of beds in the ward
-    c("qunif", list(min=3, max=20), "mean.max.los"),       # mean.max.los; mean of length of stay (normal distribution)
+    c("qunif", list(min=3, max=20), "max.los"),       # max.los; mean of length of stay (normal distribution)
     c("qunif", list(min=0.1, max=1), "p.infect"),          # probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=10000), "cum.r.1"),        # admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),          # probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=5, max=20), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
     c("qunif", list(min=0.00001, max=0.1), "total_prop"),  # mean of total starting amount of enterobacteriaceae on log scale
-    c("qunif", list(min=0, max=0.9), "r_prop"),            # mean of starting amount of resistant gut bacteria on log scale
+    c("qunif", list(min=0, max=0.9), "prop_R"),            # mean of starting amount of resistant gut bacteria on log scale
     c("qunif", list(min=0,max=0.05), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
     c("qunif", list(min=1,max=10), "r_thres"),             # r_thres = R threshold level for tranmissibility
     c("qunif", list(min=0.3,max=1.5), "r_growth"),         # r_growth = growth constant for logistic growth
@@ -73,7 +73,7 @@ LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 # Save run to disk
-image_name <- paste0("LHS_", model, "_", N, "_",abxr,"_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("LHSdiff_", model, "_", N, "_",abxr,"_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save(LHS.freq,file=paste0("./runs/", image_name, ".Rdata"))
 
 ##run 2
@@ -83,7 +83,7 @@ LHS.freq2 <- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
 # Save run to disk
-image_name <- paste0("LHS_", model, "_", N,"_",abxr,"_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
+image_name <- paste0("LHSdiff_", model, "_", N,"_",abxr,"_",format(Sys.time(), "%d%b%Y_%H%M%Z"))
 save(LHS.freq2,file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)

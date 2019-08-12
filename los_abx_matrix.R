@@ -29,7 +29,7 @@ seq_along_admissiondates=function(x){
 seq2 <- Vectorize(seq_along_admissiondates, vectorize.args = "x")
 rep2 <- Vectorize(rep.int, vectorize.args = "times")
 
-los.abx.table <- function(n.bed, n.day, mean.max.los,
+los.abx.table <- function(n.bed, n.day, max.los,
                           p.infect, p.r.day1, cum.r.1, 
                           meanDur, timestep){
     # number of slots in the patient matrix 
@@ -41,8 +41,8 @@ los.abx.table <- function(n.bed, n.day, mean.max.los,
     
     #length of stay for each patient if no hospital acquired infection 
     # (truncated normal distribution)
-    all_los = ceiling(rexp(n.patient.max, 1/mean.max.los))
-    all_los[all_los > 5*mean.max.los] = mean.max.los
+    all_los = ceiling(rexp(n.patient.max, 1/max.los))
+    all_los[all_los > 5*max.los] = max.los
     
     #decide if patients are on antibiotics 
     all_abx= rep(list(NA),n.patient.max)

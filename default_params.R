@@ -1,7 +1,7 @@
 ############## Shared parameters ##################
 #fixed parameters 
 n.bed=30                            # n.bed= number of beds in the ward
-mean.max.los=7                      # mean.max.los= mean of max length of stay (exponential distribution)
+max.los=7                      # mean.max.los= mean of max length of stay (exponential distribution)
 n.day=365
 
 ############# Simple model #################
@@ -11,7 +11,7 @@ meanDur=10
 
 p.infect = 0.2                   # p=probability of receiving antibiotic
 p.r.day1 =0.1
-prob_StartBact_R = 0.2           # Probability of being colonized with resistant strain on admission
+prop_R = 0.2           # Probability of being colonized with resistant strain on admission
 prop_S_nonR = 0.8                # Proportion of large S within non-resistant states (S+s)
 bif = 0.9                        # bacterial interference factor 
 pi_ssr = 0.01                   # pi_s= probability of R transmitting to ss
@@ -37,7 +37,7 @@ repop.s2= 0.005                   # probability of repopulation of sr to become 
 K = 11                             # gut holding capacity
 total_prop = 0.02                   # mean of total starting amount of gut bacteria on log scale
 #t_sd = 1.1218                       # sd of total starting amount of gut bacteria on log scale
-r_prop = 0.3                        # mean of starting amount of resistant gut bacteria on log scale
+prop_R = 0.3                        # mean of starting amount of resistant gut bacteria on log scale
 #r_sd = 1.8921                       # sd of starting amount of resistant gut bacteria on log scale
 r_growth = 0.4                        # r_growth = growth constant for logistic growth
 s_growth = 0.3

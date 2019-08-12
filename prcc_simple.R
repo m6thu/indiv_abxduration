@@ -7,7 +7,7 @@ require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 require(MCMCglmm) #for rtnorm
 
-setwd('/Users/moyin/Desktop/indiv_abxduration')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
 cl <- makeCluster(detectCores()-1)
 
@@ -30,8 +30,8 @@ modelRun.simple <- function (data.df) { #data.df is a dataframe of the parameter
 #list parameters together with name, so they are "linked" or not easily confused
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"),              #"n.bed", number of beds in the ward
-    c("qunif", list(min=3, max=20), "mean.max.los"),       #"mean.max.los", mean of length of stay
-    c("qunif", list(min=0, max=1), "prob_StartBact_R"),    #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    c("qunif", list(min=3, max=20), "max.los"),       #"max.los", mean of length of stay
+    c("qunif", list(min=0, max=1), "prop_R"),    #"prop_R",probability of initial carriage of resistant organisms
     c("qunif", list(min=0, max=1), "prop_S_nonR"),         #"prop_S_nonR", proportion of S in the population of S and ss
     c("qunif", list(min=0, max=1), "bif"),                 #"bif", bacterial interference factor
     c("qunif", list(min=0, max=0.05), "pi_ssr"),            # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)

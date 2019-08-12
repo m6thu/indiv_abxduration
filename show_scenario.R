@@ -2,7 +2,7 @@
 #######Effect of antibiotic duration on hospitalised patients############
 #####################Show one run per scenario ##########################
 #########################################################################
-setwd('/Users/moyin/Desktop/indiv_abxduration')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 rm(list=ls()) # Clean working environment
 
 library(ggplot2)
@@ -10,7 +10,7 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "binary"
+model <- "simple"
 
 source("default_params.R")
 source('los_abx_matrix.R')

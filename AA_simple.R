@@ -3,7 +3,7 @@
 ################Determine number of iterations per run###################
 #########################################################################
 
-setwd("/Users/moyin/Desktop/indiv_abxduration")
+setwd("/Users/moyin/Documents/git_projects/indiv_abxduration/")
 rm(list=ls()) # Clean working environment
 
 source("model_simple.R")
@@ -26,8 +26,8 @@ clusterCall(cl, function() {source('model_simple.R')})
 
 parameters <- list(
     c(runif(1,min=5, max=50), "n.bed"),              #"n.bed", number of beds in the ward
-    c(runif(1,min=3, max=20), "mean.max.los"),       #"mean.max.los", mean of length of stay
-    c(runif(1,min=0, max=1), "prob_StartBact_R"),    #"prob_StartBact_R",probability of initial carriage of resistant organisms
+    c(runif(1,min=3, max=20), "max.los"),       #"max.los", mean of length of stay
+    c(runif(1,min=0, max=1), "prop_R"),    #"prop_R",probability of initial carriage of resistant organisms
     c(runif(1,min=0, max=1), "prop_S_nonR"),         #"prop_S_nonR", proportion of S in the population of S and ss
     c(runif(1,min=0, max=1), "bif"),                 #"bif", bacterial interference factor
     c(runif(1,min=0, max=0.05), "pi_ssr"),            # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
@@ -53,15 +53,15 @@ aa_data_simple_diff<-list()
 for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(paste('Calculating', i, 'in', (max(iterationstotry)*numberofrepeatsineachiteration), 'total runs'))
   old <- Sys.time() # get start time
-  simple <- diff_prevalence(n.bed=values[1], mean.max.los=values[2], 
-                            prob_StartBact_R=values[3], prop_S_nonR=values[4], 
+  simple <- diff_prevalence(n.bed=values[1], max.los=values[2], 
+                            prop_R=values[3], prop_S_nonR=values[4], 
                             bif=values[5], pi_ssr=values[6], repop.s1=values[7], mu_r=values[8], 
                             abx.s=values[9], abx.r=values[10], p.infect=values[11], 
                             cum.r.1=values[12], p.r.day1=values[13], short_dur=values[14], long_dur = values[15])
   samples<- values #sampled parameter combinations 
   results <- simple #save results of the simulations
   aa_data_simple_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 18) #combine sampled parameter combinations and results in one file 
-  colnames(aa_data_simple_diff[[i]])=c(parameters_simple, 'results')
+  colnames(aa_data_simple_diff[[i]])=c(parameters_diff_prevalence_simple, 'long','short','results')
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
 } 

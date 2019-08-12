@@ -8,7 +8,7 @@ library(spartan) #load spartan package for AA and eFAST
 #resource: https://cran.r-project.org/web/packages/spartan/vignettes/sensitivity_analysis.html
 #data download: http://www.kieranalden.info/index.php/spartan/
 
-setwd('/Users/moyin/Desktop/indiv_abxduration/')
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration//')
 
 # SAMPLE PARAMETER SPACE 
 source('model_frequency.R')
@@ -16,13 +16,13 @@ source('model_frequency.R')
 #parameters 
 parameters <- list(
     c(runif(1,min=5, max=50), "n.bed"),              #n.bed; number of beds in the ward
-    c(runif(1,min=3, max=20), "mean.max.los"),       #mean.max.los; mean of length of stay (normal distribution)
+    c(runif(1,min=3, max=20), "max.los"),       #max.los; mean of length of stay (normal distribution)
     c(runif(1,min=0.1, max=1), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
     c(runif(1,min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c(runif(1,min=5, max=20), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
     c(runif(1,min=0.00001, max=0.1), "total_prop"),             # mean of total starting amount of e coli on log scale
-    c(runif(1,min=0,max=0.9), "r_prop"),              # mean of starting amount of resistant gut bacteria on log scale
+    c(runif(1,min=0,max=0.9), "prop_R"),              # mean of starting amount of resistant gut bacteria on log scale
     c(runif(1,min=0,max=0.05), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
     c(runif(1,min=1,max=10), "r_thres"),             # r_thres = R threshold level for tranmissibility
     c(runif(1,min=0.3,max=1.5), "r_growth"),           # r_growth = growth constant for logistic growth
@@ -45,14 +45,14 @@ aa_data_freq_diff<-list()
 for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(paste('Calculating', i, 'in', (max(iterationstotry)*numberofrepeatsineachiteration), 'total runs'))
   old <- Sys.time() # get start time
-  freq <- diff_prevalence(n.bed=values[1], mean.max.los=values[2], p.infect=values[3], cum.r.1=values[4], 
-                          p.r.day1=values[5],K=values[6], total_prop=values[7], r_prop=values[8], pi_ssr=values[9], 
+  freq <- diff_prevalence(n.bed=values[1], max.los=values[2], p.infect=values[3], cum.r.1=values[4], 
+                          p.r.day1=values[5],K=values[6], total_prop=values[7], prop_R=values[8], pi_ssr=values[9], 
                           r_thres=values[10], r_growth=values[11], r_trans=values[12], s_growth=values[13],
                           abx.s=values[14], abx.r=values[15], short_dur = values[16], long_dur = values[17])
   samples<- values #sampled parameter combinations 
   results <- freq #save results of the simulations
   aa_data_freq_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 20) #combine sampled parameter combinations and results in one file 
-  colnames(aa_data_freq_diff[[i]])=c(parameters_freq, "Rperbed", "RThresperbed")
+  colnames(aa_data_freq_diff[[i]])=c(parameters_diff_prevalence_freq, "long",'short', "RThresperbed")
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
 } 

@@ -2,7 +2,7 @@
 #######Effect of antibiotic duration on hospitalised patients############
 ################Determine number of iterations per run###################
 #########################################################################
-setwd("/Users/moyin/Desktop/indiv_abxduration")
+setwd("/Users/moyin/Documents/git_projects/indiv_abxduration/")
 rm(list=ls()) # Clean working environment
 
 source("model_binary.R")
@@ -25,11 +25,11 @@ clusterCall(cl, function() {source('model_binary.R')})
 #parameters 
 parameters <- list(
     c(runif(1,min=5, max=50), "n.bed"),              #n.bed; number of beds in the ward
-    c(runif(1,min=3, max=20), "mean.max.los"),       #mean.max.los; mean of length of stay (exponential distribution)
-    c(runif(1,min=0, max=1), "prob_StartBact_R"),    #probability of initial carriage of resistant organisms
-    c(runif(1,min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_StartBact_R)
-    c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_StartBact_R
-    c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_StartBact_R
+    c(runif(1,min=3, max=20), "max.los"),       #max.los; mean of length of stay (exponential distribution)
+    c(runif(1,min=0, max=1), "prop_R"),    #probability of initial carriage of resistant organisms
+    c(runif(1,min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
+    c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
+    c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c(runif(1,min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
     c(runif(1,min=0, max=0.05), "pi_ssr"),           #probability of being transmitted r to ss (ss—> ssr)
     c(runif(1,min=0.005, max=0.02), "repop.s1"),         #probability of regrowth of S  (s—>S)
@@ -59,8 +59,8 @@ aa_data_binary_diff<-list()
 for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(paste('Calculating', i, 'in', (max(iterationstotry)*numberofrepeatsineachiteration), 'total runs'))
   old <- Sys.time() # get start time
-  binary <- diff_prevalence(n.bed=values[1], mean.max.los=values[2], 
-                            prob_StartBact_R=values[3], prop_S_nonR=values[4], 
+  binary <- diff_prevalence(n.bed=values[1], max.los=values[2], 
+                            prop_R=values[3], prop_S_nonR=values[4], 
                             prop_Sr_inR=values[5], prop_sr_inR=values[6], bif=values[7], 
                             pi_ssr=values[8], repop.s1=values[9], repop.s2=values[10], repop.r1=values[11], 
                             repop.r2=values[12], mu1=values[13], mu2=values[14], 
@@ -69,7 +69,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   samples<- values #sampled parameter combinations 
   results <- binary #save results of the simulations
   aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 25) #combine sampled parameter combinations and results in one file 
-  colnames(aa_data_binary_diff[[i]])=c(parameters_binary, "No sr/sR/Sr per bed", "sR per bed")
+  colnames(aa_data_binary_diff[[i]])=c(parameters_diff_prevalence_binary, "long", 'short',"sR per bed")
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
 } 
