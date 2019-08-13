@@ -47,7 +47,7 @@ parameters <- list(
     c("qunif", list(min=0.002, max=0.02), "mu2"),          #probability of being decolonised to S (sr—> s) 
     c("qunif", list(min=0.002, max=0.02), "mu_r"),         #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0.1, max=0.7), "abx.s"),           #probability of clearing S to become s
-    c("qunif", list(min=0, max=0.000001), "abx.r"),           #probability of clearing R to become r
+    c("qunif", list(min=0, max=0.0000001), "abx.r"),           #probability of clearing R to become r
     c("qunif", list(min=0.1, max=1), "p.infect"),          #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
@@ -73,7 +73,7 @@ if(!(sum(factors == parameters_diff_prevalence_binary) ==  length(parameters_dif
 ##run 1
 abxr='zero'
 old <- Sys.time() # get start time
-N=700
+N=900
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format

@@ -2,6 +2,12 @@
 #######Effect of antibiotic duration on hospitalised patients############
 ##################Show effect varying 1 parameter########################
 #########################################################################
+setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
+rm(list=ls()) # Clean working environment
+
+library(ggplot2)
+library(ggpubr)
+
 
 model='frequency'
 

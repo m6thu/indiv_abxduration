@@ -10,7 +10,7 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "simple"
+model <- "binary"
 
 source("default_params.R")
 source('los_abx_matrix.R')
@@ -48,7 +48,7 @@ if(model == "simple"){
     n.day=365
     sdDur=1
     
-    matrixes.short = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+    matrixes.short = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
     patient.matrix.short=matrixes.short[[1]]
@@ -56,13 +56,13 @@ if(model == "simple"){
     abx.matrix.short=matrixes.short[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los=los.array.short, 
-                                   prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                   prop_R=prop_R,prop_S_nonR=prop_S_nonR)
     
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, 
                                       abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
                                       bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
     
-    matrixes.long = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+    matrixes.long = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= long_dur, timestep=timestep)
     patient.matrix.long=matrixes.long[[1]]
@@ -70,7 +70,7 @@ if(model == "simple"){
     abx.matrix.long=matrixes.long[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los=los.array.long, 
-                                  prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                  prop_R=prop_R,prop_S_nonR=prop_S_nonR)
     
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, 
                                      abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
@@ -87,7 +87,7 @@ if(model == "simple"){
     
     p.abx.short=ggplot(mosaicdata.abx.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"),limits = c("0", "1", "2"))+
+        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"),limits = c("0", "1", "2"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Short antibiotic treatment duration',
              x = "Time (days)", y="Bed number")+ 
@@ -104,7 +104,7 @@ if(model == "simple"){
     
     p.abx.long=ggplot(mosaicdata.abx.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"),limits = c("0", "1", "2"))+
+        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"),limits = c("0", "1", "2"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Long antibiotic treatment duration',
              x = "Time (days)", y="")+ 
@@ -129,7 +129,7 @@ if(model == "simple"){
     
     p.car.short=ggplot(mosaicdata.car.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage type`)) + 
-        scale_fill_manual(values=sunflower,labels=c('R','S','ss'),limits = c('R','S','ss'))+
+        scale_fill_manual(values=sunflower,labels=c('R','S','ss'),limits = c('R','S','ss'),name='Carriage type')+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)*timestep, labels = c('100','200','300')) +
@@ -145,7 +145,7 @@ if(model == "simple"){
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage type`)) + 
-        scale_fill_manual(values=sunflower,labels=c('R','S','ss'),limits = c('R','S','ss'))+
+        scale_fill_manual(values=sunflower,labels=c('R','S','ss'),limits = c('R','S','ss'),name='Carriage type')+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)*timestep, labels = c('100','200','300')) +
@@ -220,7 +220,7 @@ if(model == "simple"){
     n.day=365
     sdDur=1
     
-    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
     patient.matrix.short=matrixes[[1]]
@@ -229,13 +229,13 @@ if(model == "simple"){
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los=los.array.short, 
-                             prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                             prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
     
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
                                       pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
                                       repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
     
-    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= long_dur, timestep=timestep)
     patient.matrix.long=matrixes[[1]]
@@ -244,7 +244,7 @@ if(model == "simple"){
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los=los.array.long, 
-                                   prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                                   prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
     
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
                                        pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
@@ -261,7 +261,7 @@ if(model == "simple"){
     
     p.abx.short=ggplot(mosaicdata.abx.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"))+
+        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Short antibiotic treatment duration',
              x = "Time (days)", y="Bed number")+ 
@@ -278,7 +278,7 @@ if(model == "simple"){
     
     p.abx.long=ggplot(mosaicdata.abx.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"))+
+        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Long antibiotic treatment duration',
              x = "Time (days)", y="")+ 
@@ -306,7 +306,7 @@ if(model == "simple"){
     
     p.car.short=ggplot(mosaicdata.car.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage type`)) + 
-        scale_fill_manual(values=sunflower)+
+        scale_fill_manual(values=sunflower, name='Carriage type')+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)*timestep, labels = c('100','200','300')) +
@@ -322,7 +322,7 @@ if(model == "simple"){
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage type`)) + 
-        scale_fill_manual(values=sunflower)+
+        scale_fill_manual(values=sunflower,name='Carriage type')+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)*timestep, labels = c('100','200','300')) +
@@ -379,14 +379,13 @@ if(model == "simple"){
     sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = dur))+
         geom_line()+
         labs(x = "Time (days)", y="Cumulative sum of\nsR in a 30-bed ward")+
-        scale_color_manual(values =  c('#A0495B', '#0096BC'))+
+        scale_color_manual(values =  c('#A0495B', '#0096BC'), name='Treatment duration')+
         theme_bw()+
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
               axis.title = element_text(size=base_size+2), 
               legend.position = "bottom", 
               legend.background = element_rect(fill=lgdcol,size=0.05),
-              legend.text  = element_text(size = base_size+2),
-              legend.title = element_text(size = base_size+2,'Treatment duration'))
+              legend.text  = element_text(size = base_size+2))
     
     (allplots= ggarrange(ggarrange(abx.mosaic, car.mosaic, totalRline, nrow=3), 
                          sumplot, nrow=2, heights = c(3, 1)))
@@ -396,26 +395,26 @@ if(model == "simple"){
     
     timestep=1
     
-    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
     patient.matrix.short=matrixes[[1]]
     day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
-    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, r_prop=r_prop,K=K)
+    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,K=K)
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     
-    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+    matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= long_dur, timestep=timestep)
     patient.matrix.long=matrixes[[1]]
     day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
-    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, r_prop=r_prop,K=K)
+    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,K=K)
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
                                        pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
@@ -431,7 +430,7 @@ if(model == "simple"){
     
     p.abx.short=ggplot(mosaicdata.abx.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"))+
+        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Short antibiotic treatment duration',
              x = "Time (days)", y="Bed number")+ 
@@ -448,7 +447,7 @@ if(model == "simple"){
     
     p.abx.long=ggplot(mosaicdata.abx.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"))+
+        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Long antibiotic treatment duration',
              x = "Time (days)", y="")+ 
@@ -477,7 +476,7 @@ if(model == "simple"){
     
     p.car.short=ggplot(mosaicdata.car.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage status`)) + 
-        scale_fill_manual(values=sunflower)+
+        scale_fill_manual(values=sunflower, name='Carriage type')+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
@@ -493,7 +492,7 @@ if(model == "simple"){
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Carriage status`)) + 
-        scale_fill_manual(values=sunflower)+
+        scale_fill_manual(values=sunflower, name='Carriage type')+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
@@ -540,27 +539,25 @@ if(model == "simple"){
     cumsum.short=cumsum(totalRperday.short.avg)/n.bed*30
     cumsumdata.short=data.frame(`Time (days)`= 1:n.day, 
                                 cumsum= cumsum.short)
-    cumsumdata.short$dur=rep('Short',nrow(cumsumdata.short))
+    cumsumdata.short$`Treatment duration`=rep('Short',nrow(cumsumdata.short))
     cumsum.long=cumsum(totalRperday.long.avg)/n.bed*30
     cumsumdata.long=data.frame(`Time (days)`= 1:n.day, 
                                cumsum= cumsum.long)
-    cumsumdata.long$dur=rep('Long',nrow(cumsumdata.long))
+    cumsumdata.long$`Treatment duration`=rep('Long',nrow(cumsumdata.long))
     cumsumdata=rbind.data.frame(cumsumdata.short,cumsumdata.long)
-    sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = dur))+
+    sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = `Treatment duration`))+
         geom_line()+
         labs(x = "Time (days)", y="Cumulative sum of\nR in a 30-bed ward")+
-        scale_color_manual(values =  c('#A0495B', '#0096BC'))+
+        scale_color_manual(values =  c('#A0495B', '#0096BC'), name='Treatment duration' )+
         theme_bw()+
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
               axis.title = element_text(size=base_size+2), 
               legend.position = "bottom", 
               legend.background = element_rect(fill=lgdcol,size=0.05),
-              legend.text  = element_text(size = base_size+2),
-              legend.title = element_text(size = base_size+2,'Treatment duration'))
-    
+              legend.text  = element_text(size = base_size+2))
+   
     (allplots= ggarrange(ggarrange(abx.mosaic, car.mosaic, totalRline, nrow=3), 
                          sumplot, nrow=2, heights = c(3, 1)))
-
 }
 
 allplots
