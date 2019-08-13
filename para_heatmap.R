@@ -36,27 +36,27 @@ models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3',
 # }
 
 getposition<-function(data,labs=labs.df){
-    prcc= data$prcc[[1]]$PRCC
-    prcc$ranking=NA
-    prcc= prcc[order(prcc$original),] #arrange in ranking order
-    low = which(prcc$`min. c.i.` < 0 & prcc$`max. c.i.`< 0)
-    high= which(prcc$`min. c.i.` > 0 & prcc$`max. c.i.`> 0)
-    none= setdiff(1:nrow(prcc),c(low,high))
-    prcc$ranking[low]=prcc$`min. c.i.`[low]
-    prcc$ranking[high]=prcc$`max. c.i.`[high]
-    prcc$ranking[none]=0
-    
-    df=data.frame(parameters=rownames(prcc), ranking=prcc$ranking)
-    out=merge(labs.df, df, by='parameters', all.x=TRUE)[,c(1,3)]
-    
-    return(out)
+  prcc= data$prcc[[1]]$PRCC
+  prcc$ranking=NA
+  prcc= prcc[order(prcc$original),] #arrange in ranking order
+  low = which(prcc$`min. c.i.` < 0 & prcc$`max. c.i.`< 0)
+  high= which(prcc$`min. c.i.` > 0 & prcc$`max. c.i.`> 0)
+  none= setdiff(1:nrow(prcc),c(low,high))
+  prcc$ranking[low]=prcc$`min. c.i.`[low]
+  prcc$ranking[high]=prcc$`max. c.i.`[high]
+  prcc$ranking[none]=0
+  
+  df=data.frame(parameters=rownames(prcc), ranking=prcc$ranking)
+  out=merge(labs.df, df, by='parameters', all.x=TRUE)[,c(1,3)]
+  
+  return(out)
 }
 
 Amodel1=get(load('runs/LHS2_simple_60005Aug2019_2050GMT.Rdata')) #abx_r>0
-Amodel2=get(load('runs/LHS2_binary_60006Aug2019_0414GMT.Rdata'))
+Amodel2=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
 Amodel3=get(load('runs/LHS_frequency_130006Aug2019_1900GMT.Rdata'))
 Bmodel1=get(load('runs/LHS2_simple_70007Aug2019_1602GMT.Rdata')) #abx_r>0
-Bmodel2=get(load('runs/LHS2_binary_80007Aug2019_0819GMT.Rdata')) 
+Bmodel2=get(load('runs/LHSdiff_binary_900_zero_13Aug2019_1455BST.Rdata')) 
 Bmodel3=get(load('runs/LHS_frequency_150008Aug2019_0008GMT.Rdata'))
 
 #Amodel1.p=getp(Amodel1, para.list=parameters_simple, 500)
@@ -82,19 +82,18 @@ forplot$`ranking value`=rescale(forplot$ranking, to=c(0,1))
 
 base_size=9
 ggplot(forplot, aes(model, parameters)) + 
-    geom_tile(aes(fill = ranking), colour = "white") + 
-    scale_fill_gradientn(colours=c("#388697",'#fbfae5',"#EB5160"),
-                         na.value = "white", 
-                         breaks=c(min(forplot$ranking, na.rm = T),0,max(forplot$ranking, na.rm = T)),
-                         labels=c('Negatively affects\n outcome',
-                                  'Does not affect\n outcome', 
-                                  'Positively affects\n outcome'))+
-    theme_grey(base_size = base_size) + 
-    labs(x = "", y="", fill = "Ranking positions\n")+ 
-    scale_x_discrete(expand = c(0, 0)) +
-    scale_y_discrete(expand = c(0, 0)) + 
-    theme(legend.position = "right", 
-          axis.ticks = element_blank(), 
-          axis.text.x = element_text(size = base_size, angle = 330, hjust = 0, colour = "grey50"))+
-        geom_vline(xintercept = 3.5,  color = "black", size=0.5)
-
+  geom_tile(aes(fill = ranking), colour = "white") + 
+  scale_fill_gradientn(colours=c("#388697",'#fbfae5',"#EB5160"),
+                       na.value = "white", 
+                       breaks=c(min(forplot$ranking, na.rm = T),0,max(forplot$ranking, na.rm = T)),
+                       labels=c('Negatively affects\n outcome',
+                                'Does not affect\n outcome', 
+                                'Positively affects\n outcome'))+
+  theme_grey(base_size = base_size) + 
+  labs(x = "", y="", fill = "Ranking positions\n")+ 
+  scale_x_discrete(expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) + 
+  theme(legend.position = "right", 
+        axis.ticks = element_blank(), 
+        axis.text.x = element_text(size = base_size, angle = 330, hjust = 0, colour = "grey50"))+
+  geom_hline(yintercept=c(2.5, 5.5, 7.5, 14.5,20.5, 26.5), color='grey', size=0.5)+geom_vline(xintercept = 3.5,  color = "black", size=0.5)
