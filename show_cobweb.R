@@ -1,8 +1,8 @@
 library(epiR) #calculate p values for PRCC
 library(pse)
 
-output1=get(load('runs/LHS2_binary_80007Aug2019_0819GMT.Rdata'))
-output2=get(load('runs/LHS_frequency_140007Aug2019_2030GMT.Rdata'))
+output1=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
+output2=get(load('runs/LHSdiff_binary_900_notzero_12Aug2019_2229BST.Rdata'))
 parameters<-parameters_diff_prevalence_binary
 
 # 1. Check monotonicity 
@@ -58,9 +58,9 @@ prcc$hi_lo[which(prcc$`max. c.i.`<0 & prcc$`min. c.i.`<0) ]='Below'
 prcc$hi_lo[is.na(prcc$hi_lo)]='None'
 prcc$hi_lo=as.factor(prcc$hi_lo)
 rownames.prcc<-factor(as.factor(rownames(prcc)), levels = rownames(prcc))
-Colors <- setNames(c('#F98866',"#80BD9E",'grey'), c('Above', 'Below','None'))
+Colors <- setNames(c('#eb5160',"#388697",'grey'), c('Above', 'Below','None'))
 
-ggplot(data=prcc, mapping = aes(x = rownames.prcc, y = original)) +
+p=ggplot(data=prcc, mapping = aes(x = rownames.prcc, y = original)) +
   geom_hline(yintercept=0, color = "azure2")+
   geom_point()+
   geom_errorbar(aes(ymin=`min. c.i.`, ymax=`max. c.i.`, color=hi_lo), width=0.3)+
@@ -69,26 +69,23 @@ ggplot(data=prcc, mapping = aes(x = rownames.prcc, y = original)) +
   scale_fill_manual("hi_lo",breaks=c(1,2,3,4),values=Colors)+
   scale_x_discrete(rownames.prcc)+
   scale_y_continuous(limits = c(-1,1))+
-  ylab(expression("Partial Ranking Correlation Coefficients"))+
+  labs(y="Partial Ranking Correlation Coefficients",
+       x="")+
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         panel.background = element_blank())
   
-##### pic (partial inclination coefficient) is the sensitivity" of the model response in respect to each parameter
-pic(LHS.output, nboot=40) 
-#represent the beta terms in y = alpha + beta*x regressions, after removing the linear effect of the other parameters
-
 ##### Cobweb
+x.samples<-x.samples[, match(rownames(prcc), names(x.samples))] 
 outcome.df<-as.data.frame(cbind(x.samples,y.output)) #dummy matrix with parameter values in columns and outcome in last column
-names(outcome.df)<- c(parameters,'outcome') #name the columns of the dummy matrix 
 for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that produced top 5% of the outcomes
-  if (outcome.df$outcome[i]<quantile(outcome.df$outcome,probs = 0.95)) { 
+  if (outcome.df$y.output[i]<quantile(outcome.df$y.output,probs = 0.85)) { 
     outcome.df$top5[i] <-0 } else {
       outcome.df$top5[i] <-1
     }
 }
 require(plotrix) #load MASS package
-blue<-alpha("lightskyblue1", alpha=0.3)
-red<-alpha("red", alpha=0.6)
+blue<-alpha("lightskyblue", alpha=0.05)
+red<-alpha("#E85D75", alpha=0.15)
 colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
 outcome.df$top5<- as.factor(outcome.df$top5)
 parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
@@ -101,14 +98,21 @@ parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...)
   },
   df, rx)
   matplot(1L:ncol(x), t(x), type = "l", col = col, lty = lty, 
-          xlab = "", ylab = "", axes = FALSE,...)
-  axis(1, at = 1L:ncol(x), labels = c(colnames(x)), las = 2)
+          xlab = "", ylab = "Sampled parameter values", axes = FALSE,...)
+  axis(1, at = 1L:ncol(x), labels = c(colnames(x)), las = 2, cex.axis=0.7)
   for (i in 1L:ncol(x)) {
     lines(c(i, i), c(0, 1), col = "grey")
-    text(c(i, i), seq(0,1,length.out=length(pr[[i]])), labels = pr[[i]], 
+    text (c(i, i), seq(0,1,length.out=length(pr[[i]])), labels = pr[[i]], 
          xpd = NA, col=lblcol, cex=0.5)
   }
   invisible()
 }
-parcoordlabel(outcome.df[,c(1:length(parameters))], col = colors[outcome.df$top5])
+c=parcoordlabel(outcome.df[,c(1:length(parameters))], col = colors[outcome.df$top5])
+
+##put cobweb and PRCC together 
+
+
+##### pic (partial inclination coefficient) is the sensitivity" of the model response in respect to each parameter
+pic(output1, nboot=40) 
+#represent the beta terms in y = alpha + beta*x regressions, after removing the linear effect of the other parameters
 

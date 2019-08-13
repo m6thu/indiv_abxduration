@@ -4,7 +4,6 @@ rm(list=ls()) # Clean working environment
 
 library(ggplot2)
 library(ggpubr)
-require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
 getplotdata=function(raw){
     

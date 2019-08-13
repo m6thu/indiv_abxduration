@@ -86,9 +86,9 @@ ggplot(forplot, aes(model, parameters)) +
     scale_fill_gradientn(colours=c("#388697",'#fbfae5',"#EB5160"),
                          na.value = "white", 
                          breaks=c(min(forplot$ranking, na.rm = T),0,max(forplot$ranking, na.rm = T)),
-                         labels=c('Positively affects\n outcome',
+                         labels=c('Negatively affects\n outcome',
                                   'Does not affect\n outcome', 
-                                  'Negatively affects\n outcome'))+
+                                  'Positively affects\n outcome'))+
     theme_grey(base_size = base_size) + 
     labs(x = "", y="", fill = "Ranking positions\n")+ 
     scale_x_discrete(expand = c(0, 0)) +
