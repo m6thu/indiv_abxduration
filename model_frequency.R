@@ -136,7 +136,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     
     timestep = 1
     n.day = 100
-    iterations = 1
+    iterations = 100
     
     iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)

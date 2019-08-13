@@ -263,7 +263,7 @@ diff_prevalence <- function(n.bed, max.los,
                 p.infect, cum.r.1, p.r.day1, short_dur, long_dur))
     
     timestep = 3
-    iterations = 1
+    iterations = 125
     n.day=300
     sdDur=1
     
