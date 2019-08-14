@@ -15,7 +15,7 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, K){
     prop_R = rexp(1, 1/prop_R)
     if (prop_R > 1) { prop_R = 1 }
     r_bact = log(prop_R*exp(total_bact)) #total number of resistant Enterobacteriaceae for each patient (log)
-    s_bact = log(exp(total_bact) - exp(r_bact))
+    s_bact = log(exp(total_bact) - exp(r_bact)) #total number of sensitive Enterobacteriaceae for each patient (log)
     
     # # spin until no minus values for log... probably not best way
     # while(min(s_bact) < 0){
@@ -36,7 +36,7 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, K){
         end_idx = end_idx + los.array[2, i]
     }
     
-    return(list(S_Bactlevelstart, R_Bactlevelstart))
+    return(list(S_Bactlevelstart, R_Bactlevelstart)) # in log
 }
 
 # Update values for every day (define function)
@@ -47,28 +47,22 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     # K: loading capacity, and r_thres:threshold for infectiousness does not change with time
     pi_ssr = 1-(1-pi_ssr)^(1/timestep)
     
-    #total capacity for enterobacteriaceae growth 
-    total_capacity= total_prop*K
+    #total capacity for enterobacteriaceae growth (log)
+    total_capacity= log(total_prop*exp(K))
     
-    if (abx.r < 0.1) { 
-        abxr_killr = abx.r
-        abxr_kills = abx.s
-        abxs_kills = abx.s
-    } else {
-        abxr_killr = abx.s
-        abxr_kills = abx.s
-        abxs_kills = abx.s
-    }
-    
-    S_table = colo.matrix[[1]]
-    R_table = colo.matrix[[2]]
+    abxr_killr = 1-(1-abx.r)^(1/timestep) #in log
+    abxr_kills = 1-(1-abx.r)^(1/timestep) #in log
+    abxs_kills = 1-(1-abx.s)^(1/timestep) #in log
+     
+    S_table = colo.matrix[[1]] #in log
+    R_table = colo.matrix[[2]] #in log
     
     # For each day (first day should be filled)
     for(i in 2:nrow(patient.matrix)){
-        # calculate how many people has R above transmission level
+        # calculate how many people has R above transmission level (log)
         r_num = sum(R_table[i-1,] > r_thres)
         # from number of r, calculate probability of transmission
-        prop_r = 1-((1-pi_ssr)^r_num)
+        prop_r = 1-((1-pi_ssr)^r_num) 
         
         ###### Convert all log scale parameters into normal scale for addition, then convert back to log
         #for each person:
@@ -77,22 +71,22 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 
                 # roll for transmission
                 roll = runif(1, 0, 1)
-                # calculate effect of R logistic bacteria growth 
-                R_grow = r_growth*exp(R_table[i-1, j])*(1 - ((exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(total_capacity)))
-                # add effect of transmission if roll pass prob check and if previous R level is 0
+                # calculate effect of R logistic bacteria growth (abs)
+                R_grow = r_growth*exp(R_table[i-1, j])*(1 - ((exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(total_capacity))) 
+                # add effect of transmission if roll pass prob check and if previous R level is 0 (abs)
                 R_trans = exp(r_trans)*(roll < prop_r)# & !R_table[i-1, j])
-                # add effect of abx death if abx.matrix is r abx (== 2)
+                # add effect of abx death if abx.matrix is r abx (== 2) (abs)
                 R_abx = -(abx.matrix[i-1, j] == 2)*exp(abxr_killr)
-                # apply effects to current table
+                # apply effects to current table (abs first because log of a negative number is NaN)
                 R_table[i, j] = exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
-                if(R_table[i, j] > exp(total_capacity)){
-                    R_table[i, j] = exp(total_capacity)
+                if(R_table[i, j] > total_capacity){
+                    R_table[i, j] = total_capacity
                 }
                 if(R_table[i, j] < 0){
                     R_table[i, j] = 0
                 }
-                R_table[i, j] = log(R_table[i, j])
+                R_table[i, j] = log(R_table[i, j]) #log
                 if(R_table[i, j] < 0){
                     R_table[i, j] = 0
                 }
@@ -101,19 +95,19 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             if(is.na(S_table[i, j])){ 
                 # calculate effect of S logistic bacteria growth (in absolute numbers)
                 S_grow = s_growth*exp(S_table[i-1, j])*(1 - ((exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(total_capacity)))
-                # calculate effect of death antibiotics R and effect of death by abx S
+                # calculate effect of death antibiotics R and effect of death by abx S (abs)
                 S_abx_s = -(abx.matrix[i-1, j] == 1)*exp(abxs_kills)
                 S_abx_r = -(abx.matrix[i-1, j] == 2)*exp(abxr_kills)
-                # apply effects
+                # apply effects (abs first because log of a negative number is NaN)
                 S_table[i, j] = exp(S_table[i-1, j]) + S_grow + S_abx_s + S_abx_r
                 # trim range
-                if(S_table[i, j] > exp(total_capacity)){
-                    S_table[i, j] = exp(total_capacity)
+                if(S_table[i, j] > total_capacity){
+                    S_table[i, j] = total_capacity
                 }
                 if(S_table[i, j] < 0){
                     S_table[i, j] = 0
                 }
-                S_table[i, j] = log(S_table[i, j])
+                S_table[i, j] = log(S_table[i, j]) #log
                 if(S_table[i, j] < 0){
                     S_table[i, j] = 0
                 }
@@ -138,7 +132,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     n.day = 100
     iterations = 100
     
-    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
+    #iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
@@ -154,19 +148,19 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                           pi_ssr=pi_ssr, total_prop=total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
-        # Summary
+        # Summary - timestep by bed in absolute numbers
         df.R = data.frame(colo.matrix_filled_iter[[2]])
-        #print(df.R)
-        iter_totalR.no[, iter] = rowMeans(matrix(rowSums(df.R), ncol=timestep, byrow=T))
         
-        #for number of people who reached R threshold on a day
+        # for number of people who reached R threshold on a day
+        ##   sum of number of people per timestep that reach threshold 
+        ##   make a matrix of sum of people per day (days by timestep)
+        ##   daily means of number of people who reached R threshold 
         iter_totalR.thres[, iter]=rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalR_no_short = mean(rowSums(iter_totalR.no[51:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
     totalR_thres_short = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
-    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
+    #iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
@@ -186,12 +180,12 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
         #Summary 
         #for total units of R bacteria on a day
         df.R = data.frame(colo.matrix_filled_iter[[2]])
-        iter_totalR.no[, iter] = rowMeans(matrix(rowSums(df.R), ncol=timestep, byrow=T))
+        #iter_totalR.no[, iter] = rowMeans(matrix(rowSums(df.R), ncol=timestep, byrow=T))
         #for number of people who reached R threshold on a day
         iter_totalR.thres[, iter] = rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalR_no_long = mean(rowSums(iter_totalR.no[51:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
+    #totalR_no_long = mean(rowSums(iter_totalR.no[51:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
     totalR_thres_long = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
     # print elapsed time

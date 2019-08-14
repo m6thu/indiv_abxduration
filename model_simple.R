@@ -41,10 +41,6 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     abx.r1 =abx.r 
     abx.r2 =abx.r 
     
-    if (abx.r < 0.01) { #LHS unable to sample from 0 to 0, needs to be 0 to 0.01
-        abx.matrix[abx.matrix==2]=1
-    }
-    
     #print(paste("pi_ssr, timestep:", pi_ssr, timestep))
     
     # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
@@ -357,11 +353,11 @@ prevalence <- function(n.bed, max.los,
                                          bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
         
         #Summary
-        df = data.frame(colo_table_filled_iter)
-        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R"), ncol=timestep, byrow=T))
+        df = data.frame(colo_table_filled_iter) #timestep by number of beds with R,S,ss
+        iter_totalR[, iter] = rowMeans(matrix(rowSums(df == "R"), ncol=timestep, byrow=T)) #rowMeans(number of days by timestep) gives mean number of R per day
     }
     # Discard first 150 runs as burn-in
-    totalR = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed)
+    totalR = mean(rowSums(iter_totalR[151:nrow(iter_totalR), ,drop=FALSE])/iterations/n.bed) #mean(avg R per bed per day)
     
     #print(paste("totalR_long", totalR_long, "totalR_short", totalR_short))
     # print elapsed time

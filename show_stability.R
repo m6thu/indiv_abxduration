@@ -5,7 +5,7 @@
 library(reshape)
 library(ggplot2)
 
-setwd("/Users/moyin/Desktop/indiv_abxduration")
+setwd("/Users/moyin/Documents/git_projects/indiv_abxduration/")
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
@@ -25,14 +25,14 @@ if(model == "simple"){
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= short_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                 prop_R=prop_R,prop_S_nonR=prop_S_nonR)
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -48,14 +48,14 @@ if(model == "simple"){
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= long_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R,prop_S_nonR=prop_S_nonR)
+                                 prop_R=prop_R,prop_S_nonR=prop_S_nonR)
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -92,14 +92,14 @@ if(model == "simple"){
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= short_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                                 prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                          pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
                                          repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
@@ -114,14 +114,14 @@ if(model == "simple"){
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= long_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                                 prob_StartBact_R=prob_StartBact_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                                 prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                          pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
                                          repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
@@ -152,18 +152,17 @@ if(model == "simple"){
     iterations = 100
     timestep=1
     
-    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= short_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                           pi_ssr=pi_ssr, total_prop = total_prop,K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
@@ -176,18 +175,17 @@ if(model == "simple"){
     }
     cumsum_short = apply(iter_totalR.thres, 2, cumsum)
     
-    iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
     for(iter in 1:iterations){
         
-        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, mean.max.los=mean.max.los, 
+        matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                                  p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                                  meanDur= long_dur, timestep=timestep)
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, r_prop=r_prop,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                           pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
@@ -217,3 +215,5 @@ if(model == "simple"){
                   axis.text = element_text(size = 15, colour = "grey50"), 
                   axis.title = element_text(size=15)))
 }
+
+stability.p

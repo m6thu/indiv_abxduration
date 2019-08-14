@@ -28,6 +28,17 @@ prevalence(n.bed, max.los,
 
 #frequency
 n.day=100
+matrixes=los.abx.table(n.bed, n.day, max.los,
+                          p.infect, p.r.day1, cum.r.1, 
+                          meanDur, timestep)
+patient.matrix=matrixes[[1]]
+abx.matrix=matrixes[[2]]
+los.array=summary.los(patient.matrix)
+colo.matrix=colo.table(patient.matrix, los.array, total_prop, prop_R, K)
+nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
+                    pi_ssr, total_prop, K, r_thres, r_growth, r_trans, s_growth,
+                    abx.s, abx.r, timestep)
+
 diff_prevalence(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
                             K, total_prop, prop_R, pi_ssr, r_thres, r_growth, r_trans, s_growth,
                             abx.s, abx.r, short_dur,long_dur)

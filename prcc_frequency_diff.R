@@ -8,7 +8,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores()-3)
 
 model <- 'frequency'
 # source functions on all cores
@@ -45,7 +45,7 @@ parameters <- list(
     c("qunif", list(min=1,max=10), "r_trans"),             # r_trans = amount transmitted on log scale
     c("qunif", list(min=0.3,max=1.5), "s_growth"),         # s_growth = amount transmitted on log scale
     c("qunif", list(min=5,max=15), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-    c("qunif", list(min=0,max=0.0001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+    c("qunif", list(min=5,max=15), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
     c("qunif", list(min=3, max=7), "short_dur"),           # mean short duration of narrow spectrum antibiotics (normal distribution) 
     c("qunif", list(min=14, max=21), "long_dur")           # mean long duration of narrow spectrum antibiotics (normal distribution)
     )
@@ -65,8 +65,8 @@ if(!(sum(factors == parameters_diff_prevalence_freq) ==  length(parameters_diff_
 
 # Use the LHD function to generate a hypercube 
 ##run 1
-abxr='zero'
-N=1300
+abxr='notzero'
+N=500
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time

@@ -36,7 +36,7 @@ models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3',
 # }
 
 getposition<-function(data,labs=labs.df){
-  prcc= data$prcc[[1]]$PRCC
+  prcc= data$prcc[[3]]$PRCC
   prcc$ranking=NA
   prcc= prcc[order(prcc$original),] #arrange in ranking order
   low = which(prcc$`min. c.i.` < 0 & prcc$`max. c.i.`< 0)
@@ -52,12 +52,12 @@ getposition<-function(data,labs=labs.df){
   return(out)
 }
 
-Amodel1=get(load('runs/LHS2_simple_60005Aug2019_2050GMT.Rdata')) #abx_r>0
+Amodel1=get(load('runs/LHSdiff_simple_800_notzero13Aug2019_0211GMT.Rdata')) #abx_r>0
 Amodel2=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
-Amodel3=get(load('runs/LHS_frequency_130006Aug2019_1900GMT.Rdata'))
-Bmodel1=get(load('runs/LHS2_simple_70007Aug2019_1602GMT.Rdata')) #abx_r>0
-Bmodel2=get(load('runs/LHSdiff_binary_900_zero_13Aug2019_1455BST.Rdata')) 
-Bmodel3=get(load('runs/LHS_frequency_150008Aug2019_0008GMT.Rdata'))
+Amodel3=get(load('runs/LHSdiff_frequency_1600_notzero_13Aug2019_2332GMT.Rdata'))
+Bmodel1=get(load('runs/LHSdiff_simple_800_zero13Aug2019_0949GMT.Rdata')) #abx_r>0
+Bmodel2=get(load('runs/LHSdiff_binary_1000_zero_13Aug2019_1926BST.Rdata')) 
+Bmodel3=get(load('runs/LHSdiff_frequency_1600_zero_13Aug2019_1640GMT.Rdata'))
 
 #Amodel1.p=getp(Amodel1, para.list=parameters_simple, 500)
 # Amodel2.p=getp(Amodel2, para.list=parameters_binary, 500)

@@ -10,7 +10,7 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "binary"
+model <- "frequency"
 
 source("default_params.R")
 source('los_abx_matrix.R')
@@ -201,14 +201,13 @@ if(model == "simple"){
     sumplot=ggplot(cumsumdata, aes(x=Time..days., y=cumsum, colour = dur))+
         geom_line()+
         labs(x = "Time (days)", y="Cumulative sum of\nR in a 30-bed ward")+
-        scale_color_manual(values =  c('#A0495B', '#0096BC'))+
+        scale_color_manual(values =  c('#A0495B', '#0096BC'), name= 'Treatment duration')+
         theme_bw()+
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
               axis.title = element_text(size=base_size+2), 
               legend.position = "bottom", 
               legend.background = element_rect(fill=lgdcol,size=0.05),
-              legend.text  = element_text(size = base_size+2),
-              legend.title = element_text(size = base_size+2,'Treatment duration'))
+              legend.text  = element_text(size = base_size+2))
     
     (allplots= ggarrange(ggarrange(abx.mosaic, car.mosaic, totalRline, nrow=3), 
                          sumplot, nrow=2, heights = c(3, 1)))
@@ -394,7 +393,6 @@ if(model == "simple"){
 }else if(model == "frequency"){
     
     timestep=1
-    
     matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)
@@ -418,7 +416,7 @@ if(model == "simple"){
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
                                        pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
-   
+    
     #Plots 
     ####Abx use plots 
     mosaicdata.abx.short = dataformosaic(data=abx.matrix.short ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
@@ -466,17 +464,17 @@ if(model == "simple"){
     
     ##Carriage mosaic 
     mosaicdata.car.short = dataformosaic(data=colo_table_filled_short,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.short$`Carriage status`=rep('Below R threshold for transmission', nrow(mosaicdata.car.short))
-    mosaicdata.car.short$`Carriage status`[which(as.numeric(mosaicdata.car.short$`Number of R`)>=r_thres)]='Above R threshold for transmission'
-    mosaicdata.car.long = dataformosaic(data=colo_table_filled_long,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.long$`Carriage status`=rep('Below R threshold for transmission', nrow(mosaicdata.car.long))
-    mosaicdata.car.long$`Carriage status`[which(as.numeric(mosaicdata.car.long$`Number of R`)>=r_thres)]='Above R threshold for transmission'
+    mosaicdata.car.short$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.short$`Number of R`))>r_thres)
     
-    sunflower=c('#ee7a12', "#d6e1d9")
+    mosaicdata.car.long = dataformosaic(data=colo_table_filled_long,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.car.long$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.long$`Number of R`))>r_thres)
+    
+    sunflower=c("#d6e1d9",'#ee7a12')
     
     p.car.short=ggplot(mosaicdata.car.short, aes(`Time (days)`, `Bed number`)) + 
-        geom_tile(aes(fill = `Carriage status`)) + 
-        scale_fill_manual(values=sunflower, name='Carriage type')+
+        geom_tile(aes(fill = abovethreshold)) + 
+        scale_fill_manual(values=sunflower, name='Carriage type', 
+                          labels=c('Below threshold for R transmission','Above threshold for R transmission'))+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +
@@ -491,8 +489,9 @@ if(model == "simple"){
         geom_segment(data=day1.short, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
     p.car.long=ggplot(mosaicdata.car.long, aes(`Time (days)`, `Bed number`)) + 
-        geom_tile(aes(fill = `Carriage status`)) + 
-        scale_fill_manual(values=sunflower, name='Carriage type')+
+        geom_tile(aes(fill = abovethreshold)) + 
+        scale_fill_manual(values=sunflower, name='Carriage type', 
+                          labels=c('Below threshold for R transmission','Above threshold for R transmission'))+
         theme_bw(base_size=base_size) + 
         labs(x = "Time (days)", y="Bed number")+ 
         scale_x_continuous(expand = c(0, 0), breaks= c(100,200,300)) +

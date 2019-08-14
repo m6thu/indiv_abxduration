@@ -58,10 +58,6 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     abx.r1 =abx.r 
     abx.r2 =abx.r 
     
-    if (abx.r < 0.01) { 
-        abx.matrix[abx.matrix==2]=1
-    }
-    
     pi_r1 = pi_ssr- (pi_ssr * bif)                 # pi_ssr= probability of R transmitting to s to become sr 
     
     # For each day

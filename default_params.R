@@ -35,10 +35,10 @@ repop.s2= 0.005                   # probability of repopulation of sr to become 
 
 ############# Frequency model #################
 K = 11                             # gut holding capacity
-total_prop = 0.02                   # mean of total starting amount of gut bacteria on log scale
-#t_sd = 1.1218                       # sd of total starting amount of gut bacteria on log scale
-prop_R = 0.3                        # mean of starting amount of resistant gut bacteria on log scale
-#r_sd = 1.8921                       # sd of starting amount of resistant gut bacteria on log scale
+total_prop = 0.02                  # mean of total starting amount of gut bacteria on log scale
+#t_sd = 1.1218                     # sd of total starting amount of gut bacteria on log scale
+prop_R = 0.3                       # mean of starting amount of resistant gut bacteria on log scale
+#r_sd = 1.8921                     # sd of starting amount of resistant gut bacteria on log scale
 r_growth = 0.4                        # r_growth = growth constant for logistic growth
 s_growth = 0.3
 r_thres = 5                        # r_thres = R threshold level for tranmissibility
