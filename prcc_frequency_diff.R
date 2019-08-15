@@ -8,7 +8,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
-cl <- makeCluster(detectCores()-3)
+cl <- makeCluster(detectCores()-1)
 
 model <- 'frequency'
 # source functions on all cores
@@ -66,7 +66,7 @@ if(!(sum(factors == parameters_diff_prevalence_freq) ==  length(parameters_diff_
 # Use the LHD function to generate a hypercube 
 ##run 1
 abxr='notzero'
-N=500
+N=1500
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time
