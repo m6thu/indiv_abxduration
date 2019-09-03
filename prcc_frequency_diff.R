@@ -8,7 +8,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
 
-cl <- makeCluster(detectCores()-3)
+cl <- makeCluster(detectCores()-1)
 
 model <- 'frequency'
 # source functions on all cores
