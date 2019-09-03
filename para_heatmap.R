@@ -54,7 +54,7 @@ getposition<-function(data,labs=labs.df){
 
 Amodel1=get(load('runs/LHSdiff_simple_800_notzero13Aug2019_0211GMT.Rdata')) #abx_r>0
 Amodel2=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
-Amodel3=get(load('runs/LHSdiff_frequency_1600_notzero_13Aug2019_2332GMT.Rdata'))
+Amodel3=get(load('runs/LHSdiff_frequency_500_notzero_14Aug2019_1406BST.Rdata'))
 Bmodel1=get(load('runs/LHSdiff_simple_800_zero13Aug2019_0949GMT.Rdata')) #abx_r>0
 Bmodel2=get(load('runs/LHSdiff_binary_1000_zero_13Aug2019_1926BST.Rdata')) 
 Bmodel3=get(load('runs/LHSdiff_frequency_1600_zero_13Aug2019_1640GMT.Rdata'))

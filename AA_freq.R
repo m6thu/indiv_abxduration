@@ -1,7 +1,6 @@
 # load libraries 
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
-require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 library(spartan) #load spartan package for AA and eFAST
 
 ################################### Consistency testing ############################################
@@ -9,8 +8,6 @@ library(spartan) #load spartan package for AA and eFAST
 #data download: http://www.kieranalden.info/index.php/spartan/
 
 setwd('/Users/moyin/Documents/git_projects/indiv_abxduration//')
-
-# SAMPLE PARAMETER SPACE 
 source('model_frequency.R')
 
 #parameters 
@@ -57,7 +54,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Desktop/indiv_abxduration/runs/ATest_freq/test1'
+dirtostoreAAruns='/Users/moyin/Documents/git_projects/indiv_abxduration/runs/ATest_freq/test1/'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){
@@ -86,13 +83,13 @@ FILEPATH <- dirtostoreAAruns #already in dirtostoreAAruns stated above
 # Sample sizes (number of simulation replicates in each distribution) to be analysed
 SAMPLESIZES <- iterationstotry
 # The simulation output measures to be analysed
-MEASURES <- c("Rperbed", "RThresperbed")
+MEASURES <- c("long","short","RThresperbed")
 # Number of distributions being compared. Default: 20, as performed by Read et al
 NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
 RESULTFILENAME <- "aa_data_freq.csv"
 # Notes the column in the CSV results file where the results start.
-OUTPUTFILECOLSTART <- 20
+OUTPUTFILECOLSTART <- 18
 # Last column of the output measure results
 OUTPUTFILECOLEND <- 20
 # The A-Test value either side of 0.5 which should be considered a 'large difference'
