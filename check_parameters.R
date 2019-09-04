@@ -9,7 +9,7 @@ seq2 <- Vectorize(seq_along_admissiondates, vectorize.args = "x")
 plotpara<-function(parameter,max, min){
   
   ####General parameters
-  iter=50
+  iter=200
   nday=1:30
   timesteps=c(3,1)
   models=c('Models 1 and 2','Model 3')
@@ -117,6 +117,123 @@ plot.cum.r.1=function(min, max){
        cex = .8)
 }
 
+###########Frequency model ###########
+setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
+source('model_frequency.R')
+source('los_abx_matrix.R')
+model='Frequency'
+source('default_params.R')
+
+###check growth under no antibiotics 
+growth.no.abx=function(min, max, k, total_prop, capacity_prop, n.day=n.day){
+  
+  total_capacity= log(capacity_prop*exp(K)) 
+  total_existing= log(total_prop*exp(total_capacity))
+  
+  growlist=list()
+  iter=500
+  
+  for (k in 1:iter){
+    
+    growth=runif(1, min, max)
+    total=c()
+    bact=total_existing
+    
+    for (i in 1:n.day){
+
+      total[i]=bact
+      
+      # calculate effect of logistic bacteria growth (abs)
+      grow = growth*exp(bact)*(1 - (exp(bact)/exp(total_capacity)))
+      
+      # apply effects to current number
+      bact = log(exp(bact) + grow)
+    }
+    growlist[[k]]= exp(total)
+  }
+  
+  day.risk.df=data.frame(matrix(unlist(growlist), ncol=iter))
+  
+  par(mfrow=c(1,1))
+  plot(x=1:n.day, y=day.risk.df[,2], 
+       ylim=c(min(day.risk.df),max(day.risk.df)), type = 'l', col='grey50',
+       xaxt='n',
+       ylab='Cumulative growth', 
+       xlab=paste0('Number of days'),
+       main=paste0('s_growth and r_growth (Model 3)'), 
+       sub=paste0('max=',max,'  min=',min))
+  axis(1, at = seq(0, max(n.day), length=7), las=2, 
+       labels=seq(0, max(n.day), length=7))
+  for (i in 3:ncol(day.risk.df)){
+    lines(x=1:max(n.day), y=day.risk.df[,i], type = 'l',col='grey50')
+  }
+  text(150, min(day.risk.df)+450, "Each line represents a single iteration",
+       cex = .8)
+  text(150, min(day.risk.df)+100, paste0("Given K=10, capacity_prop=",capacity_prop, ", total_prop=",total_prop),
+       cex = .8)
+  }
+
+###check antibiotic killing 
+abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, capacity_prop, n.day=n.day){
+  
+  total_capacity= log(capacity_prop*exp(K)) 
+  total_existing= log(total_prop*exp(total_capacity))
+  
+  growlist=list()
+  iter=500
+  
+  for (k in 1:iter){
+    
+    growth=runif(1, min=growth.min, max=growth.max)
+    abx=runif(1, min=abx.min, max=abx.max)
+    total=c()
+    bact=total_existing
+    
+    for (i in 1:n.day){
+
+      total[i]=bact
+      
+      # calculate effect of logistic bacteria growth (abs)
+      grow = growth*exp(bact)*(1 - (exp(bact)/exp(total_capacity)))
+      
+      # add effect of abx death 
+      bact_abx = -abx*grow
+      
+      # apply effects to current number
+      if (exp(bact) + grow + bact_abx<0) {
+        bact=0
+        }else{
+      bact = log(exp(bact) + grow + bact_abx)
+        }
+      
+    }
+    growlist[[k]]= exp(total)
+  }
+  
+  day.risk.df=data.frame(matrix(unlist(growlist), ncol=iter))
+  
+  par(mfrow=c(1,1))
+  plot(x=1:n.day, y=day.risk.df[,2], 
+       ylim=c(min(day.risk.df),max(day.risk.df)), type = 'l', col='grey50',
+       xaxt='n',
+       ylab='Cumulative growth', 
+       xlab=paste0('Number of days'),
+       main=paste0('growth and abx killing (Model 3)'), 
+       sub=paste0('growth(max)=',growth.max,'  growth(min)=',growth.min, 
+                  '  abx(max)=',abx.max,'  abx(min)=',abx.min))
+  axis(1, at = seq(0, max(n.day), length=7), las=2, 
+       labels=seq(0, max(n.day), length=7))
+  for (i in 3:ncol(day.risk.df)){
+    lines(x=1:max(n.day), y=day.risk.df[,i], type = 'l',col='grey50')
+  }
+  text(n.day-5, max(day.risk.df)-100, "Each line represents a single iteration",
+       cex = .8)
+  text(n.day-5, max(day.risk.df)-500, paste0("Given K=10, capacity_prop=",capacity_prop, ", total_prop=",total_prop),
+       cex = .8)
+}
+
+
+######PLOT GRAPHS########
 setwd(dir = '/Users/moyin/Desktop/')
 png(filename="pi_ssr.png", width = 800, height = 350)
 plotpara(parameter='pi_ssr',max=0.03, min=0)
@@ -137,51 +254,11 @@ png(filename="cum.r.1.png", width = 800, height = 350)
 plot.cum.r.1(min=10, max=1000)
 dev.off()
 
-###########Frequency model 
-source('model_frequency.R')
-source('los_abx_matrix.R')
-source('default_params.R')
+png(filename="growth.png", width = 800, height = 350)
+growth.no.abx(min=0.01, max=0.1, k=10, total_prop=0.2,capacity_prop=0.1, n.day=270)
+dev.off()
 
-k=10
-capacity_prop=0.1
-total_prop=0.2
-n.day=270
-prop_R=0.3
-
-total_capacity= log(capacity_prop*exp(K)) 
-total_existing= log(total_prop*exp(total_capacity))
-r_bact = log(prop_R*exp(total_existing)) #total number of resistant Enterobacteriaceae for each patient (log)
-s_bact = log(exp(total_existing) - exp(r_bact)) #total number of sensitive Enterobacteriaceae for each patient (log)
-total_r=total_s=c()
-
-###UNDER NO ANTIBIOTICS 
-for (i in 1:n.day){
-  
-  s_growth=0.01
-  r_growth=0.05
-  total_r[i]=r_bact
-  total_s[i]=s_bact
-  
-  # calculate effect of logistic bacteria growth (abs)
-  R_grow = r_growth*exp(r_bact)*(1 - ((exp(r_bact) + exp(s_bact))/exp(total_capacity))) 
-  S_grow = s_growth*exp(s_bact)*(1 - ((exp(s_bact) + exp(r_bact))/exp(total_capacity)))
-  
-  # apply effects to current number
-  r_bact = log(exp(r_bact) + R_grow)
-  s_bact = log(exp(s_bact) + S_grow)
-}
-df=cbind.data.frame(days=1:n.day, 
-                    total_s_perday=exp(total_s),
-                    total_r_perday=exp(total_r))
-df.melt=data.table::melt(df, id.var='days')
-ggplot2::ggplot(aes(x=days, y= value, group=variable,colour = variable),data=df.melt)+
-  geom_line()+
-  scale_color_manual(values=c('#4CE0B3','#ED254E'), name='Types of Enterobacteriaceae', labels=c('Susceptible', 'Resistant'))+
-  geom_hline(yintercept=exp(total_capacity),linetype="dashed", 
-             color = "red", size=0.5)+
-  labs(y='Number of bacteria',
-       x='Number of days', 
-       title='Growth of Enterobacteriaceae without antibiotics')+
-  theme_bw()+
-  theme(legend.position = 'bottom', panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
+png(filename="kill.png", width = 800, height = 350)
+abx.killing(growth.min=0.01, growth.max=0.1, abx.max=100, abx.min=20, 
+            k=10, total_prop=0.9, capacity_prop=0.1, n.day=18)
+dev.off()

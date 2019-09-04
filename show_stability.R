@@ -5,11 +5,11 @@
 library(reshape)
 library(ggplot2)
 
-setwd("/Users/moyin/Documents/git_projects/indiv_abxduration/")
+setwd("/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/")
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
-model <- "frequency"
+model <- "simple"
 
 source("default_params.R")
 source("los_abx_matrix.R")
@@ -19,7 +19,7 @@ if(model == "simple"){
     
     timestep = 3
     sdDur=1
-    iterations=2
+    iterations=100
     
     iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     
@@ -162,10 +162,10 @@ if(model == "simple"){
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, total_prop = total_prop,K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
@@ -185,10 +185,10 @@ if(model == "simple"){
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         
         # Summary

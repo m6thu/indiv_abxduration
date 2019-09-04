@@ -19,6 +19,7 @@ parameters <- list(
     c(runif(1,min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c(runif(1,min=5, max=20), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
     c(runif(1,min=0.00001, max=0.1), "total_prop"),             # mean of total starting amount of e coli on log scale
+    c(runif(1,min=0.00001, max=0.1), "capacity_prop"),  # mean of amount of enterobacteriaceae capcity on log scale
     c(runif(1,min=0,max=0.9), "prop_R"),              # mean of starting amount of resistant gut bacteria on log scale
     c(runif(1,min=0,max=0.05), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
     c(runif(1,min=1,max=10), "r_thres"),             # r_thres = R threshold level for tranmissibility
@@ -43,12 +44,13 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(paste('Calculating', i, 'in', (max(iterationstotry)*numberofrepeatsineachiteration), 'total runs'))
   old <- Sys.time() # get start time
   freq <- diff_prevalence(n.bed=values[1], max.los=values[2], p.infect=values[3], cum.r.1=values[4], 
-                          p.r.day1=values[5],K=values[6], total_prop=values[7], prop_R=values[8], pi_ssr=values[9], 
-                          r_thres=values[10], r_growth=values[11], r_trans=values[12], s_growth=values[13],
-                          abx.s=values[14], abx.r=values[15], short_dur = values[16], long_dur = values[17])
+                          p.r.day1=values[5],K=values[6], total_prop=values[7], capacity_prop=values[8],
+                          prop_R=values[9], pi_ssr=values[10], 
+                          r_thres=values[11], r_growth=values[12], r_trans=values[13], s_growth=values[14],
+                          abx.s=values[15], abx.r=values[16], short_dur = values[17], long_dur = values[18])
   samples<- values #sampled parameter combinations 
   results <- freq #save results of the simulations
-  aa_data_freq_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 20) #combine sampled parameter combinations and results in one file 
+  aa_data_freq_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 21) #combine sampled parameter combinations and results in one file 
   colnames(aa_data_freq_diff[[i]])=c(parameters_diff_prevalence_freq, "long",'short', "RThresperbed")
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
@@ -89,9 +91,9 @@ NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
 RESULTFILENAME <- "aa_data_freq.csv"
 # Notes the column in the CSV results file where the results start.
-OUTPUTFILECOLSTART <- 18
+OUTPUTFILECOLSTART <- 19
 # Last column of the output measure results
-OUTPUTFILECOLEND <- 20
+OUTPUTFILECOLEND <- 21
 # The A-Test value either side of 0.5 which should be considered a 'large difference'
 # between two sets of results. Use of 0.23 was taken from the Vargha-Delaney publication
 LARGEDIFFINDICATOR <- 0.23
