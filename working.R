@@ -28,6 +28,7 @@ prevalence(n.bed, max.los,
 
 #frequency
 n.day=100
+timestep=1
 matrixes=los.abx.table(n.bed, n.day, max.los,
                           p.infect, p.r.day1, cum.r.1, 
                           meanDur, timestep)

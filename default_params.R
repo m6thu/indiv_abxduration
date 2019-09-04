@@ -11,7 +11,7 @@ meanDur=10
 
 p.infect = 0.2                   # p=probability of receiving antibiotic
 p.r.day1 =0.1
-prop_R = 0.2           # Probability of being colonized with resistant strain on admission
+prop_R = 0.2                     # Probability of being colonized with resistant strain on admission
 prop_S_nonR = 0.8                # Proportion of large S within non-resistant states (S+s)
 bif = 0.9                        # bacterial interference factor 
 pi_ssr = 0.01                   # pi_s= probability of R transmitting to ss

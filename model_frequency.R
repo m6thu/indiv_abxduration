@@ -12,18 +12,10 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, K){
     t_mean= log(total_prop*exp(K)) #total number of Enterobacteriaceae is a proportion of the total capacity (log)
     total_bact = rnorm(number_of_patients, t_mean) #total number of Enterobacteriaceae for each patient (log)
     
-    prop_R = rexp(1, 1/prop_R)
+    prop_R = rexp(1, 1/prop_R) #proportion of total Enterobacteriaceae that is resistant
     if (prop_R > 1) { prop_R = 1 }
     r_bact = log(prop_R*exp(total_bact)) #total number of resistant Enterobacteriaceae for each patient (log)
     s_bact = log(exp(total_bact) - exp(r_bact)) #total number of sensitive Enterobacteriaceae for each patient (log)
-    
-    # # spin until no minus values for log... probably not best way
-    # while(min(s_bact) < 0){
-    #     spin_n = sum(s_bact < 0)
-    #     spin_total = rnorm(spin_n, t_mean)
-    #     spin_r = rnorm(spin_n, r_mean)
-    #     s_bact[s_bact < 0] = exp(spin_total) - exp(spin_r)
-    # }
     
     S_Bactlevelstart = matrix(NA, n.day, n.bed)
     R_Bactlevelstart = matrix(NA, n.day, n.bed)
@@ -41,19 +33,18 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, K){
 
 # Update values for every day (define function)
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    pi_ssr, total_prop, K, r_thres, r_growth, r_trans, s_growth,
+                    pi_ssr, total_prop, capacity_prop, K, r_thres, r_growth, r_trans, s_growth,
                     abx.s, abx.r, timestep){
     
     # K: loading capacity, and r_thres:threshold for infectiousness does not change with time
     pi_ssr = 1-(1-pi_ssr)^(1/timestep)
     
     #total capacity for enterobacteriaceae growth (log)
-    total_capacity= log(total_prop*exp(K))
+    total_capacity= log(capacity_prop*exp(K)) 
     
-    abxr_killr = 1-(1-abx.r)^(1/timestep) #in log
-    abxr_kills = 1-(1-abx.r)^(1/timestep) #in log
-    abxs_kills = 1-(1-abx.s)^(1/timestep) #in log
-     
+    #existing population 
+    total_existing= log(total_prop*exp(total_capacity))
+    
     S_table = colo.matrix[[1]] #in log
     R_table = colo.matrix[[2]] #in log
     
@@ -76,7 +67,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # add effect of transmission if roll pass prob check and if previous R level is 0 (abs)
                 R_trans = exp(r_trans)*(roll < prop_r)# & !R_table[i-1, j])
                 # add effect of abx death if abx.matrix is r abx (== 2) (abs)
-                R_abx = -(abx.matrix[i-1, j] == 2)*exp(abxr_killr)
+                R_abx = -(abx.matrix[i-1, j] == 2)*abx.r*R_grow
                 # apply effects to current table (abs first because log of a negative number is NaN)
                 R_table[i, j] = exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
@@ -96,8 +87,8 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # calculate effect of S logistic bacteria growth (in absolute numbers)
                 S_grow = s_growth*exp(S_table[i-1, j])*(1 - ((exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(total_capacity)))
                 # calculate effect of death antibiotics R and effect of death by abx S (abs)
-                S_abx_s = -(abx.matrix[i-1, j] == 1)*exp(abxs_kills)
-                S_abx_r = -(abx.matrix[i-1, j] == 2)*exp(abxr_kills)
+                S_abx_s = -(abx.matrix[i-1, j] == 1)*abx.s*S_grow
+                S_abx_r = -(abx.matrix[i-1, j] == 2)*abx.r*S_grow
                 # apply effects (abs first because log of a negative number is NaN)
                 S_table[i, j] = exp(S_table[i-1, j]) + S_grow + S_abx_s + S_abx_r
                 # trim range
