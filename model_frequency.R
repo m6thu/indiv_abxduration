@@ -118,8 +118,8 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
                 abx.s, abx.r, short_dur,long_dur))
     
     timestep = 1
-    n.day = 100
-    iterations = 125
+    n.day = 300
+    iterations = 1
     
     #iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
@@ -147,7 +147,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
         iter_totalR.thres[, iter]=rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    totalR_thres_short = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
+    totalR_thres_short = mean(rowSums(iter_totalR.thres[151:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
     #iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
@@ -174,8 +174,8 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
         iter_totalR.thres[, iter] = rowMeans(matrix(rowSums(df.R >= r_thres), ncol=timestep, byrow=T))
         #print("end iteration loop")
     }
-    #totalR_no_long = mean(rowSums(iter_totalR.no[51:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
-    totalR_thres_long = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
+    #totalR_no_long = mean(rowSums(iter_totalR.no[151:nrow(iter_totalR.no),, drop=FALSE])/iterations/n.bed)
+    totalR_thres_long = mean(rowSums(iter_totalR.thres[151:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
     # print elapsed time
     new = Sys.time() - old # calculate difference
@@ -195,8 +195,8 @@ prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
                 abx.s, abx.r, meanDur))
     
     timestep = 1
-    n.day = 100
-    iterations = 125
+    n.day = 300
+    iterations = 1
     
     iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
     
@@ -221,7 +221,7 @@ prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
         #print("end iteration loop")
     }
 
-    totalR_thres = mean(rowSums(iter_totalR.thres[51:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
+    totalR_thres = mean(rowSums(iter_totalR.thres[151:nrow(iter_totalR.thres),, drop=FALSE])/iterations/n.bed)
     
     # print elapsed time
     new = Sys.time() - old # calculate difference

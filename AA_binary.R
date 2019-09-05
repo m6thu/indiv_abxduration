@@ -2,7 +2,7 @@
 #######Effect of antibiotic duration on hospitalised patients############
 ################Determine number of iterations per run###################
 #########################################################################
-setwd("/Users/moyin/Documents/git_projects/indiv_abxduration/")
+setwd("/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/")
 rm(list=ls()) # Clean working environment
 
 source("model_binary.R")
@@ -31,7 +31,7 @@ parameters <- list(
     c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
     c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c(runif(1,min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
-    c(runif(1,min=0, max=0.05), "pi_ssr"),           #probability of being transmitted r to ss (ss—> ssr)
+    c(runif(1,min=0, max=0.03), "pi_ssr"),           #probability of being transmitted r to ss (ss—> ssr)
     c(runif(1,min=0.005, max=0.02), "repop.s1"),         #probability of regrowth of S  (s—>S)
     c(runif(1,min=0.005, max=0.02), "repop.s2"),         #probability of regrowth of S  (sr—>Sr)
     c(runif(1,min=0.005, max=0.05), "repop.r1"),         #probability of regrowth of s (sr—> sR)
@@ -39,10 +39,10 @@ parameters <- list(
     c(runif(1,min=0.002, max=0.02), "mu1"),              #probability of being decolonised to S (Sr—> S) 
     c(runif(1,min=0.002, max=0.02), "mu2"),              #probability of being decolonised to S (sr—> s) 
     c(runif(1,min=0.002, max=0.02), "mu_r"),             #probability of being decolonised to S (Sr—> S) 
-    c(runif(1,min=0.1, max=0.7), "abx.s"),           #probability of clearing S to become s
-    c(runif(1,min=0.1, max=0.7), "abx.r"),        #probability of clearing R to become r
+    c(runif(1,min=0.1, max=0.5), "abx.s"),           #probability of clearing S to become s
+    c(runif(1,min=0.1, max=0.5), "abx.r"),        #probability of clearing R to become r
     c(runif(1,min=0.1, max=1), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
-    c(runif(1,min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
+    c(runif(1,min=10, max=1000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=1), "p.r.day1"),        #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c(runif(1,min=3, max=7), "short_dur"),           #mean short duration of antibiotics (normal distribution) 
     c(runif(1,min=14, max=21), "long_dur")           #mean long duration of antibiotics (normal distribution) 
@@ -74,7 +74,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Desktop/indiv_abxduration/runs/ATest_binary/test1'
+dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_binary/test1'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){
@@ -105,13 +105,13 @@ FILEPATH <- dirtostoreAAruns #already in dirtostoreAAruns stated above
 # Sample sizes (number of simulation replicates in each distribution) to be analysed
 SAMPLESIZES <- iterationstotry
 # The simulation output measures to be analysed
-MEASURES <- c("No sr/sR/Sr per bed", "sR per bed")
+MEASURES <- c("long",'short', "sR per bed")
 # Number of distributions being compared. Default: 20, as performed by Read et al
 NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
 RESULTFILENAME <- "aa_data_binary.csv"
 # Notes the column in the CSV results file where the results start.
-OUTPUTFILECOLSTART <- 25
+OUTPUTFILECOLSTART <- 23
 # Last column of the output measure results
 OUTPUTFILECOLEND <- 25
 # The A-Test value either side of 0.5 which should be considered a 'large difference'

@@ -9,7 +9,7 @@ setwd("/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/")
 rm(list=ls()) # Clean working environment
 
 # model can be "simple", "binary", or "frequency"
-model <- "simple"
+model <- "frequency"
 
 source("default_params.R")
 source("los_abx_matrix.R")

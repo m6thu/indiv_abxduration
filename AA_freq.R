@@ -7,7 +7,7 @@ library(spartan) #load spartan package for AA and eFAST
 #resource: https://cran.r-project.org/web/packages/spartan/vignettes/sensitivity_analysis.html
 #data download: http://www.kieranalden.info/index.php/spartan/
 
-setwd('/Users/moyin/Documents/git_projects/indiv_abxduration//')
+setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration//')
 source('model_frequency.R')
 
 #parameters 
@@ -15,19 +15,19 @@ parameters <- list(
     c(runif(1,min=5, max=50), "n.bed"),              #n.bed; number of beds in the ward
     c(runif(1,min=3, max=20), "max.los"),       #max.los; mean of length of stay (normal distribution)
     c(runif(1,min=0.1, max=1), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
-    c(runif(1,min=10, max=10000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
+    c(runif(1,min=10, max=1000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-    c(runif(1,min=5, max=20), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
-    c(runif(1,min=0.00001, max=0.1), "total_prop"),             # mean of total starting amount of e coli on log scale
+    c(runif(1,min=5, max=15), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
+    c(runif(1,min=0.1, max=0.9), "total_prop"),             # mean of total starting amount of e coli on log scale
     c(runif(1,min=0.00001, max=0.1), "capacity_prop"),  # mean of amount of enterobacteriaceae capcity on log scale
     c(runif(1,min=0,max=0.9), "prop_R"),              # mean of starting amount of resistant gut bacteria on log scale
-    c(runif(1,min=0,max=0.05), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
-    c(runif(1,min=1,max=10), "r_thres"),             # r_thres = R threshold level for tranmissibility
-    c(runif(1,min=0.3,max=1.5), "r_growth"),           # r_growth = growth constant for logistic growth
-    c(runif(1,min=1,max=10), "r_trans"),             # r_trans = amount transmitted on log scale
-    c(runif(1,min=0.3,max=1.5), "s_growth"),           # r_growth = growth constant for logistic growth
-    c(runif(1,min=5,max=15), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-    c(runif(1,min=5,max=15), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+    c(runif(1,min=0,max=0.03), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
+    c(runif(1,min=1,max=7), "r_thres"),             # r_thres = R threshold level for tranmissibility
+    c(runif(1,min=0.01,max=0.1), "r_growth"),           # r_growth = growth constant for logistic growth
+    c(runif(1,min=1,max=7), "r_trans"),             # r_trans = amount transmitted on log scale
+    c(runif(1,min=0.01,max=0.1), "s_growth"),           # r_growth = growth constant for logistic growth
+    c(runif(1,min=20,max=100), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
+    c(runif(1,min=20,max=100), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
     c(runif(1,min=3, max=7), "short_dur"),           #mean short duration of narrow spectrum antibiotics (normal distribution) 
     c(runif(1,min=14, max=21), "long_dur")           #mean long duration of narrow spectrum antibiotics (normal distribution)
 )
@@ -56,7 +56,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Documents/git_projects/indiv_abxduration/runs/ATest_freq/test1/'
+dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_freq/test1/'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){

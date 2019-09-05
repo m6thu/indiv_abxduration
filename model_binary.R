@@ -369,7 +369,7 @@ diff_prevalence <- function(n.bed, max.los,
     
     timestep = 3
     n.day = 300
-    iterations = 125
+    iterations = 100
     
     iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)
     iter_totalr_or_R= matrix(NA, nrow = n.day, ncol = iterations)
@@ -440,7 +440,7 @@ prevalence <- function(n.bed, max.los,
 
     timestep = 3
     n.day = 300
-    iterations = 125
+    iterations = 100
     
     iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)
     for(iter in 1:iterations){
