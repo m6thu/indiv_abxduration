@@ -1,7 +1,6 @@
 source('msm_util_rtnorm.R')
 source('los_abx_matrix.R')
 
-# Defaults from Rene's data ini_16S_log
 colo.table <- function(patient.matrix, los.array, total_prop, capacity_prop, prop_R, K){
     
     n.day = nrow(patient.matrix)
@@ -76,16 +75,13 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # apply effects to current table (abs first because log of a negative number is NaN)
                 R_table[i, j] = exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
                 # trim if value goes beyond range
-                if(R_table[i, j] > total_capacity){
-                    R_table[i, j] = total_capacity
+                if(R_table[i, j] > exp(total_capacity)){
+                    R_table[i, j] = exp(total_capacity) #abs
                 }
                 if(R_table[i, j] < 0){
-                    R_table[i, j] = 0
+                    R_table[i, j] = 0 #abs
                 }
                 R_table[i, j] = log(R_table[i, j]) #log
-                if(R_table[i, j] < 0){
-                    R_table[i, j] = 0
-                }
             }
             
             if(is.na(S_table[i, j])){ 
@@ -97,16 +93,13 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
                 # apply effects (abs first because log of a negative number is NaN)
                 S_table[i, j] = exp(S_table[i-1, j]) + S_grow + S_abx_s + S_abx_r
                 # trim range
-                if(S_table[i, j] > total_capacity){
-                    S_table[i, j] = total_capacity
+                if(S_table[i, j] > exp(total_capacity)){
+                    S_table[i, j] = exp(total_capacity)
                 }
                 if(S_table[i, j] < 0){
                     S_table[i, j] = 0
                 }
                 S_table[i, j] = log(S_table[i, j]) #log
-                if(S_table[i, j] < 0){
-                    S_table[i, j] = 0
-                }
             }
         }
     }

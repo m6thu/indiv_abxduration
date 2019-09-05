@@ -2,7 +2,7 @@
 #######Effect of antibiotic duration on hospitalised patients############
 #####################Show one run per scenario ##########################
 #########################################################################
-setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
+setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 rm(list=ls()) # Clean working environment
 
 library(ggplot2)
@@ -335,7 +335,6 @@ if(model == "simple"){
               axis.title = element_text(size=base_size+2))+
         geom_segment(data=day1.long, aes(x,y,xend=x.end, yend=y.end), size=0.15, inherit.aes=F, colour='red')
     
-    
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
     ##total R per day 
@@ -400,9 +399,9 @@ if(model == "simple"){
     day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
-    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,K=K)
+    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,K=K)
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
-                                      pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                      pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     
     matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
@@ -412,9 +411,9 @@ if(model == "simple"){
     day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
-    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,K=K)
+    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, capacity_prop=capacity_prop,prop_R=prop_R,K=K)
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
-                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                       pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop,K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     
     #Plots 

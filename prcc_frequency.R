@@ -36,14 +36,14 @@ parameters <- list(
     c("qunif", list(min=0.1, max=1), "p.infect"),          # probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=1000), "cum.r.1"),        # admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),          # probability of being prescribed broad spectrum antibiotic on day 1 of admission 
-    c("qunif", list(min=5, max=20), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
+    c("qunif", list(min=5, max=15), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
     c("qunif", list(min=0.1, max=0.9), "total_prop"),  # mean of total starting amount of enterobacteriaceae on log scale
     c("qunif", list(min=0.00001, max=0.1), "capacity_prop"),  # mean of amount of enterobacteriaceae capcity on log scale
     c("qunif", list(min=0, max=0.9), "prop_R"),            # mean of starting amount of resistant gut bacteria on log scale
     c("qunif", list(min=0,max=0.03), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
-    c("qunif", list(min=1,max=10), "r_thres"),             # r_thres = R threshold level for tranmissibility
+    c("qunif", list(min=1,max=7), "r_thres"),             # r_thres = R threshold level for tranmissibility
     c("qunif", list(min=0.01,max=0.1), "r_growth"),         # r_growth = growth constant for logistic growth
-    c("qunif", list(min=1,max=10), "r_trans"),             # r_trans = amount transmitted on log scale
+    c("qunif", list(min=1,max=7), "r_trans"),             # r_trans = amount transmitted on log scale
     c("qunif", list(min=0.01,max=0.1), "s_growth"),         # s_growth = amount transmitted on log scale
     c("qunif", list(min=20,max=100), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
     c("qunif", list(min=20,max=100), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r

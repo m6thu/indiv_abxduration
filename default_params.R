@@ -42,7 +42,7 @@ prop_R = 0.3                       # mean of starting amount of resistant gut ba
 #r_sd = 1.8921                     # sd of starting amount of resistant gut bacteria on log scale
 r_growth = 0.02                        # r_growth = growth constant for logistic growth
 s_growth = 0.02
-r_thres = 7                        # r_thres = R threshold level for tranmissibility
+r_thres = 3                        # r_thres = R threshold level for tranmissibility
 r_trans = 3                        # r_trans = amount transmitted
 abx.s = 50                          # abxr_killr = amount of r killed by broad spectrum abx r
 abx.r = 50                          # abxs_kills = amount of s killed by narrow spectrum abx s
