@@ -1,7 +1,7 @@
 library(epiR) #calculate p values for PRCC
 library(pse)
 
-output2=get(load('runs/LHSdiff_frequency_500_notzero_05Sep2019_1411BST.Rdata'))
+output2=get(load('runs/LHSdiff_frequency_800_notzero_05Sep2019_1818BST.Rdata'))
 output1=get(load('runs/LHSdiff_frequency_800_notzero_05Sep2019_1701BST.Rdata'))
 parameters<-parameters_diff_prevalence_freq
 

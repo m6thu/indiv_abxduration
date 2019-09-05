@@ -67,7 +67,7 @@ if(!(sum(factors == parameters_diff_prevalence_freq) ==  length(parameters_diff_
 # Use the LHD function to generate a hypercube 
 ##run 1
 abxr='notzero'
-N=700
+N=800
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time
