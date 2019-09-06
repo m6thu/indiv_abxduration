@@ -1,8 +1,8 @@
 library(epiR) #calculate p values for PRCC
 library(pse)
 
-output2=get(load('runs/LHSdiff_frequency_800_notzero_05Sep2019_1818BST.Rdata'))
-output1=get(load('runs/LHSdiff_frequency_800_notzero_05Sep2019_1701BST.Rdata'))
+output1=get(load('runs/LHSdiff_frequency_900_notzero_05Sep2019_2153BST.Rdata'))
+output1=get(load('runs/LHSdiff_frequency_800_notzero_05Sep2019_2007BST.Rdata'))
 parameters<-parameters_diff_prevalence_freq
 
 # 1. Check monotonicity 
