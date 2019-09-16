@@ -1,7 +1,7 @@
 #######Modelling Day Project######
 #######Parameter exploration######
 ################################### Dependencies and functions ################################################
-setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
+setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
@@ -9,7 +9,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores()-2)
+cl <- makeCluster(detectCores())
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
@@ -47,7 +47,7 @@ parameters <- list(
     c("qunif", list(min=0.002, max=0.02), "mu2"),          #probability of being decolonised to S (sr—> s) 
     c("qunif", list(min=0.002, max=0.02), "mu_r"),         #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0.1, max=0.5), "abx.s"),           #probability of clearing S to become s
-    c("qunif", list(min=0, max=0.0000001), "abx.r"),           #probability of clearing R to become r
+    c("qunif", list(min=0.1, max=0.5), "abx.r"),           #probability of clearing R to become r
     c("qunif", list(min=0.1, max=1), "p.infect"),          #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=1000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
@@ -71,7 +71,7 @@ if(!(sum(factors == parameters_diff_prevalence_binary) ==  length(parameters_dif
 
 #Run model and save runs 
 ##run 1
-abxr='zero'
+abxr='notzero'
 old <- Sys.time() # get start time
 N=900
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)

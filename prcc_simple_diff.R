@@ -9,7 +9,7 @@ require(MCMCglmm) #for rtnorm
 
 setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores())
 
 model <- 'simple'
 # source functions on all cores

@@ -399,9 +399,9 @@ if(model == "simple"){
     day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
-    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,K=K)
+    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,r_mean = r_mean, K=K)
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
-                                      pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                      pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     
     matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
@@ -411,9 +411,9 @@ if(model == "simple"){
     day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
-    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, capacity_prop=capacity_prop,prop_R=prop_R,K=K)
+    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, capacity_prop=capacity_prop,prop_R=prop_R,r_mean = r_mean,K=K)
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
-                                       pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop,K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                       pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop,K=K, r_mean=r_mean, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     
     #Plots 
@@ -463,10 +463,10 @@ if(model == "simple"){
     
     ##Carriage mosaic 
     mosaicdata.car.short = dataformosaic(data=colo_table_filled_short,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.short$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.short$`Number of R`))>r_thres)
+    mosaicdata.car.short$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.short$`Number of R`))>=r_trans)
     
     mosaicdata.car.long = dataformosaic(data=colo_table_filled_long,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.long$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.long$`Number of R`))>r_thres)
+    mosaicdata.car.long$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.long$`Number of R`))>=r_trans)
     
     sunflower=c("#d6e1d9",'#ee7a12')
     
@@ -507,7 +507,7 @@ if(model == "simple"){
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
     ##total R per day 
-    totalRperday.short=apply(colo_table_filled_short, 1, function(x) length(which(x>=r_thres)))
+    totalRperday.short=apply(colo_table_filled_short, 1, function(x) length(which(x>=r_trans)))
     totalRperday.short.avg= rowMeans(matrix(totalRperday.short, ncol=timestep, byrow=T))
     Rperdaydata.short=data.frame(`Time (days)`= 1:n.day, 
                                  `Total R per day`= totalRperday.short.avg)
@@ -519,7 +519,7 @@ if(model == "simple"){
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
               axis.title = element_text(size=base_size+2))
     
-    totalRperday.long=apply(colo_table_filled_long, 1, function(x) length(which(x>=r_thres)))
+    totalRperday.long=apply(colo_table_filled_long, 1, function(x) length(which(x>=r_trans)))
     totalRperday.long.avg= rowMeans(matrix(totalRperday.long, ncol=timestep, byrow=T))
     Rperdaydata.long=data.frame(`Time (days)`= 1:n.day, 
                                 `Total R per day`= totalRperday.long.avg)

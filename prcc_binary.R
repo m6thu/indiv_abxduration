@@ -1,7 +1,7 @@
 #######Modelling Day Project######
 #######Parameter exploration######
 ################################### Dependencies and functions ################################################
-setwd('/Users/moyin/Documents/git_projects/indiv_abxduration/')
+setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
@@ -9,7 +9,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores())
 
 model <- 'binary'
 
@@ -70,7 +70,7 @@ if(!(sum(factors == parameters_prevalence_binary) ==  length(parameters_prevalen
 ##run 1
 abxr='zero'
 old <- Sys.time() # get start time
-N=700
+N=800
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format

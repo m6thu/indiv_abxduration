@@ -162,16 +162,16 @@ if(model == "simple"){
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R, r_mean=r_mean,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
         
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_thres)/n.bed, ncol=timestep, byrow = T))
+        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_trans)/n.bed, ncol=timestep, byrow = T))
     }
     cumsum_short = apply(iter_totalR.thres, 2, cumsum)
     
@@ -185,17 +185,17 @@ if(model == "simple"){
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,r_mean=r_mean,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
         
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_thres)/n.bed, ncol=timestep, byrow = T))
+        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_trans)/n.bed, ncol=timestep, byrow = T))
         
     }
     cumsum_long = apply(iter_totalR.thres, 2, cumsum)
@@ -209,7 +209,7 @@ if(model == "simple"){
             scale_color_manual(values=rep('grey50', (ncol(stabilitydata)-1)))+
             labs(y='Difference in number of R carriers in long vs short duration/bed/day',
                  x='Time (days)')+
-            geom_vline(xintercept=50, linetype='dashed', size=0.7, colour='red')+
+            geom_vline(xintercept=150, linetype='dashed', size=0.7, colour='red')+
             theme_bw()+
             theme(legend.position = 'none', 
                   axis.text = element_text(size = 15, colour = "grey50"), 

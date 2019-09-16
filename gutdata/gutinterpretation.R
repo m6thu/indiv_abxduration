@@ -1,20 +1,7 @@
-##Parameter space determination 
-
-###SATURN gut data###
-setwd('gutdata/')
-d=read.csv('Ini_CTXm_copies_qPCR.csv')
 
 ####Model 1 and 2 
 
-########repop.s1
-t=1:100
-repops1=0.02
-#at time t, the probability of s-->S 
-becoming_S_at_time_t= (1-repops1)^(t-1)*repops1
-cumsum_becoming_S_at_time_t=cumsum(becoming_S_at_time_t)
-plot(t, cumsum_becoming_S_at_time_t)
-#repops1=0.005 for ~ a year for cummulative risk to become almost 1
-#repops1=0.02 for ~ 100 days for cummulative risk to become almost 1
+
 
 ########repop.r: returning traveller 25% colonised with esbl after 1-6 weeks of travel
 t=1:50
@@ -65,8 +52,9 @@ sd(d$ini_16S_log)
 
 ######## r_prop
 summary(d$ini_CTXm_copies/d$ini_16S_copies) #proportion of R in total 
-#                                            number of Enterbacterobacteriaceae, r_prop
+#                                            number of Enterbacterobacteriaceae, r_prop
 #                                            = exponential distribution 
+hist(d$ini_CTXm_copies/d$ini_16S_copies,breaks =seq(0,6,0.01))
 
 ####### r_growth, s_growth
 #Shaw ISME 2019- microbiome recovery

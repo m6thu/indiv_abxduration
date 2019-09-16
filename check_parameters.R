@@ -124,7 +124,7 @@ source('los_abx_matrix.R')
 model='Frequency'
 source('default_params.R')
 
-###check growth under no antibiotics 
+###check growth under no antibiotics, r_growth, s_growth
 growth.no.abx=function(min, max, k, total_prop, capacity_prop, n.day=n.day){
   
   total_capacity= log(capacity_prop*exp(K)) 
@@ -171,7 +171,26 @@ growth.no.abx=function(min, max, k, total_prop, capacity_prop, n.day=n.day){
        cex = .8)
   text(150, min(day.risk.df)+100, paste0("Given K=10, capacity_prop=",capacity_prop, ", total_prop=",total_prop),
        cex = .8)
-  }
+}
+
+#Shaw ISME 2019- microbiome recovery table 3 and 4 
+d=data.frame(antibiotic=c('ciprofloxacin', 'clindamycin','amoxicillin','minocycline'), 
+             Dmin=c(5.47,6.23,0.13,1.54), 
+             Dmax=c(9.75,9.84,6.56,7.82),
+             Amin=c(0.28,0.29,-0.66,-1.09),
+             Amax=c(1.34,1.42,0.56,0.23), 
+             phi1min=c(-0.69,-0.46,-1.96,-1.44),
+             phi1max=c(0.16,0.34,0.31,1.29),
+             phi2min=c(0.05,0.23,-1.58,1.01),
+             phi2max=c(0.92,1.11,1.83,1.97))
+t=1:100
+D=1.34  #values in paper
+A=-.03
+phi1=-1.53 
+phi2=0.09
+#equation 3, figure 1c
+y=((D*exp(phi1)*exp(phi2))/(exp(phi2)-exp(phi1)))*(exp(-exp(phi1*t))-exp(-exp(phi2*t)))+A*(1-exp(-exp(phi1*t)))
+plot(t,y) #similar distribution as logistic growth
 
 ###check antibiotic killing 
 abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, capacity_prop, n.day=n.day){
@@ -233,17 +252,40 @@ abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, ca
 }
 
 
+####K####
+d=read.csv('gutdata/Ini_CTXm_copies_qPCR.csv') #SATURN gut data
+mean(d$ini_16S_log) #total capacity in log, K
+sd(d$ini_16S_log)
+hist(d$ini_16S_log)
+##Assuming Enterobacteriaceae 0.001-5% 
+enterobacteriaceae.capacity=d$ini_16S_copies*0.05
+summary(d$ini_CTXm_copies/enterobacteriaceae.capacity) #proportion of R in total 
+#                                                    number of Enterbacterobacteriaceae, r_prop
+#                                                    = exponential distribution 
+#70% of the ratio is less than 1
+#median 12% 
+hist(d$ini_CTXm_copies/enterobacteriaceae.capacity,breaks =seq(0,105,0.01), xlim = c(0,1))
+
 ######PLOT GRAPHS########
 setwd(dir = '/Users/moyin/Desktop/')
+
+#repopr=0.02 for ~ 50 days for cummulative risk to become 0.60 -hilty 2012 cid
 png(filename="pi_ssr.png", width = 800, height = 350)
 plotpara(parameter='pi_ssr',max=0.03, min=0)
 dev.off()
+
 png(filename="repop.s.png", width = 800, height = 350)
 plotpara(parameter='repop.s',max=0.02, min=0.005)
 dev.off()
+
+#returning traveller 25% colonised with esbl after 1-6 weeks of travel
 png(filename="repop.r.png", width = 800, height = 350)
 plotpara(parameter='repop.r',max=0.05, min=0.005)
 dev.off()
+
+#mu_r- Haggai Bar-Yoseph, JAC, 2016, 
+##colonization 100 -> 76.7% (95% CI=69.3%–82.8%) 1 month ->35.2% (95% CI=28.2%–42.9%) 12 months 
+##decolonized 17.2-30.7 1 month, 57.1-71.8 12 months 
 png(filename="mu.png", width = 800, height = 350)
 plotpara(parameter='mu',max=0.02, min=0.002)
 dev.off()
@@ -255,10 +297,24 @@ plot.cum.r.1(min=10, max=1000)
 dev.off()
 
 png(filename="growth.png", width = 800, height = 350)
-growth.no.abx(min=0.01, max=0.1, k=10, total_prop=0.2,capacity_prop=0.1, n.day=270)
+growth.no.abx(min=0.01, max=0.5, k=10, total_prop=0.9,capacity_prop=0.1, n.day=18)
 dev.off()
 
 png(filename="kill.png", width = 800, height = 350)
 abx.killing(growth.min=0.01, growth.max=0.1, abx.max=100, abx.min=20, 
             k=10, total_prop=0.9, capacity_prop=0.1, n.day=18)
 dev.off()
+
+#####Gibson 2018: doubling time of e coli 15h 
+#G (generation time) = (time, in minutes or hours)/n(number of generations), G = t/n
+# log10(2)/(15/24) #15 hours - a daily growth rate of 115.2 with doubling time 0.625 days
+# log10(2)/(25/24) #25 hours - a daily growth rate of 0.29 
+# log10(2)/(5/24)  #15 hours - a daily growth rate of 1.44
+# 
+# t=1:500
+# r_growth=0.29
+# K=12
+# total_capacity=log(0.05*(exp(K)))
+# r=200
+# s=1000
+# r_growth*r*(1 - (r + s)/exp(total_capacity)) #growth in 1 day 

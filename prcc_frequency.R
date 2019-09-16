@@ -41,7 +41,7 @@ parameters <- list(
     c("qunif", list(min=0.00001, max=0.1), "capacity_prop"),  # mean of amount of enterobacteriaceae capcity on log scale
     c("qunif", list(min=0, max=0.9), "prop_R"),            # mean of starting amount of resistant gut bacteria on log scale
     c("qunif", list(min=0,max=0.03), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
-    c("qunif", list(min=1,max=7), "r_thres"),             # r_thres = R threshold level for tranmissibility
+    c("qunif", list(min=1,max=7), "r_mean"),             # r_mean = mean R level in those carrying R
     c("qunif", list(min=0.01,max=0.1), "r_growth"),         # r_growth = growth constant for logistic growth
     c("qunif", list(min=1,max=7), "r_trans"),             # r_trans = amount transmitted on log scale
     c("qunif", list(min=0.01,max=0.1), "s_growth"),         # s_growth = amount transmitted on log scale
