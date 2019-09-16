@@ -392,6 +392,7 @@ if(model == "simple"){
 }else if(model == "frequency"){
     
     timestep=1
+    
     matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
                              meanDur= short_dur, timestep=timestep)

@@ -43,7 +43,7 @@ parameters <- list(
     c("qunif", list(min=0,max=0.03), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
     c("qunif", list(min=0.1,max=0.9), "r_mean"),             # r_mean = mean R level for those carrying R
     c("qunif", list(min=0.01,max=0.5), "r_growth"),         # r_growth = growth constant for logistic growth
-    c("qunif", list(min=1,max=8), "r_trans"),             # r_trans = amount transmitted on log scale
+    c("qunif", list(min=5,max=7), "r_trans"),             # r_trans = amount transmitted on log scale
     c("qunif", list(min=0.01,max=0.1), "s_growth"),         # s_growth = amount transmitted on log scale
     c("qunif", list(min=20,max=100), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
     c("qunif", list(min=0,max=0.0001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
@@ -67,7 +67,7 @@ if(!(sum(factors == parameters_diff_prevalence_freq) ==  length(parameters_diff_
 # Use the LHD function to generate a hypercube 
 ##run 1
 abxr='zero'
-N=200
+N=500
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time
