@@ -22,8 +22,7 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
                   data.df[,1], data.df[,2], data.df[,3], data.df[,4], data.df[,5], 
                   data.df[,6], data.df[,7], data.df[,8], data.df[,9], 
                   data.df[,10], data.df[,11], data.df[,12], data.df[,13], data.df[,14], data.df[,15], 
-                  data.df[,16], data.df[,17], data.df[,18],data.df[,19],
-                  data.df[,20], data.df[,21], data.df[,22]
+                  data.df[,16], data.df[,17], data.df[,18]
     ))
 }
 
@@ -38,14 +37,10 @@ parameters <- list(
     c("qunif", list(min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
     c("qunif", list(min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c("qunif", list(min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
-    c("qunif", list(min=0, max=0.03), "pi_ssr"),            #probability of being transmitted r to ss (ss—> ssr)
-    c("qunif", list(min=0.005, max=0.02), "repop.s1"),     #probability of regrowth of S  (s—>S)
-    c("qunif", list(min=0.005, max=0.02), "repop.s2"),     #probability of regrowth of S  (sr—>Sr)
-    c("qunif", list(min=0.005, max=0.05), "repop.r1"),     #probability of regrowth of s (sr—> sR)
-    c("qunif", list(min=0.005, max=0.05), "repop.r2"),     #probability of regrowth of s (sr—> sR)
-    c("qunif", list(min=0.002, max=0.02), "mu1"),          #probability of being decolonised to S (Sr—> S) 
-    c("qunif", list(min=0.002, max=0.02), "mu2"),          #probability of being decolonised to S (sr—> s) 
-    c("qunif", list(min=0.002, max=0.02), "mu_r"),         #probability of being decolonised to S (Sr—> S) 
+    c("qunif", list(min=0, max=0.002), "pi_ssr"),            #probability of being transmitted r to ss (ss—> ssr)
+    c("qunif", list(min=0.002, max=0.02), "repop.s"),     #probability of regrowth of S  (s—>S)
+    c("qunif", list(min=0.01, max=0.05), "repop.r"),     #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0.002, max=0.02), "mu"),          #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0.1, max=0.5), "abx.s"),           #probability of clearing S to become s
     c("qunif", list(min=0.1, max=0.5), "abx.r"),           #probability of clearing R to become r
     c("qunif", list(min=0.1, max=1), "p.infect"),          #probability of being prescribed narrow spectrum antibiotic

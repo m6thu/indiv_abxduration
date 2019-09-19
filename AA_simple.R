@@ -25,21 +25,21 @@ cl <- makeCluster(detectCores()-1)
 clusterCall(cl, function() {source('model_simple.R')})
 
 parameters <- list(
-    c(runif(1,min=5, max=50), "n.bed"),              #"n.bed", number of beds in the ward
+    c(runif(1,min=5, max=50), "n.bed"),         #"n.bed", number of beds in the ward
     c(runif(1,min=3, max=20), "max.los"),       #"max.los", mean of length of stay
-    c(runif(1,min=0, max=1), "prop_R"),    #"prop_R",probability of initial carriage of resistant organisms
-    c(runif(1,min=0, max=1), "prop_S_nonR"),         #"prop_S_nonR", proportion of S in the population of S and ss
-    c(runif(1,min=0, max=1), "bif"),                 #"bif", bacterial interference factor
-    c(runif(1,min=0, max=0.03), "pi_ssr"),            # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
-    c(runif(1,min=0.005, max=0.02), "repop.s1"),         # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
-    c(runif(1,min=0.002, max=0.02), "mu_r"),             # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI=69.3%–82.8%) at 1 month to 35.2% (95% CI=28.2%–42.9%) at 12 months of follow-up)
-    c(runif(1,min=0.1, max=0.5), "abx.s"),           # "abx.s", probability of S becoming ss after being on narrow spectrum antibiotics
-    c(runif(1,min=0.1, max=0.5), "abx.r"),            # "abx.r", probability of R becoming ss after being on broad spectrum antibiotics
-    c(runif(1,min=0.1, max=1), "p.infect"),        # "p.infect", probability of being prescribed antibiotics
-    c(runif(1,min=10, max=1000), "cum.r.1"),        # admission day when cummulative prabability of HAI requiring abx.r is 1
-    c(runif(1,min=0.1, max=1), "p.r.day1"),        #probability of being prescribed broad spectrum antibiotic on admission 
-    c(runif(1,min=3, max=7), "short_dur"),           # "short_dur", mean short duration of antibiotics (normal distribution)
-    c(runif(1,min=14, max=21), "long_dur")           # "long_dur", mean long duration of antibiotics (normal distribution)
+    c(runif(1,min=0, max=1), "prop_R"),         #"prop_R",probability of initial carriage of resistant organisms
+    c(runif(1,min=0, max=1), "prop_S_nonR"),    #"prop_S_nonR", proportion of S in the population of S and ss
+    c(runif(1,min=0, max=1), "bif"),            #"bif", bacterial interference factor
+    c(runif(1,min=0, max=0.002), "pi_ssr"),      # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
+    c(runif(1,min=0.002, max=0.02), "repop.s"), # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
+    c(runif(1,min=0.002, max=0.02), "mu"),      # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI=69.3%–82.8%) at 1 month to 35.2% (95% CI=28.2%–42.9%) at 12 months of follow-up)
+    c(runif(1,min=0.1, max=0.5), "abx.s"),      # "abx.s", probability of S becoming ss after being on narrow spectrum antibiotics
+    c(runif(1,min=0.1, max=0.5), "abx.r"),      # "abx.r", probability of R becoming ss after being on broad spectrum antibiotics
+    c(runif(1,min=0.1, max=1), "p.infect"),     # "p.infect", probability of being prescribed antibiotics
+    c(runif(1,min=10, max=1000), "cum.r.1"),    # admission day when cummulative prabability of HAI requiring abx.r is 1
+    c(runif(1,min=0.1, max=1), "p.r.day1"),     # probability of being prescribed broad spectrum antibiotic on admission 
+    c(runif(1,min=3, max=7), "short_dur"),      # "short_dur", mean short duration of antibiotics (normal distribution)
+    c(runif(1,min=14, max=21), "long_dur")      # "long_dur", mean long duration of antibiotics (normal distribution)
 )
 
 # get factor values 
@@ -55,7 +55,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   old <- Sys.time() # get start time
   simple <- diff_prevalence(n.bed=values[1], max.los=values[2], 
                             prop_R=values[3], prop_S_nonR=values[4], 
-                            bif=values[5], pi_ssr=values[6], repop.s1=values[7], mu_r=values[8], 
+                            bif=values[5], pi_ssr=values[6], repop.s=values[7], mu=values[8], 
                             abx.s=values[9], abx.r=values[10], p.infect=values[11], 
                             cum.r.1=values[12], p.r.day1=values[13], short_dur=values[14], long_dur = values[15])
   samples<- values #sampled parameter combinations 

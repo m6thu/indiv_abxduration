@@ -30,12 +30,12 @@ colo.table <- function(patient.matrix, los.array, prop_R, prop_S_nonR){
 
 ####################4. Update values for every day  #####################
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    bif, pi_ssr, abx.s, abx.r, repop.s1, mu_r, timestep){
+                    bif, pi_ssr, abx.s, abx.r, repop.s, mu, timestep){
     
     # adjust probabilities based on timestep
     pi_ssr = 1-(1-pi_ssr)^(1/timestep)
-    repop.s1 = 1-(1-repop.s1)^(1/timestep)
-    mu_r = 1-(1-mu_r)^(1/timestep)
+    repop.s = 1-(1-repop.s)^(1/timestep)
+    mu = 1-(1-mu)^(1/timestep)
     abx.s= 1-(1-abx.s)^(1/timestep)
     abx.r= 1-(1-abx.r)^(1/timestep)
     abx.r1 =abx.r 
@@ -71,10 +71,10 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         if(length(R)){
             # Roll a random number for each R on the previous day
             roll = runif(length(R), 0, 1)
-            # All column indices which roll < mu_r (decolonization parameter) are saved to fill in as S
-            S_idx = R[roll < mu_r]
+            # All column indices which roll < mu (decolonization parameter) are saved to fill in as S
+            S_idx = R[roll < mu]
             # All the remaining column indices are saved to fill in as staying R the next day
-            same_idx = R[roll >= mu_r]
+            same_idx = R[roll >= mu]
             # Fill in saved column as S
             colo.matrix[i, S_idx] = "S"
             # Fill in saved column as R
@@ -110,11 +110,11 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             roll = runif(length(ss), 0, 1)
             
             r_idx = ss[roll < prop_R]
-            s_idx = ss[(roll >= prop_R) & (roll < (repop.s1+prop_R))]
+            s_idx = ss[(roll >= prop_R) & (roll < (repop.s+prop_R))]
             same_idx = ss[!(ss %in% c(r_idx, s_idx))]
             
-            if((repop.s1+prop_R > 1)){
-                stop(paste("Error stopifnot: repop.s1+prop_R >1 in First scenario: those with no antibiotics on previous day"))
+            if((repop.s+prop_R > 1)){
+                stop(paste("Error stopifnot: repop.s+prop_R >1 in First scenario: those with no antibiotics on previous day"))
             }
             
             colo.matrix[i, s_idx] = "S"
@@ -218,7 +218,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             same_idx= S[!(S %in% c(r_idx, ss_idx))]
             
             if((abx.r1+prop_R > 1)){
-                stop(paste("Error stopifnot: abx.r1+prop_R >1 in Third scenario: those with broad antibiotics on previous day "))
+                stop(paste("Error stopifnot: abx.r+prop_R >1 in Third scenario: those with broad antibiotics on previous day "))
             }
             
             colo.matrix[i, ss_idx] = "ss"
@@ -248,17 +248,17 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
 
 diff_prevalence <- function(n.bed, max.los, 
                             prop_R, prop_S_nonR, 
-                            bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
+                            bif, pi_ssr, repop.s, mu, abx.s, abx.r,
                             p.infect, cum.r.1, p.r.day1, short_dur, long_dur){
     
     old = Sys.time() # get start time
     # DEBUG
     print(paste(n.bed, max.los, 
                 prop_R, prop_S_nonR, 
-                bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
+                bif, pi_ssr, repop.s, mu, abx.s, abx.r,
                 p.infect, cum.r.1, p.r.day1, short_dur, long_dur))
     
-    timestep = 3
+    timestep = 1
     iterations = 100
     n.day=300
     sdDur=1
@@ -278,7 +278,7 @@ diff_prevalence <- function(n.bed, max.los,
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
+                                         bif=bif, pi_ssr=pi_ssr, repop.s=repop.s, mu=mu, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter)
@@ -302,7 +302,7 @@ diff_prevalence <- function(n.bed, max.los,
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
+                                         bif=bif, pi_ssr=pi_ssr, repop.s=repop.s, mu=mu, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter)
@@ -320,17 +320,17 @@ diff_prevalence <- function(n.bed, max.los,
 
 prevalence <- function(n.bed, max.los, 
                             prop_R, prop_S_nonR, 
-                            bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
+                            bif, pi_ssr, repop.s, mu, abx.s, abx.r,
                             p.infect, cum.r.1, p.r.day1, meanDur){
     
     old = Sys.time() # get start time
     # DEBUG
     print(paste(n.bed, max.los, 
                 prop_R, prop_S_nonR, 
-                bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
+                bif, pi_ssr, repop.s, mu, abx.s, abx.r,
                 p.infect, cum.r.1, p.r.day1, meanDur))
     
-    timestep = 3
+    timestep = 1
     iterations = 100
     n.day=300
     sdDur=1
@@ -350,7 +350,7 @@ prevalence <- function(n.bed, max.los,
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
+                                         bif=bif, pi_ssr=pi_ssr, repop.s=repop.s, mu=mu, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter) #timestep by number of beds with R,S,ss
@@ -368,10 +368,10 @@ prevalence <- function(n.bed, max.los,
 
 parameters_prevalence_simple<- c("n.bed", "max.los", 
                            "prop_R", "prop_S_nonR", 
-                           "bif", "pi_ssr", "repop.s1", "mu_r", 
+                           "bif", "pi_ssr", "repop.s", "mu", 
                            "abx.s", "abx.r", "p.infect", "cum.r.1", 'p.r.day1', "meanDur")
 
 parameters_diff_prevalence_simple<- c("n.bed", "max.los", 
                       "prop_R", "prop_S_nonR", 
-                      "bif", "pi_ssr", "repop.s1", "mu_r", 
+                      "bif", "pi_ssr", "repop.s", "mu", 
                       "abx.s", "abx.r", "p.infect", "cum.r.1", 'p.r.day1', "short_dur", "long_dur")

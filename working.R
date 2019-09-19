@@ -1,50 +1,47 @@
-model='frequency'
+model='binary'
 source('default_params.R')
 source(paste0('model_',model,'.R'))
 
 #simple
-diff_prevalence(n.bed,max.los, 
-                            prop_R, prop_S_nonR, 
-                            bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
-                            p.infect, cum.r.1, p.r.day1, short_dur, long_dur)
+diff_prevalence(n.bed,max.los,prop_R, prop_S_nonR, bif, pi_ssr, repop.s, mu, abx.s, abx.r,
+                p.infect, cum.r.1, p.r.day1, short_dur, long_dur)
 
 prevalence(n.bed,max.los, 
-                prop_R, prop_S_nonR, 
-                bif, pi_ssr, repop.s1, mu_r, abx.s, abx.r,
-                p.infect, cum.r.1, p.r.day1, meanDur)
+           prop_R, prop_S_nonR, 
+           bif, pi_ssr, repop.s, mu, abx.s, abx.r,
+           p.infect, cum.r.1, p.r.day1, meanDur)
 
 #binary 
 diff_prevalence(n.bed, max.los, 
-                            prop_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
-                            bif, pi_ssr, repop.s1, repop.s2, repop.r1, repop.r2,
-                            mu1, mu2, mu_r, abx.s, abx.r, 
-                            p.infect, cum.r.1, p.r.day1, short_dur, long_dur)
+                prop_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+                bif, pi_ssr, repop.s, repop.r, mu, abx.s, abx.r, 
+                p.infect, cum.r.1, p.r.day1, short_dur, long_dur)
 
 prevalence(n.bed, max.los, 
-                prop_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
-                bif, pi_ssr, repop.s1, repop.s2, repop.r1, repop.r2,
-                mu1, mu2, mu_r, abx.s, abx.r, 
-                p.infect, cum.r.1, p.r.day1, meanDur)
+           prop_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
+           bif, pi_ssr, repop.s,  repop.r, mu, abx.s, abx.r, 
+           p.infect, cum.r.1, p.r.day1, meanDur)
 
 #frequency
 n.day=300
 max.los=7
 timestep=1
 matrixes=los.abx.table(n.bed, n.day, max.los,
-                          p.infect, p.r.day1, cum.r.1, 
-                          meanDur, timestep)
+                       p.infect, p.r.day1, cum.r.1, 
+                       meanDur, timestep)
 patient.matrix=matrixes[[1]]
 abx.matrix=matrixes[[2]]
 los.array=summary.los(patient.matrix)
-colo.matrix=colo.table(patient.matrix, los.array, total_prop, capacity_prop, prop_R, r_mean, K)
+colo.matrix=colo.table(patient.matrix, los.array, total_prop, prop_R, r_mean, K)
 n=nextDay(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    pi_ssr, total_prop, capacity_prop, K, r_mean, r_growth, r_trans, s_growth,
-                    abx.s, abx.r, timestep)
+          pi_ssr, total_prop, K, r_mean, r_growth, r_thres, s_growth,
+          abx.s, abx.r, timestep)
 
-diff_prevalence(n.bed, max.los, p.infect, cum.r.1, p.r.day1, capacity_prop,
-                            K, total_prop, prop_R, pi_ssr, r_mean, r_growth, r_trans, s_growth,
-                            abx.s, abx.r, short_dur,long_dur)
+diff_prevalence(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
+                K, total_prop, prop_R, pi_ssr, 
+                r_mean, r_growth, r_thres, s_growth,
+                abx.s, abx.r, short_dur,long_dur)
 
 prevalence(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
-                K, total_prop, capacity_prop, prop_R, pi_ssr, r_mean, r_growth, r_trans, s_growth,
-                abx.s, abx.r, meanDur)
+           K, total_prop, prop_R, pi_ssr, r_mean, r_growth,r_thres, s_growth,
+           abx.s, abx.r, meanDur)

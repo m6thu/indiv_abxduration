@@ -15,10 +15,10 @@ source('model_frequency.R')
 
 parameters=as.factor(unique(c(parameters_diff_prevalence_simple, parameters_diff_prevalence_binary, parameters_diff_prevalence_freq)))
 levels(parameters) =  rev(c("n.bed", "max.los", #ward 
-                            "prop_R", "prop_S_nonR","prop_Sr_inR","prop_sr_inR", "total_prop", "K", #patient characteristics 
-                            "repop.s1", "repop.s2", "s_growth","repop.r1", "repop.r2", "r_growth", #within host dynamics 
-                            "r_thres", "r_trans","pi_ssr","bif", #transmission dynamics
-                            "mu_r","mu1","mu2",#decolonisation 
+                            "prop_R", "prop_S_nonR","prop_Sr_inR","prop_sr_inR", "total_prop", "K", "r_mean", #patient characteristics 
+                            "repop.s","s_growth","repop.r", "r_growth",  #within host dynamics 
+                            "r_thres", "pi_ssr","bif", #transmission dynamics
+                            "mu","mu1","mu2",#decolonisation 
                             "abx.s", "abx.r","p.infect", "p.r.day1", "cum.r.1", "short_dur", "long_dur"))
 labs.df=data.frame(parameters=parameters, values=NA)
 models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3', 
@@ -52,12 +52,12 @@ getposition<-function(data,labs=labs.df){
   return(out)
 }
 
-Amodel1=get(load('runs/LHSdiff_simple_800_notzero13Aug2019_0211GMT.Rdata')) #abx_r>0
-Amodel2=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
-Amodel3=get(load('runs/LHSdiff_frequency_500_notzero_14Aug2019_1406BST.Rdata'))
-Bmodel1=get(load('runs/LHSdiff_simple_800_zero13Aug2019_0949GMT.Rdata')) #abx_r>0
-Bmodel2=get(load('runs/LHSdiff_binary_1000_zero_13Aug2019_1926BST.Rdata')) 
-Bmodel3=get(load('runs/LHSdiff_frequency_1600_zero_13Aug2019_1640GMT.Rdata'))
+Amodel1=get(load('runs/LHSdiff_simple_900_notzero06Sep2019_0552GMT.Rdata')) #abx_r>0
+Amodel2=get(load('runs/LHSdiff_binary_1000_notzero_07Sep2019_0949BST.Rdata'))
+Amodel3=get(load('runs/LHSdiff_frequency_800_notzero_18Sep2019_0345BST.Rdata'))
+Bmodel1=get(load('runs/LHSdiff_simple_800_zero16Sep2019_1316GMT.Rdata')) #abx_r>0
+Bmodel2=get(load('runs/LHSdiff_binary_1000_zero_07Sep2019_0459BST.Rdata')) 
+Bmodel3=get(load('runs/LHSdiff_frequency_700_zero_17Sep2019_2337BST.Rdata'))
 
 #Amodel1.p=getp(Amodel1, para.list=parameters_simple, 500)
 # Amodel2.p=getp(Amodel2, para.list=parameters_binary, 500)
@@ -96,4 +96,5 @@ ggplot(forplot, aes(model, parameters)) +
   theme(legend.position = "right", 
         axis.ticks = element_blank(), 
         axis.text.x = element_text(size = base_size, angle = 330, hjust = 0, colour = "grey50"))+
-  geom_hline(yintercept=c(2.5, 5.5, 7.5, 14.5,20.5, 26.5), color='grey', size=0.5)+geom_vline(xintercept = 3.5,  color = "black", size=0.5)
+  geom_hline(yintercept=c(2.5, 5.5, 7.5, 13.5, 19.5, 26.5), color='grey', size=0.5)+
+  geom_vline(xintercept = 3.5,  color = "black", size=0.5)

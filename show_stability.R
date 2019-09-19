@@ -17,7 +17,7 @@ source(paste0("model_", model,".R"))
 
 if(model == "simple"){
     
-    timestep = 3
+    timestep = 1
     sdDur=1
     iterations=100
     
@@ -36,7 +36,7 @@ if(model == "simple"){
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
+                                         bif=bif, pi_ssr=pi_ssr, repop.s=repop.s, mu=mu, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter)
@@ -59,7 +59,7 @@ if(model == "simple"){
         
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                          abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         bif=bif, pi_ssr=pi_ssr, repop.s1=repop.s1, mu_r=mu_r, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
+                                         bif=bif, pi_ssr=pi_ssr, repop.s=repop.s, mu=mu, abx.s=abx.s, abx.r=abx.r,timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter)
@@ -84,7 +84,7 @@ if(model == "simple"){
     
 } else if (model == "binary") {
     
-    timestep = 3
+    timestep = 1
     sdDur=1
     iterations=100
     
@@ -101,8 +101,8 @@ if(model == "simple"){
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
                                  prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
-                                         repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
+                                         pi_ssr=pi_ssr, bif=bif, mu=mu,
+                                         repop.s=repop.s, repop.r=repop.r, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter)
@@ -123,8 +123,8 @@ if(model == "simple"){
         colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
                                  prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
         colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                         pi_ssr=pi_ssr, bif=bif, mu1=mu1, mu2=mu2, mu_r=mu_r, repop.r1=repop.r1, repop.r2=repop.r2,
-                                         repop.s1=repop.s1, repop.s2=repop.s2, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
+                                         pi_ssr=pi_ssr, bif=bif, mu=mu,
+                                         repop.s=repop.s, repop.r=repop.r, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
         
         #Summary
         df = data.frame(colo_table_filled_iter)
@@ -162,16 +162,16 @@ if(model == "simple"){
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R, r_mean=r_mean,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
-        
+        r_thres_matrix=data.frame(colo.matrix[[4]])
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_trans)/n.bed, ncol=timestep, byrow = T))
+        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_thres_matrix)/n.bed, ncol=timestep, byrow = T))
     }
     cumsum_short = apply(iter_totalR.thres, 2, cumsum)
     
@@ -185,17 +185,17 @@ if(model == "simple"){
         patient.matrix=matrixes[[1]]
         abx.matrix=matrixes[[2]]
         los.array = summary.los(patient.matrix=patient.matrix)
-        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, capacity_prop=capacity_prop, prop_R=prop_R,r_mean=r_mean,K=K)
+        colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_mean=r_mean,K=K)
         
         colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                          pi_ssr=pi_ssr, total_prop = total_prop, capacity_prop=capacity_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_trans=r_trans, s_growth=s_growth,
+                                          pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth,r_thres=r_thres, s_growth=s_growth,
                                           abx.s=abx.s, abx.r=abx.r, timestep=timestep)
         
         # Summary
         df.R = data.frame(colo.matrix_filled_iter[[2]])
-        
+        r_thres_matrix= data.frame(colo.matrix[[4]])
         #for number of people who reached R threshold on a day
-        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_trans)/n.bed, ncol=timestep, byrow = T))
+        iter_totalR.thres[, iter]= rowMeans(matrix(rowSums(df.R >= r_thres_matrix)/n.bed, ncol=timestep, byrow = T))
         
     }
     cumsum_long = apply(iter_totalR.thres, 2, cumsum)

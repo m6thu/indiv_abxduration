@@ -188,10 +188,10 @@ if(model == "simple"){
         
         #output
         colo_table_filled_short[[i]] <- nextDay(patient.matrix = patient.matrix[[i]], los.array = los.array[[i]], abx.matrix=abx.short[[i]], colo.matrix=colo.matrix[[i]], 
-                                                pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, 
+                                                pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, r_thres=r_thres,
                                                 abxr_killr=abxr_killr, abxr_kills=abxr_kills, abxs_kills=abxs_kills, timestep=1)
         colo_table_filled_long[[i]] <- nextDay(patient.matrix = patient.matrix[[i]], los.array = los.array[[i]], abx.matrix=abx.long[[i]], colo.matrix=colo.matrix[[i]], 
-                                               pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, 
+                                               pi_r=pi_r, K=K, r_thres=r_thres, r_growth=r_growth, r_trans=r_trans, r_thres=r_thres,
                                                abxr_killr=abxr_killr, abxr_kills=abxr_kills, abxs_kills=abxs_kills, timestep=1)
         
         #increase overtime

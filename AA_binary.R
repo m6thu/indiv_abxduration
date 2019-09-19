@@ -31,14 +31,10 @@ parameters <- list(
     c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
     c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c(runif(1,min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
-    c(runif(1,min=0, max=0.03), "pi_ssr"),           #probability of being transmitted r to ss (ss—> ssr)
-    c(runif(1,min=0.005, max=0.02), "repop.s1"),         #probability of regrowth of S  (s—>S)
-    c(runif(1,min=0.005, max=0.02), "repop.s2"),         #probability of regrowth of S  (sr—>Sr)
-    c(runif(1,min=0.005, max=0.05), "repop.r1"),         #probability of regrowth of s (sr—> sR)
-    c(runif(1,min=0.005, max=0.05), "repop.r2"),         #probability of regrowth of s (sr—> sR)
-    c(runif(1,min=0.002, max=0.02), "mu1"),              #probability of being decolonised to S (Sr—> S) 
-    c(runif(1,min=0.002, max=0.02), "mu2"),              #probability of being decolonised to S (sr—> s) 
-    c(runif(1,min=0.002, max=0.02), "mu_r"),             #probability of being decolonised to S (Sr—> S) 
+    c(runif(1,min=0, max=0.002), "pi_ssr"),           #probability of being transmitted r to ss (ss—> ssr)
+    c(runif(1,min=0.002, max=0.02), "repop.s"),         #probability of regrowth of S  (s—>S)
+    c(runif(1,min=0.01, max=0.05), "repop.r"),         #probability of regrowth of s (sr—> sR)
+    c(runif(1,min=0.002, max=0.02), "mu"),             #probability of being decolonised to S (Sr—> S) 
     c(runif(1,min=0.1, max=0.5), "abx.s"),           #probability of clearing S to become s
     c(runif(1,min=0.1, max=0.5), "abx.r"),        #probability of clearing R to become r
     c(runif(1,min=0.1, max=1), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
@@ -62,13 +58,12 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   binary <- diff_prevalence(n.bed=values[1], max.los=values[2], 
                             prop_R=values[3], prop_S_nonR=values[4], 
                             prop_Sr_inR=values[5], prop_sr_inR=values[6], bif=values[7], 
-                            pi_ssr=values[8], repop.s1=values[9], repop.s2=values[10], repop.r1=values[11], 
-                            repop.r2=values[12], mu1=values[13], mu2=values[14], 
-                            mu_r=values[15], abx.s=values[16], abx.r=values[17], p.infect=values[18], 
-                            cum.r.1=values[19], p.r.day1=values[20], short_dur=values[21], long_dur=values[22])
+                            pi_ssr=values[8], repop.s=values[9], repop.r=values[10], 
+                            mu=values[11], abx.s=values[12], abx.r=values[13], p.infect=values[14], 
+                            cum.r.1=values[15], p.r.day1=values[16], short_dur=values[17], long_dur=values[18])
   samples<- values #sampled parameter combinations 
   results <- binary #save results of the simulations
-  aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 25) #combine sampled parameter combinations and results in one file 
+  aa_data_binary_diff[[i]]<-matrix(c(samples, results), byrow = TRUE, ncol = 21) #combine sampled parameter combinations and results in one file 
   colnames(aa_data_binary_diff[[i]])=c(parameters_diff_prevalence_binary, "long", 'short',"sR per bed")
   new <- Sys.time() - old # calculate difference
   print(new) # print elapsed time
@@ -111,9 +106,9 @@ NUMSUBSETSPERSAMPLESIZE <- numberofrepeatsineachiteration
 # Output file name containing the simulation responses.
 RESULTFILENAME <- "aa_data_binary.csv"
 # Notes the column in the CSV results file where the results start.
-OUTPUTFILECOLSTART <- 23
+OUTPUTFILECOLSTART <- 19
 # Last column of the output measure results
-OUTPUTFILECOLEND <- 25
+OUTPUTFILECOLEND <- 21
 # The A-Test value either side of 0.5 which should be considered a 'large difference'
 # between two sets of results. Use of 0.23 was taken from the Vargha-Delaney publication
 LARGEDIFFINDICATOR <- 0.23
