@@ -37,9 +37,9 @@ r_thres=0.5
 
 if (model=='simple' | model=='binary'){
     abx.s = 0.2                  # probability of clearing S to become ss under antibiotic treatment 
-    abx.r = 0.2
+    abx.r = 0.00001
 } else {
     abx.s = 12                   # abxr_killr = amount of r killed by broad spectrum abx r
-    abx.r = 12                   # abxs_kills = amount of s killed by narrow spectrum abx s
+    abx.r = 0.000001                   # abxs_kills = amount of s killed by narrow spectrum abx s
 }
     
