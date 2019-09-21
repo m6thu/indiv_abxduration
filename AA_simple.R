@@ -12,7 +12,6 @@ source("model_simple.R")
 require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis 
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
-require(MCMCglmm) #for rtnorm
 require(spartan) #for AA 
 
 ################################### Consistency testing ############################################
@@ -34,7 +33,7 @@ parameters <- list(
     c(runif(1,min=0.002, max=0.02), "repop.s"), # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
     c(runif(1,min=0.002, max=0.02), "mu"),      # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI=69.3%–82.8%) at 1 month to 35.2% (95% CI=28.2%–42.9%) at 12 months of follow-up)
     c(runif(1,min=0.1, max=0.5), "abx.s"),      # "abx.s", probability of S becoming ss after being on narrow spectrum antibiotics
-    c(runif(1,min=0.1, max=0.5), "abx.r"),      # "abx.r", probability of R becoming ss after being on broad spectrum antibiotics
+    c(runif(1,min=0, max=0.000001), "abx.r"),      # "abx.r", probability of R becoming ss after being on broad spectrum antibiotics
     c(runif(1,min=0.1, max=1), "p.infect"),     # "p.infect", probability of being prescribed antibiotics
     c(runif(1,min=10, max=1000), "cum.r.1"),    # admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=1), "p.r.day1"),     # probability of being prescribed broad spectrum antibiotic on admission 
@@ -47,7 +46,7 @@ values <- as.numeric(unlist(lapply(parameters, function(l) l[[1]])))
 factors <- unlist(lapply(parameters, function(l) l[[2]]))
 
 # Use the LHS function to generate a hypercube 
-iterationstotry= c(1, 50, 100, 125, 150) #iterations we are going to test 
+iterationstotry= c(1, 50, 100, 125) #iterations we are going to test 
 numberofrepeatsineachiteration=20 
 aa_data_simple_diff<-list() 
 for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
@@ -66,7 +65,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns="/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_simple/test1"
+dirtostoreAAruns="/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_simple/test_scenarioB/"
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){

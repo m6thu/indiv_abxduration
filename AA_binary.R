@@ -19,7 +19,7 @@ require(spartan) #for AA
 
 # SAMPLE PARAMETER SPACE 
 # source functions on all cores
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores())
 clusterCall(cl, function() {source('model_binary.R')})
 
 #parameters 
@@ -69,7 +69,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_binary/test1'
+dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_binary/test_scenarioA/'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){

@@ -38,9 +38,15 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     mu = 1-(1-mu)^(1/timestep)
     abx.s= 1-(1-abx.s)^(1/timestep)
     abx.r= 1-(1-abx.r)^(1/timestep)
-    abx.r1 =abx.r 
-    abx.r2 =abx.r 
     
+    if (abx.r<0.05) { #if abx.r is ineffective in scenario B - resistance = CRE 
+      abx.r.aginst.s =abx.s #remains effective for s  
+      abx.r.aginst.r =abx.r #in effective for r 
+    } else { # if abx.r is effective in scenario B - resistance = ESBL
+      abx.r.aginst.s =abx.r #effective for both s and r 
+      abx.r.aginst.r =abx.r
+    }
+      
     #print(paste("pi_ssr, timestep:", pi_ssr, timestep))
     
     # pi_sr= probability of R transmitting to S (a proportion of pi_r if being colonised with S protects colonisation by R)
@@ -194,8 +200,8 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             roll= runif(length(R), 0, 1)
             
             # Fill in today 
-            ss_idx = R[roll < abx.r2]
-            same_idx = R[roll >= abx.r2]
+            ss_idx = R[roll < abx.r.aginst.r]
+            same_idx = R[roll >= abx.r.aginst.r]
             colo.matrix[i, ss_idx] = "ss"
             colo.matrix[i, same_idx] = "R"
         }
@@ -214,11 +220,11 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
             roll= runif(length(S), 0, 1)
             
             r_idx = S[roll < prop_R]
-            ss_idx = S [(roll >= prop_R) & (roll < (abx.r1+prop_R))]
+            ss_idx = S [(roll >= prop_R) & (roll < (abx.r.aginst.s+prop_R))]
             same_idx= S[!(S %in% c(r_idx, ss_idx))]
             
-            if((abx.r1+prop_R > 1)){
-                stop(paste("Error stopifnot: abx.r+prop_R >1 in Third scenario: those with broad antibiotics on previous day "))
+            if((abx.r.aginst.s+prop_R > 1)){
+                stop(paste("Error stopifnot: abx.r.aginst.s+prop_R >1 in Third scenario: those with broad antibiotics on previous day "))
             }
             
             colo.matrix[i, ss_idx] = "ss"
@@ -259,9 +265,14 @@ diff_prevalence <- function(n.bed, max.los,
                 p.infect, cum.r.1, p.r.day1, short_dur, long_dur))
     
     timestep = 1
-    iterations = 100
     n.day=300
     sdDur=1
+    
+    if (abx.r>0.01){ #scenario A
+      iterations= 100
+    } else { #scenario B
+      iterations= 50
+    }
     
     iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
     

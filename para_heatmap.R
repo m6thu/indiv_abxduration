@@ -58,7 +58,7 @@ getposition<-function(data,labs=labs.df){
 
 Amodel1=get(load('runs/LHSdiff_simple_900_notzero20Sep2019_0120BST.Rdata')) #abx_r>0
 Amodel2=get(load('runs/LHSdiff_binary_900_notzero_20Sep2019_0150GMT.Rdata'))
-Amodel3=get(load('runs/LHSdiff_frequency_900_notzero_20Sep2019_1305BST.Rdata'))
+Amodel3=get(load('runs/LHSdiff_frequency_1000_notzero_20Sep2019_1646BST.Rdata'))
 Bmodel1=get(load('runs/LHSdiff_simple_900_zero20Sep2019_0408BST.Rdata')) #abx_r>0
 Bmodel2=get(load('runs/LHSdiff_binary_900_zero_20Sep2019_0509GMT.Rdata')) 
 Bmodel3=get(load('runs/LHSdiff_frequency_800_notzero_20Sep2019_1025BST.Rdata'))
@@ -92,7 +92,7 @@ ggplot(forplot, aes(model, parameters)) +
   scale_fill_gradientn(colours=c("#388697",'#fbfae5',"#EB5160"),
                        na.value = "white", 
                        breaks=c(min(forplot$ranking, na.rm = T),0,max(forplot$ranking, na.rm = T)),
-                       labels=c('Lower value increases difference in\nprevalence of resistant carriers',
+                       labels=c('Higher value decreases difference in\nprevalence of resistant carriers',
                                 'Does not affect difference in\nprevalence of resistant carriers', 
                                 'Higher value increases difference in\nprevalence of resistant carriers'))+
   theme_grey(base_size = base_size) + 
