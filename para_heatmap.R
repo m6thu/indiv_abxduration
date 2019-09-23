@@ -56,12 +56,12 @@ getposition<-function(data,labs=labs.df){
   return(out)
 }
 
-Amodel1=get(load('runs/LHSdiff_simple_900_notzero20Sep2019_0120BST.Rdata')) #abx_r>0
-Amodel2=get(load('runs/LHSdiff_binary_900_notzero_20Sep2019_0150GMT.Rdata'))
-Amodel3=get(load('runs/LHSdiff_frequency_1000_notzero_20Sep2019_1646BST.Rdata'))
-Bmodel1=get(load('runs/LHSdiff_simple_900_zero20Sep2019_0408BST.Rdata')) #abx_r>0
-Bmodel2=get(load('runs/LHSdiff_binary_900_zero_20Sep2019_0509GMT.Rdata')) 
-Bmodel3=get(load('runs/LHSdiff_frequency_800_notzero_20Sep2019_1025BST.Rdata'))
+Amodel1=get(load('runs/LHSdiff_simple_1100_notzero21Sep2019_1937BST.Rdata')) #abx_r>0
+Amodel2=get(load('runs/LHSdiff_binary_1300_notzero_23Sep2019_0620BST.Rdata'))
+Amodel3=get(load('runs/LHSdiff_frequency_1100_notzero_22Sep2019_1423BST.Rdata'))
+Bmodel1=get(load('runs/LHSdiff_simple_1100_zero21Sep2019_2140BST.Rdata')) #abx_r>0
+Bmodel2=get(load('runs/LHSdiff_binary_1300_zero_23Sep2019_0028BST.Rdata')) 
+Bmodel3=get(load('runs/LHSdiff_frequency_1100_zero_22Sep2019_1646BST.Rdata'))
 
 #Amodel1.p=getp(Amodel1, para.list=parameters_simple, 500)
 # Amodel2.p=getp(Amodel2, para.list=parameters_binary, 500)

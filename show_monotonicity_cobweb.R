@@ -1,0 +1,82 @@
+library(epiR) #calculate p values for PRCC
+library(pse)
+
+output1=get(load('runs/LHSdiff_binary_1200_zero_22Sep2019_2141BST.Rdata'))
+output2=get(load('runs/LHSdiff_binary_1300_zero_23Sep2019_0028BST.Rdata'))
+parameters<-parameters_diff_prevalence_binary
+
+# 1. Check monotonicity 
+##### scatterplot - see show_scatterplot
+##### Hoeffding's D and Spearman's 
+library(xtable)
+parametersamples=output1[['data']]
+output=output1$res[,3,]
+hd=hd.p=c()
+spm=spm.p=c()
+for (i in 1:ncol(parametersamples)){
+  hd[[i]]=hoeffd(x=parametersamples[,i], y=output)$D[1,2]
+  hd.p[[i]]=hoeffd(x=parametersamples[,i], y=output)$P[1,2]
+  spm[[i]]= cor.test(x=parametersamples[,i], y=output,  method = "spearman")$estimate
+  spm.p[[i]]=cor.test(x=parametersamples[,i], y=output,  method = "spearman")$p.value
+}
+corr.table=data.frame(Parameters=parameters, 
+                      HoeffdingD=format(round(hd, 3), nsmall = 3), 
+                      HoeffdingD.p=format(round(hd.p, 3), nsmall = 3), 
+                      SpearmanRank=format(round(spm, 3), nsmall = 3), 
+                      SpearmanRank.p=format(round(spm.p, 3), nsmall = 3))
+colnames(corr.table)=c('Parameters',
+                       'Hoeffding`s D measure', 'Hoeffding`s D p-value', 
+                       'Spearman`s rank correlation measure', 'Spearman`s rank correlation p-value')
+xtable(corr.table)
+
+#2. Check agreement between runs to decide if our sample size for adequate 
+# Symmetric Best Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.
+(mySbma <- sbma(output1, output2))
+# value of -1 indicates complete disagreement between the runs 
+# value of 1 indicated complete agreement  (>0.7 acceptable)
+# caveat: if none of the model parameters is monotonically correlated with the output, 
+# the agreement between runs may stay as low as 0.2 even for very large hypercubes.
+
+# Visualization of analysis 
+
+##### Cobweb
+x.samples<-x.samples[, match(rownames(prcc), names(x.samples))] 
+outcome.df<-as.data.frame(cbind(x.samples,y.output)) #dummy matrix with parameter values in columns and outcome in last column
+for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that produced top 5% of the outcomes
+  if (outcome.df$y.output[i]<quantile(outcome.df$y.output,probs = 0.85)) { 
+    outcome.df$top5[i] <-0 } else {
+      outcome.df$top5[i] <-1
+    }
+}
+require(plotrix) #load MASS package
+blue<-alpha("lightskyblue", alpha=0.05)
+red<-alpha("#E85D75", alpha=0.15)
+colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
+outcome.df$top5<- as.factor(outcome.df$top5)
+parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
+{
+  df <- as.data.frame(x)
+  pr <- lapply(df, pretty)
+  rx <- lapply(pr, range, na.rm = TRUE)
+  x <- mapply(function(x,r) {
+    (x-r[1])/(r[2]-r[1])
+  },
+  df, rx)
+  matplot(1L:ncol(x), t(x), type = "l", col = col, lty = lty, 
+          xlab = "", ylab = "Sampled parameter values", axes = FALSE,...)
+  axis(1, at = 1L:ncol(x), labels = c(colnames(x)), las = 2, cex.axis=0.7)
+  for (i in 1L:ncol(x)) {
+    lines(c(i, i), c(0, 1), col = "grey")
+    text (c(i, i), seq(0,1,length.out=length(pr[[i]])), labels = pr[[i]], 
+         xpd = NA, col=lblcol, cex=0.5)
+  }
+  invisible()
+}
+c=parcoordlabel(outcome.df[,c(1:length(parameters))], col = colors[outcome.df$top5])
+
+##put cobweb and PRCC together 
+
+##### pic (partial inclination coefficient) is the sensitivity" of the model response in respect to each parameter
+pic(output1, nboot=40) 
+#represent the beta terms in y = alpha + beta*x regressions, after removing the linear effect of the other parameters
+

@@ -51,10 +51,10 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     abx.r = 1-(1-abx.r)^(1/timestep)
     abx.s = 1-(1-abx.s)^(1/timestep)
     
-    if (abx.r<0.05) { #if abx.r is ineffective in scenario B - resistance = CRE 
+    if (abx.r < 0.05) { #if abx.r is ineffective in scenario B - resistance = CRE 
       abx.r.aginst.s =abx.s #remains effective for s  
       abx.r.aginst.r =abx.r #ineffective for r 
-    } else { # if abx.r is effective in scenario B - resistance = ESBL
+    } else { # if abx.r is effective in scenario A - resistance = ESBL
       abx.r.aginst.s =abx.r #effective for both s and r 
       abx.r.aginst.r =abx.r
     }
@@ -319,6 +319,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             
             sr_idx = Sr[roll < abx.r.aginst.s]
             same_idx= Sr[roll >= abx.r.aginst.s]
+            
             colo.matrix[i, sr_idx] = "sr"
             colo.matrix[i, same_idx] = "Sr"
         }
@@ -344,8 +345,9 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
             
             roll = runif(length(sR), 0, 1)
             
-            sr_idx = sR[roll < abx.r.aginst.r + mu]
-            same_idx= sR[roll >= abx.r.aginst.r + mu]
+            sr_idx = sR[roll < abx.r.aginst.r]
+            same_idx= sR[roll >= abx.r.aginst.r]
+            
             colo.matrix[i, sr_idx] = "sr"
             colo.matrix[i, same_idx] = "sR"
         }
