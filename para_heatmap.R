@@ -13,7 +13,7 @@ source('model_simple.R')
 source('model_binary.R')
 source('model_frequency.R')
 
-parameters=as.factor(unique(c(parameters_diff_prevalence_simple, parameters_diff_prevalence_binary, parameters_diff_prevalence_freq)))
+parameters=as.factor(unique(c(parameters_prevalence_simple, parameters_prevalence_binary, parameters_prevalence_freq)))
 levels(parameters) =  rev(c("n.bed", "max.los", #ward level
                             "prop_R", "prop_S_nonR","prop_Sr_inR","prop_sr_inR", "total_prop", "K", "r_mean", #Carriage status on day one of admission to the ward  
                             "repop.s","s_growth", #Regrowth of susceptible Enterobacteriaceae 
@@ -22,7 +22,7 @@ levels(parameters) =  rev(c("n.bed", "max.los", #ward level
                             "mu",#decolonisation 
                             "abx.s", "abx.r", #antibiotics killing
                             "p.infect", "p.r.day1", "cum.r.1", #Number of antibiotic prescriptions 
-                            "short_dur", "long_dur")) #antibiotics duration 
+                            "meanDur")) #antibiotics duration 
 labs.df=data.frame(parameters=parameters, values=NA)
 models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3', 
          'Scenario B\n Model 1', 'Scenario B\n Model 2', 'Scenario B\n Model 3', 
@@ -40,7 +40,7 @@ models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3',
 # }
 
 getposition<-function(data,labs=labs.df){
-  prcc= data$prcc[[3]]$PRCC
+  prcc= data$prcc[[2]]$PRCC
   prcc$ranking=NA
   prcc= prcc[order(prcc$original),] #arrange in ranking order
   low = which(prcc$`min. c.i.` < 0 & prcc$`max. c.i.`< 0)
@@ -92,9 +92,9 @@ ggplot(forplot, aes(model, parameters)) +
   scale_fill_gradientn(colours=c("#388697",'#fbfae5',"#EB5160"),
                        na.value = "white", 
                        breaks=c(min(forplot$ranking, na.rm = T),0,max(forplot$ranking, na.rm = T)),
-                       labels=c('Higher value decreases difference in\nprevalence of resistant carriers',
+                       labels=c('Higher value favours long duration',
                                 'Does not affect difference in\nprevalence of resistant carriers', 
-                                'Higher value increases difference in\nprevalence of resistant carriers'))+
+                                'Higher value favours short duration'))+
   theme_grey(base_size = base_size) + 
   labs(x = "", y="", fill = "")+ 
   scale_x_discrete(expand = c(0, 0)) +

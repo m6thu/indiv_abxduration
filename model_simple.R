@@ -329,10 +329,10 @@ diff_prevalence <- function(n.bed, max.los,
     return(array(c(totalR_long, totalR_short, totalR_long - totalR_short)))
 }
 
-prevalence <- function(n.bed, max.los, 
-                            prop_R, prop_S_nonR, 
-                            bif, pi_ssr, repop.s, mu, abx.s, abx.r,
-                            p.infect, cum.r.1, p.r.day1, meanDur){
+prevalence <- function(n.bed, max.los,
+                       prop_R, prop_S_nonR,
+                       bif, pi_ssr, repop.s, mu, abx.s, abx.r,
+                       p.infect, cum.r.1, p.r.day1, meanDur){
     
     old = Sys.time() # get start time
     # DEBUG

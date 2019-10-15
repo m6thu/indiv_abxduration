@@ -92,14 +92,6 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         # apply effects to current table (abs first because log of a negative number is NaN)
         R_table[i, j] = exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
         
-        # if (R_grow>0){
-        #   print(paste0('capacity',exp(total_capacity[i, j])))
-        #   print(paste0('old R',exp(R_table[i-1, j])))
-        #   print(paste0('R_grow',R_grow))
-        #   print(paste0('old S',exp(S_table[i-1, j])))
-        #   print(paste0('new R',exp(R_table[i, j])))
-        # }
-        
         # trim if value goes beyond range
         if(R_table[i, j] > exp(total_capacity[i, j])){
           R_table[i, j] = exp(total_capacity[i, j]) #abs

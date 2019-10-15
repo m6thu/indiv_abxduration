@@ -5,9 +5,9 @@ rm(list=ls()) # Clean working environment
 library(ggplot2)
 library(ggpubr)
 
-sd=get(load('runs/LHS2_simple_60005Aug2019_2050GMT.Rdata'))
-bd=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
-fd=get(load('runs/LHS_frequency_130006Aug2019_1900GMT.Rdata'))
+sd=get(load('runs/LHSdiff_simple_1100_zero21Sep2019_2140BST.Rdata'))
+bd=get(load('runs/LHSdiff_binary_1300_zero_23Sep2019_0028BST.Rdata'))
+fd=get(load('runs/LHSdiff_frequency_2100_zero_24Sep2019_0845BST.Rdata'))
 
 scaleFUN <- function(x) sprintf("%.2f", x) #keep x axis decimal 2 places
 

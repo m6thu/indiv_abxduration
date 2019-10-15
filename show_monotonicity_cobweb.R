@@ -1,9 +1,9 @@
 library(epiR) #calculate p values for PRCC
 library(pse)
 
-output1=get(load('runs/LHSdiff_binary_1200_zero_22Sep2019_2141BST.Rdata'))
-output2=get(load('runs/LHSdiff_binary_1300_zero_23Sep2019_0028BST.Rdata'))
-parameters<-parameters_diff_prevalence_binary
+output1=get(load('runs/LHS_binary_600_notzero_24Sep2019_1912BST.Rdata'))
+output2=get(load('runs/LHS_binary_700_notzero_24Sep2019_2007BST.Rdata'))
+parameters<-parameters_diff_prevalence_freq
 
 # 1. Check monotonicity 
 ##### scatterplot - see show_scatterplot

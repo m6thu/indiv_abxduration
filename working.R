@@ -1,4 +1,4 @@
-model='binary'
+model='frequency'
 source('default_params.R')
 source(paste0('model_',model,'.R'))
 
@@ -12,6 +12,17 @@ prevalence(n.bed,max.los,
            p.infect, cum.r.1, p.r.day1, meanDur)
 
 #binary 
+n.day=300
+max.los=7
+timestep=1
+matrixes=los.abx.table(n.bed, n.day, max.los,
+                       p.infect, p.r.day1, cum.r.1, 
+                       meanDur, timestep)
+patient.matrix=matrixes[[1]]
+abx.matrix=matrixes[[2]]
+los.array=summary.los(patient.matrix)
+colo.matrix=colo.table(patient.matrix, los.array, prop_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR)
+
 diff_prevalence(n.bed, max.los, 
                 prop_R, prop_S_nonR, prop_Sr_inR, prop_sr_inR,
                 bif, pi_ssr, repop.s, repop.r, mu, abx.s, abx.r, 
@@ -26,6 +37,8 @@ prevalence(n.bed, max.los,
 n.day=300
 max.los=7
 timestep=1
+abx.s=11
+abx.r=11
 matrixes=los.abx.table(n.bed, n.day, max.los,
                        p.infect, p.r.day1, cum.r.1, 
                        meanDur, timestep)

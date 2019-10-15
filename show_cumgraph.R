@@ -13,12 +13,12 @@ library(ggplot2)
 library(ggpubr)
 
 #load data from runs 
-dA.simple=get(load('runs/LHS2_simple_60005Aug2019_2050GMT.Rdata')) #abxr>0
-dA.binary=get(load('runs/LHSdiff_binary_1000_notzero_13Aug2019_0520BST.Rdata'))
-dA.freq=get(load('runs/LHS_frequency_100006Aug2019_1354GMT.Rdata'))
-dB.simple=get(load('runs/LHSdiff_binary_900_zero_13Aug2019_1455BST.Rdata'))#abxr=0
-dB.binary=get(load('runs/LHS2_binary_80007Aug2019_0819GMT.Rdata'))
-dB.freq=get(load('runs/LHS_frequency_150008Aug2019_0008GMT.Rdata'))
+dA.simple=get(load('runs/LHSdiff_simple_1100_notzero21Sep2019_1937BST.Rdata')) #abxr>0
+dA.binary=get(load('runs/LHSdiff_binary_1300_notzero_23Sep2019_0620BST.Rdata'))
+dA.freq=get(load('runs/LHSdiff_frequency_1500_notzero_23Sep2019_1241BST.Rdata'))
+dB.simple=get(load('runs/LHSdiff_simple_1100_zero21Sep2019_2140BST.Rdata'))#abxr=0
+dB.binary=get(load('runs/LHSdiff_binary_1300_zero_23Sep2019_0028BST.Rdata'))
+dB.freq=get(load('runs/LHSdiff_frequency_2100_zero_24Sep2019_0845BST.Rdata'))
 
 df1A= data.frame(combi=c(1:length(dA.simple$res)),variable=rep('Model 1A', length(dA.simple$res)) ,value=dA.simple$res[,3,1])
 df1B= data.frame(combi=c(1:length(dB.simple$res)),variable=rep('Model 1B', length(dB.simple$res)) ,value=dB.simple$res[,3,1])

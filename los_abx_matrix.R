@@ -27,24 +27,33 @@ los.abx.table <- function(n.bed, n.day, max.los,
     all_abx= rep(list(NA),n.patient.max)
     
     #day 1 of admission
+    #varying duration 
     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
-    abx_days.s = round(rtnorm(100, mean=meanDur, lower=1))
+    #abx_days.s = round(rtnorm(100, mean=meanDur, lower=1))
     #number of days of r antibiotic is randomly drawn from a truncated normal distribution
-    abx_days.r = round(rtnorm(100, mean=meanDur, lower=1))
+    #abx_days.r = round(rtnorm(100, mean=meanDur, lower=1))
     
+    #day 1 of admission 
     no.abx.r.day1=round(n.patient.max*p.infect*p.r.day1)#broad spectrum spectrum antibiotics for community acquired infection 
     no.abx.s.day1=round(n.patient.max*p.infect*(1-p.r.day1)) #narrow spectrum antibiotics for community acquired infection 
     no.abx.none.day1=n.patient.max-no.abx.r.day1-no.abx.s.day1
-    id.abx=split(patient.id, sample(rep(1:3, c(no.abx.r.day1, 
+    
+    id.abx=split(patient.id, sample(rep(1:3, c(no.abx.r.day1, #id of patients in each of these groups
                                                no.abx.s.day1,
                                                no.abx.none.day1))))
-    id.abx.r.day1=id.abx$`1`
-    id.abx.s.day1=id.abx$`2`
+    id.abx.r.day1=id.abx$`1` #id of patients given broad spectrum antibiotics on day 1
+    id.abx.s.day1=id.abx$`2` #id of patients given narrow spectrum antibiotics on day 1
     
-    all_abx[id.abx.r.day1]= rep2(2,times=sample(abx_days.r,length(id.abx.r.day1), replace = T))
-    all_abx[id.abx.s.day1]= rep2(1,times=sample(abx_days.s,length(id.abx.s.day1), replace = T))
+    # varying durations 
+    #all_abx[id.abx.r.day1]= rep2(2,times=sample(abx_days.r,length(id.abx.r.day1), replace = T))
+    #all_abx[id.abx.s.day1]= rep2(1,times=sample(abx_days.s,length(id.abx.s.day1), replace = T))
+    
+    #uniform durations 
+    all_abx[id.abx.r.day1]= rep(list(rep(2, meanDur)), length(id.abx.r.day1))
+    all_abx[id.abx.s.day1]= rep(list(rep(2, meanDur)), length(id.abx.s.day1))
+    
     for (i in 1:length(all_abx)){
-        all_abx[[i]]=all_abx[[i]][1:all_los[i]] #extend length to los ##SLOW
+        all_abx[[i]]=all_abx[[i]][1:all_los[i]] #extend length to los
         all_abx[[i]][is.na(all_abx[[i]])]=0 #those NA to be replaced by 0 
     }
     
@@ -65,7 +74,7 @@ los.abx.table <- function(n.bed, n.day, max.los,
             abx.r.after= which(abx.r.after.binary==1) 
             abx.r.after= abx.r.after[abx.r.after <= all_los[i]]
             for (k in 1: length(abx.r.after)){
-                r.dur=sample(abx_days.r,1)
+                r.dur=meanDur
                 start=abx.r.after[k] #abx.r start date
                 end= abx.r.after[k]+r.dur-1 #abx.r end date
                 all_abx[[i]][start:end]=2

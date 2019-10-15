@@ -16,6 +16,9 @@ source("default_params.R")
 source('los_abx_matrix.R')
 source(paste0("model_", model,".R"))
 
+abx.s=0.2
+abx.r=0.00000001
+
 dataformosaic<-function(data,label,n.bed=n.bed, n.day=n.day, timestep=timestep){
     
     data.t=t(data)

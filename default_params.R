@@ -34,4 +34,5 @@ r_growth = 0.02                  # r_growth = growth constant for logistic growt
 s_growth = 0.02
 r_mean = 0.12                    # r_thres = R threshold level for tranmissibility
 r_thres=0.5
-
+abx.s=11
+abx.r=11
