@@ -15,10 +15,10 @@ source('model_frequency.R')
 
 parameters=as.factor(unique(c(parameters_prevalence_simple, parameters_prevalence_binary, parameters_prevalence_freq)))
 levels(parameters) =  rev(c("n.bed", "max.los", #ward level
-                            "prop_S", "prop_Sr","prop_r","prop_R", "total_prop", "K", "r_mean", #Carriage status on day one of admission to the ward  
+                            "prop_S", "prop_Sr","prop_r","prop_R", "total_prop", "K", #Carriage status on day one of admission to the ward  
                             "repop.s","s_growth", #Regrowth of susceptible Enterobacteriaceae 
                             "repop.r", "r_growth",  #Regrowth of resistant Enterobacteriaceae 
-                            "r_thres", "pi_ssr","bif", #Transmission of resistant Enterobacteriaceae 
+                            "r_thres", "r_trans","pi_ssr","bif", #Transmission of resistant Enterobacteriaceae 
                             "mu",#decolonisation 
                             "abx.s", "abx.r", #antibiotics killing
                             "p.infect", "p.r.day1", "cum.r.1", #Number of antibiotic prescriptions 
@@ -121,6 +121,6 @@ ggplot(forplot, aes(model, parameters)) +
         axis.text.x = element_text(size = base_size, angle = 330, hjust = 0, colour = "grey50"))+
   annotate(geom = 'text', x=1, y=c(1:length(parameters)), label=Amodel1.p[,1], colour='grey40', size=3)+
   guides(fill=guide_colorbar(nbin = 200, raster = F))+
-  geom_hline(yintercept=c(1.5, 4.5, 6.5, 7.5, 10.5, 14.5, 21.5), color='grey', size=0.5)+
+  geom_hline(yintercept=c(1.5, 4.5, 6.5, 7.5, 11.5, 15.5, 21.5), color='grey', size=0.5)+
   geom_vline(xintercept = 4.5,  color = "black", size=0.5)
 

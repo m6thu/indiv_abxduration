@@ -13,16 +13,6 @@ los.abx.table <- function(n.bed, n.day, max.los,
                           p.infect, p.r.day1, cum.r.1, 
                           meanDur, timestep){
     
-    # Debug
-    n.bed <- 5
-    n.day <- 10
-    mean.max.los <- 3
-    p.infect <- 0.5
-    p.r.day1 <- 0.2
-    cum.r.1 <- 10
-    meanDur <- 1
-    timestep <- 1
-    
     # number of slots in the patient matrix 
     # (maximum number of patients if everyone stays only for 1 day)
     n.patient.max <- n.bed*n.day 

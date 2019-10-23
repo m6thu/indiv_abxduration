@@ -15,9 +15,11 @@ prop_R = 0.3                     # Probability of being colonized with resistant
 prop_S = 0.8                # Proportion of large S within non-resistant states (S+s)
 bif = 0.5                        # bacterial interference factor 
 mu = 0.01                        # mu1= probability of clearance of Sr to become S
-pi_ssr = 0.0002                  # pi_s= probability of R transmitting to ss
+pi_ssr = 0.01                  # pi_s= probability of R transmitting to ss
 repop.s = 0.01
 cum.r.1=500
+
+
 
 ############## Binary model ###################
 prop_S = 0.8                # Proportion of large S within non-resistant states (S+s)
@@ -32,5 +34,5 @@ total_prop = 0.4                 # mean of total starting amount of gut bacteria
 #r_sd = 1.8921                   # sd of starting amount of resistant gut bacteria on log scale
 r_growth = 0.05                  # r_growth = growth constant for logistic growth
 s_growth = 0.015
-r_mean = 0.1                    # r_thres = R threshold level for tranmissibility
-r_thres=0.5
+r_trans = 5                    # r_thres = R threshold level for tranmissibility
+r_thres=0.2

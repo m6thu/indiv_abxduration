@@ -1,7 +1,7 @@
 source('msm_util_rtnorm.R')
 source('los_abx_matrix.R')
 
-colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, r_thres, K){
+colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_trans, r_thres, K){
   
   n.day = nrow(patient.matrix)
   n.bed = ncol(patient.matrix)
@@ -19,12 +19,14 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, r_
   r_bact = rep(log(0), number_of_patients) #dummy vector
   prop_R_id = sample(1:number_of_patients, round(prop_R*number_of_patients)) #patients who carry R > thres
   
-  prop.r.ent = rexp(round(prop_R*number_of_patients),1/r_mean)#proportion of total amount of Enterobacteriaceae carried that is R
-  prop.r.ent.norm = (prop.r.ent-min(prop.r.ent))/(max(prop.r.ent)-min(prop.r.ent)) #normalised 
   
-  r_threshold_transmission = log(r_thres * exp(total_existing[prop_R_id])) 
-  r_amount = log((prop.r.ent.norm+1) * exp(r_threshold_transmission))  #total number of R for each patient (log)
-  r_amount[which(r_amount>total_existing[prop_R_id])] = total_existing[prop_R_id][which(r_amount>total_existing[prop_R_id])]
+  #prop.r.ent = rexp(round(prop_R*number_of_patients),1/r_mean)#proportion of total amount of Enterobacteriaceae carried that is R
+  #prop.r.ent.norm = (prop.r.ent-min(prop.r.ent))/(max(prop.r.ent)-min(prop.r.ent)) #normalised 
+  
+  #r_threshold_transmission = log(r_thres * exp(total_existing[prop_R_id])) 
+  #r_amount = log((prop.r.ent.norm+1) * exp(r_threshold_transmission))  #total number of R for each patient (log)
+  #r_amount[which(r_amount>total_existing[prop_R_id])] = total_existing[prop_R_id][which(r_amount>total_existing[prop_R_id])]
+  
   r_bact[prop_R_id] = r_amount
   s_bact = log(exp(total_existing) - exp(r_bact)) #total number of S for each patient (log)
   
@@ -39,16 +41,16 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, r_
     end_idx = end_idx + los.array[2, i]
   }
   
-  #transmission/threshold of R matrix 
-  r_thresholds = log(r_thres * exp(total_existing)) 
-  r_transmit_matrix= matrix(rep(r_thresholds, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
+  #transmission of R matrix 
+  r_transmit = rnorm(number_of_patients, mean=r_trans)
+  r_transmit_matrix= matrix(rep(r_transmit, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
   
   return(list(S_Bactlevelstart, R_Bactlevelstart, total_capacity_matrix, r_transmit_matrix)) # in log
 }
 
 # Update values for every day (define function)
 nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix, 
-                    pi_ssr, total_prop,  K, r_mean, r_growth, r_thres, s_growth,
+                    pi_ssr, total_prop,  K, r_trans, r_growth, r_thres, s_growth,
                     abx.s, abx.r, timestep){
   
   if (abx.r<0.05) { #if abx.r is ineffective in scenario B - resistance = CRE 
@@ -69,7 +71,7 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
   total_capacity=colo.matrix[[3]]
   
   #amount of R transferred 
-  r_trans=colo.matrix[[4]]
+  r_trans_matrix=colo.matrix[[4]]
   
   #threshold of Enterobacteriaceae before the patient can transmit 
   r_thres_matrix= log(r_thres* exp(total_capacity))
@@ -79,9 +81,12 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
     
     # calculate how many people has R above 0 (log)
     r_num = sum(R_table[i-1,] >= r_thres_matrix[i-1,])
+    n.bed = ncol(patient.matrix)
+    
     if (is.na(r_num)) {r_num=0}
+    
     # from number of r, calculate probability of transmission
-    prop_r = 1-((1-pi_ssr)^r_num) 
+    prop_r = 1-((1-pi_ssr)^(r_num/n.bed)) 
     
     ###### Convert all log scale parameters into normal scale for addition, then convert back to log
     #for each person:
@@ -112,28 +117,30 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
       
       #transmission of R if roll pass prob check 
       roll = runif(1, 0, 1) # roll for transmission
-      R_trans = exp(r_trans[i,j])*(roll < prop_r) # abs 
+      R_trans = exp(r_trans_matrix[i,j])*(roll < prop_r) # abs 
       
-      # trim range - transmission only happens if R and S have not exceeded total capacity
-      if( S_table[i, j] + R_table[i, j] > exp(total_capacity[i, j])){ 
+      # trim range 
+      ### transmission only happens if R and S have not exceeded total capacity and S is not fully occupying the capacity
+      if( S_table[i, j] + R_table[i, j] > exp(total_capacity[i, j])){ ## if existing S and R already exceed total capacity
         
-        ### no transmission if S and R more than total_capacity
-        S_table[i, j] = S_table[i, j] / (S_table[i, j] + R_table[i, j]) * exp(total_capacity[i, j]) #S and R each given their proportion of the total capacity (abs)
-        R_table[i, j] = R_table[i, j] / (S_table[i, j] + R_table[i, j]) * exp(total_capacity[i, j]) 
-        
-        } else { #transmission if S and R less than total_capacity
-          
-          if ( S_table[i, j] + R_table[i, j] + R_trans > exp(total_capacity[i, j])) {
+        if (R_table[i, j]<1) { ###  if the whole capacity is occupied by S, transmission happens with R_trans
+          R_table[i, j] = R_table[i, j] + R_trans 
+          S_table[i, j] = S_table[i, j] - R_trans 
+        } else { ### no transmission if S and R more than total_capacity
+          S_table[i, j] = S_table[i, j] / (S_table[i, j] + R_table[i, j]) * exp(total_capacity[i, j]) #S and R each given their proportion of the total capacity (abs)
+          R_table[i, j] = R_table[i, j] / (S_table[i, j] + R_table[i, j]) * exp(total_capacity[i, j]) 
+        }
+      } else { #transmission if S and R less than total_capacity
+        if ( S_table[i, j] + R_table[i, j] + R_trans > exp(total_capacity[i, j])) {
           ### transmission if S and R less than total_capacity but with transmission exceeds total_capacity
           S_table[i, j] = S_table[i, j] / (S_table[i, j] + R_table[i, j] + R_trans) * exp(total_capacity[i, j]) #S and R+R_trans each given their proportion of the total capacity (abs)
           R_table[i, j] = (R_table[i, j] + R_trans) / (S_table[i, j] + R_table[i, j] + R_trans) * exp(total_capacity[i, j]) 
-          
-          } else {
-            ### transmission if sum of S and R and transmitted R are less than the total capacity
-            #transmission happens with full amount of R_trans
-            R_table[i, j] = R_table[i, j] + R_trans 
-          }
+        } else {
+          ### transmission if sum of S and R and transmitted R are less than the total capacity
+          #transmission happens with full amount of R_trans
+          R_table[i, j] = R_table[i, j] + R_trans 
         }
+      }
       
       # covert to log 
       S_table[i, j] = log(S_table[i, j]) #log
@@ -147,13 +154,13 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
 
 diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
                             K, total_prop,  prop_R, pi_ssr, 
-                            r_mean, r_growth, r_thres, s_growth,
+                            r_trans, r_growth, r_thres, s_growth,
                             abx.s, abx.r, short_dur,long_dur){
   
   old = Sys.time() # get start time
   # DEBUG
   print(paste(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
-              K, total_prop,  prop_R, pi_ssr, r_mean, r_growth, r_thres, s_growth,
+              K, total_prop,  prop_R, pi_ssr, r_trans, r_growth, r_thres, s_growth,
               abx.s, abx.r, short_dur,long_dur))
   
   timestep = 1
@@ -171,11 +178,11 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     patient.matrix=matrixes[[1]]
     abx.matrix=matrixes[[2]]
     los.array = summary.los(patient.matrix=patient.matrix)
-    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean, r_thres=r_thres, K=K)
+    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_trans=r_trans, r_thres=r_thres, K=K)
     
     colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                       pi_ssr=pi_ssr, total_prop=total_prop, K=K, 
-                                      r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
+                                      r_trans=r_trans, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)
     # Summary - timestep by bed in absolute numbers
     df.R = data.frame(colo.matrix_filled_iter[[2]])
@@ -200,11 +207,11 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     patient.matrix=matrixes[[1]]
     abx.matrix=matrixes[[2]]
     los.array = summary.los(patient.matrix=patient.matrix)
-    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean, r_thres=r_thres, K=K)
+    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_trans=r_trans, r_thres=r_thres, K=K)
     
     colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                       pi_ssr=pi_ssr, total_prop=total_prop, K=K, 
-                                      r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
+                                      r_trans=r_trans, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)
     
     #Summary 
@@ -227,13 +234,13 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
 }
 
 prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
-                       K, total_prop,  prop_R, pi_ssr, r_mean, r_growth, r_thres, s_growth,
+                       K, total_prop,  prop_R, pi_ssr, r_trans, r_growth, r_thres, s_growth,
                        abx.s, abx.r, meanDur){
   
   old = Sys.time() # get start time
   # DEBUG
   print(paste(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
-              K, total_prop,  prop_R, pi_ssr, r_mean, r_growth, r_thres, s_growth,
+              K, total_prop,  prop_R, pi_ssr, r_trans, r_growth, r_thres, s_growth,
               abx.s, abx.r, meanDur))
   
   timestep = 1
@@ -250,10 +257,10 @@ prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     patient.matrix=matrixes[[1]]
     abx.matrix=matrixes[[2]]
     los.array = summary.los(patient.matrix=patient.matrix)
-    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, r_thres=r_thres, K=K)
+    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_trans = r_trans, r_thres=r_thres, K=K)
     
     colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
-                                      pi_ssr=pi_ssr, total_prop=total_prop, K=K, r_mean=r_mean, r_growth=r_growth,r_thres=r_thres, s_growth=s_growth,
+                                      pi_ssr=pi_ssr, total_prop=total_prop, K=K, r_trans=r_trans, r_growth=r_growth,r_thres=r_thres, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)
     # Summary
     df.R = data.frame(colo.matrix_filled_iter[[2]])
@@ -274,13 +281,20 @@ prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
 
 parameters_prevalence_freq <- c("n.bed", "max.los", "p.infect", "cum.r.1", "p.r.day1", 
                                 "K", "total_prop", "prop_R",
-                                "pi_ssr", "r_mean", "r_growth", 'r_thres', 's_growth',
+                                "pi_ssr", "r_trans", "r_growth", 'r_thres', 's_growth',
                                 "abx.s", "abx.r",
                                 "meanDur")
 
 parameters_diff_prevalence_freq <- c("n.bed", "max.los", "p.infect", "cum.r.1", "p.r.day1", 
                                      "K", "total_prop", "prop_R",
-                                     "pi_ssr", "r_mean", "r_growth", 'r_thres','s_growth',
+                                     "pi_ssr", "r_trans", "r_growth", 'r_thres','s_growth',
+                                     "abx.s", "abx.r",
+                                     "short_dur", "long_dur")
+
+
+parameters_diff_prevalence <- c("n.bed", "max.los", "p.infect", "cum.r.1", "p.r.day1", 
+                                     "K", "total_prop", "prop_R",
+                                     "pi_ssr", "r_trans", "r_growth", 'r_thres','s_growth',
                                      "abx.s", "abx.r",
                                      "short_dur", "long_dur")
 

@@ -37,7 +37,7 @@ parameters <- list(
     c("qunif", list(min=0, max=1), "prop_Sr"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
     c("qunif", list(min=0, max=1), "prop_S"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c("qunif", list(min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
-    c("qunif", list(min=0, max=0.002), "pi_ssr"),            #probability of being transmitted r to ss (ss—> ssr)
+    c("qunif", list(min=0.001, max=0.3), "pi_ssr"),            #probability of being transmitted r to ss (ss—> ssr)
     c("qunif", list(min=0.005, max=0.015), "repop.s"),     #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0.01, max=0.05), "repop.r"),     #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0.002, max=0.02), "mu"),          #probability of being decolonised to S (Sr—> S) 
