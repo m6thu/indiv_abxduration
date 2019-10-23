@@ -1,24 +1,3 @@
-# test.abx.r.after=function(cum.r.1, all_los){
-# 
-#      all_admission_days= lapply(all_los, function(x) seq(3, x, by=1)) #abx r only can start after 48h
-#      abx.r.after=list()
-# 
-#      for (i in 1:length(all_los)){
-#          probs=rnorm(100) #randomly draw 100 probabilities from a normal distribution
-#          probs.normalized = (probs - min(probs))/(max(probs)- min(probs)) #normalised probabilities
-#          p=ecdf(probs.normalized) #cumulative distribution
-#          prob.r.after=c(0,0, p((1/cum.r.1)*all_admission_days[[i]]))
-#          abx.r.after.binary=rbinom(all_los[i],1,prob = prob.r.after)
-# 
-#          if (sum(abx.r.after.binary)>0) { #if abx.r.after is not NA i.e. abx.r started after admission
-#              abx.r = which(abx.r.after.binary==1)
-#              abx.r.after[[i]]= abx.r[abx.r <= all_los[i]]
-#          }
-#      }
-#      return(abx.r.after)
-#  }
-#  test.abx.r.after(cum.r.1=10000, all_los=c(10,20,30,40,50,60)) 
-
 #generate a table of number of days we want to observe (rows) -
 # against number of beds in the ward (columns), filled in with patient id numbers
 # accomodating for increase in length of stay with hospital acquired infections
@@ -30,8 +9,7 @@ seq_along_admissiondates <- function(x){
 seqVec <- Vectorize(seq_along_admissiondates, vectorize.args = "x")
 repVec <- Vectorize(rep.int, vectorize.args = "times")
 
-# p.infect = probability of infection of both S and R
-los.abx.table <- function(n.bed, n.day, mean.max.los,
+los.abx.table <- function(n.bed, n.day, max.los,
                           p.infect, p.r.day1, cum.r.1, 
                           meanDur, timestep){
     
@@ -54,13 +32,14 @@ los.abx.table <- function(n.bed, n.day, mean.max.los,
     
     #length of stay for each patient if no hospital acquired infection 
     # (truncated normal distribution)
-    all_los <- ceiling(rexp(n.patient.max, 1/mean.max.los))
-    all_los[all_los > 5*mean.max.los] <- mean.max.los
+    all_los = ceiling(rexp(n.patient.max, 1/max.los))
+    all_los[all_los > 5*max.los] = max.los
     
     #decide if patients are on antibiotics 
     all_abx <- rep(list(NA), n.patient.max)
     
     #day 1 of admission
+    #varying duration 
     #number of days of s antibiotic is randomly drawn from a truncated normal distribution
     #number of days of r antibiotic is randomly drawn from a truncated normal distribution
     # round is dependent on OS and IEEE754 means round to the even number, don't think will have much effect
@@ -180,7 +159,7 @@ los.abx.table <- function(n.bed, n.day, mean.max.los,
 summary.los <- function(patient.matrix){    
     
     # Summarize how often each patient.id is encountered to get days for each id
-    los.dur = table(patient.matrix)
+    los.dur = table(patient.matrix) ##SLOW
     los_duration = array(dim = c(2, max(patient.matrix)))
     # Attach patient ID on 1st row
     los_duration[1,] = 1:max(patient.matrix)
