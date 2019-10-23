@@ -65,7 +65,7 @@ if(!(sum(factors == parameters_freq) ==  length(parameters_freq))){
 
 # Use the LHD function to generate a hypercube 
 old <- Sys.time() # get start time
-N=500
+N <- 1500
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, res.names, nboot=1000,cl=cl)
 # print elapsed time
 new <- Sys.time() - old # calculate difference
