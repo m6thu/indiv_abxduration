@@ -22,11 +22,11 @@ parameters <- list(
     c(runif(1,min=0,max=1), "prop_R"),              # mean of starting amount of resistant gut bacteria on log scale
     c(runif(1,min=0,max=0.002), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
     c(runif(1,min=0,max=1), "r_mean"),             # r_mean= R threshold level for tranmissibility
-    c(runif(1,min=0.01,max=0.1), "r_growth"),           # r_growth = growth constant for logistic growth
+    c(runif(1,min=0.01,max=0.05), "r_growth"),           # r_growth = growth constant for logistic growth
     c(runif(1,min=0,max=0.9), "r_thres"),             # r_thres = threshold amount of bacteria before R can be transmitted
-    c(runif(1,min=0.01,max=0.1), "s_growth"),           # r_growth = growth constant for logistic growth
+    c(runif(1,min=0.005,max=0.015), "s_growth"),           # r_growth = growth constant for logistic growth
     c(runif(1,min=10,max=15), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-    c(runif(1,min=0,max=0.00000001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+    c(runif(1,min=10,max=15), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
     c(runif(1,min=3, max=7), "short_dur"),           #mean short duration of narrow spectrum antibiotics (normal distribution) 
     c(runif(1,min=14, max=21), "long_dur")           #mean long duration of narrow spectrum antibiotics (normal distribution)
 )
@@ -55,7 +55,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_freq/test_scenarioB/'
+dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_freq/test_scenarioA/'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){

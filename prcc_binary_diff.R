@@ -32,17 +32,17 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"),              #n.bed; number of beds in the ward
     c("qunif", list(min=3, max=20), "max.los"),       #max.los; mean of length of stay (exponential distribution)
-    c("qunif", list(min=0, max=1), "prop_R"),    #probability of initial carriage of resistant organisms
-    c("qunif", list(min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
-    c("qunif", list(min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
-    c("qunif", list(min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
+    c("qunif", list(min=0, max=0.5), "prop_R"),    #probability of initial carriage of resistant organisms
+    c("qunif", list(min=0, max=1), "prop_r"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
+    c("qunif", list(min=0, max=1), "prop_Sr"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
+    c("qunif", list(min=0, max=1), "prop_S"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c("qunif", list(min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
     c("qunif", list(min=0, max=0.002), "pi_ssr"),            #probability of being transmitted r to ss (ss—> ssr)
-    c("qunif", list(min=0.002, max=0.02), "repop.s"),     #probability of regrowth of S  (s—>S)
+    c("qunif", list(min=0.005, max=0.015), "repop.s"),     #probability of regrowth of S  (s—>S)
     c("qunif", list(min=0.01, max=0.05), "repop.r"),     #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0.002, max=0.02), "mu"),          #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0.1, max=0.5), "abx.s"),           #probability of clearing S to become s
-    c("qunif", list(min=0.1, max=0.5), "abx.r"),           #probability of clearing R to become r
+    c("qunif", list(min=0, max=0.0000001), "abx.r"),           #probability of clearing R to become r
     c("qunif", list(min=0.1, max=1), "p.infect"),          #probability of being prescribed narrow spectrum antibiotic
     c("qunif", list(min=10, max=1000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),          #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
@@ -66,9 +66,9 @@ if(!(sum(factors == parameters_diff_prevalence_binary) ==  length(parameters_dif
 
 #Run model and save runs 
 ##run 1
-abxr='notzero'
+abxr='zero'
 old <- Sys.time() # get start time
-N=1200
+N=1000
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format

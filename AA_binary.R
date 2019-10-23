@@ -26,17 +26,17 @@ clusterCall(cl, function() {source('model_binary.R')})
 parameters <- list(
     c(runif(1,min=5, max=50), "n.bed"),              #n.bed; number of beds in the ward
     c(runif(1,min=3, max=20), "max.los"),       #max.los; mean of length of stay (exponential distribution)
-    c(runif(1,min=0, max=1), "prop_R"),    #probability of initial carriage of resistant organisms
-    c(runif(1,min=0, max=1), "prop_S_nonR"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
-    c(runif(1,min=0, max=1), "prop_Sr_inR"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
-    c(runif(1,min=0, max=1), "prop_sr_inR"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
+    c(runif(1,min=0, max=0.5), "prop_R"),    #probability of initial carriage of resistant organisms
+    c(runif(1,min=0, max=1), "prop_r"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
+    c(runif(1,min=0, max=1), "prop_Sr"),         #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
+    c(runif(1,min=0, max=1), "prop_r"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c(runif(1,min=0, max=1), "bif"),                 #bacterial interference factor (pi_ssr = pi_r1 * bif )
     c(runif(1,min=0, max=0.002), "pi_ssr"),           #probability of being transmitted r to ss (ss—> ssr)
-    c(runif(1,min=0.002, max=0.02), "repop.s"),         #probability of regrowth of S  (s—>S)
+    c(runif(1,min=0.005, max=0.015), "repop.s"),         #probability of regrowth of S  (s—>S)
     c(runif(1,min=0.01, max=0.05), "repop.r"),         #probability of regrowth of s (sr—> sR)
     c(runif(1,min=0.002, max=0.02), "mu"),             #probability of being decolonised to S (Sr—> S) 
     c(runif(1,min=0.1, max=0.5), "abx.s"),           #probability of clearing S to become s
-    c(runif(1,min=0.1, max=0.5), "abx.r"),        #probability of clearing R to become r
+    c(runif(1,min=0, max=0.000001), "abx.r"),        #probability of clearing R to become r
     c(runif(1,min=0.1, max=1), "p.infect"),        #probability of being prescribed narrow spectrum antibiotic
     c(runif(1,min=10, max=1000), "cum.r.1"),        #admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=1), "p.r.day1"),        #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
@@ -69,7 +69,7 @@ for (i in 1: (max(iterationstotry)*numberofrepeatsineachiteration)){
   print(new) # print elapsed time
 } 
 
-dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_binary/test_scenarioA/'
+dirtostoreAAruns='/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/runs/ATest_binary/test_scenarioB/'
 
 #store simulation results in appropriate folders 
 for (i in iterationstotry){

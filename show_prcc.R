@@ -40,12 +40,13 @@ plotprcc<-function(LHS.run){
   return(plot)
 }
 
-simple_0=get(load('runs/LHS_simple_700_zero24Sep2019_1333BST.Rdata'))
-binary_0=get(load('runs/LHS_binary_700_zero_24Sep2019_1827BST.Rdata'))
-freq_0=get(load('runs/LHS_frequency_700_zero_24Sep2019_2131BST.Rdata'))
-simple_not0=get(load('runs/LHS_simple_700_notzero24Sep2019_1612BST.Rdata'))
-binary_not0=get(load('runs/LHS_binary_700_notzero_24Sep2019_2007BST.Rdata'))
-freq_not0=get(load('runs/LHS_frequency_700_zero_24Sep2019_2131BST.Rdata'))
+simple_0=get(load('runs/LHS_simple_900_zero16Oct2019_1651BST.Rdata'))
+binary_0=get(load('runs/LHS_binary_900_zero_18Oct2019_1357BST.Rdata'))
+freq_0=get(load('runs/LHS_frequency_1200_zero_17Oct2019_1348BST.Rdata'))
+
+simple_not0=get(load('runs/LHS_simple_1000_notzero20Oct2019_2258BST.Rdata'))
+binary_not0=get(load('runs/LHS_binary_1000_notzero_21Oct2019_0018BST.Rdata'))
+freq_not0=get(load('runs/LHS_frequency_1500_notzero_21Oct2019_0158BST.Rdata'))
 
 simple0 = plotprcc(simple_0)
 binary0 = plotprcc(binary_0)

@@ -33,7 +33,7 @@ plot.stability <- function (model) { # model can be "simple", "binary", or "freq
       abx.matrix=matrixes[[2]]
       los.array = summary.los(patient.matrix=patient.matrix)
       colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                               prop_R=prop_R,prop_S_nonR=prop_S_nonR)
+                               prop_R=prop_R,prop_S=prop_S)
       
       colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                        abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -56,7 +56,7 @@ plot.stability <- function (model) { # model can be "simple", "binary", or "freq
       abx.matrix=matrixes[[2]]
       los.array = summary.los(patient.matrix=patient.matrix)
       colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                               prop_R=prop_R,prop_S_nonR=prop_S_nonR)
+                               prop_R=prop_R,prop_S=prop_S)
       
       colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, 
                                        abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
@@ -100,7 +100,7 @@ plot.stability <- function (model) { # model can be "simple", "binary", or "freq
       abx.matrix=matrixes[[2]]
       los.array = summary.los(patient.matrix=patient.matrix)
       colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                               prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                               prop_R=prop_R, prop_S=prop_S, prop_Sr=prop_Sr, prop_r=prop_r)
       colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                        pi_ssr=pi_ssr, bif=bif, mu=mu,
                                        repop.s=repop.s, repop.r=repop.r, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
@@ -122,7 +122,7 @@ plot.stability <- function (model) { # model can be "simple", "binary", or "freq
       abx.matrix=matrixes[[2]]
       los.array = summary.los(patient.matrix=patient.matrix)
       colo.matrix = colo.table(patient.matrix=patient.matrix, los=los.array, 
-                               prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                               prop_R=prop_R, prop_S=prop_S, prop_r=prop_r, prop_Sr=prop_Sr)
       colo_table_filled_iter = nextDay(patient.matrix=patient.matrix, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                        pi_ssr=pi_ssr, bif=bif, mu=mu,
                                        repop.s=repop.s, repop.r=repop.r, abx.r=abx.r, abx.s=abx.s, timestep=timestep)
@@ -163,7 +163,7 @@ plot.stability <- function (model) { # model can be "simple", "binary", or "freq
       patient.matrix=matrixes[[1]]
       abx.matrix=matrixes[[2]]
       los.array = summary.los(patient.matrix=patient.matrix)
-      colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean,K=K)
+      colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean,r_thres=r_thres,K=K)
       
       colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                         pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
@@ -186,7 +186,7 @@ plot.stability <- function (model) { # model can be "simple", "binary", or "freq
       patient.matrix=matrixes[[1]]
       abx.matrix=matrixes[[2]]
       los.array = summary.los(patient.matrix=patient.matrix)
-      colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_mean=r_mean,K=K)
+      colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_mean=r_mean,r_thres=r_thres,K=K)
       
       colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                         pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth,r_thres=r_thres, s_growth=s_growth,
@@ -241,5 +241,12 @@ figure=ggarrange(
   nrow=3)
 annotate_figure(figure,
                 top = text_grob("             Scenario A                                                                                                 Scenario B"),
-                left = text_grob("    Model 1                                                                                Model 2                                                                                Model 3   ", rot = 90))
+                left = text_grob("    Model 3                                                                                Model 2                                                                                Model 1   ", rot = 90))
+
 #save as png 1000 by 1200
+setwd('/Users/moyin/Desktop/')
+png(filename="stability.png", width = 1000, height = 1200)
+annotate_figure(figure,
+                top = text_grob("             Scenario A                                                                                                                                    Scenario B"),
+                left = text_grob("    Model 1                                                                                                                Model 2                                                                                                           Model 3   ", rot = 90))
+dev.off() 

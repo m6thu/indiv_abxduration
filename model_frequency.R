@@ -1,7 +1,7 @@
 source('msm_util_rtnorm.R')
 source('los_abx_matrix.R')
 
-colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, K){
+colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, r_thres, K){
   
   n.day = nrow(patient.matrix)
   n.bed = ncol(patient.matrix)
@@ -9,23 +9,24 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, K)
   number_of_patients = dim(los.array)[2]
   
   #total capacity for enterobacteriaceae growth (log)
-  total_capacity = rnorm(number_of_patients, K)
+  total_capacity = rnorm(number_of_patients, mean=K)
   total_capacity_matrix= matrix(rep(total_capacity, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
   
   #existing population 
-  total_prop= rnorm(number_of_patients,total_prop)
-  total_prop.norm= (total_prop-min(total_prop))/(max(total_prop)-min(total_prop)) #normalised proportion 
-  total_existing= log(total_prop.norm*exp(total_capacity)) #total number of Enterobacteriaceae is a proportion of the total capacity (log)
+  total_existing= log(total_prop*exp(total_capacity)) #total number of Enterobacteriaceae is a proportion of the total capacity (log)
   
-  prop_R_id = sample(1:number_of_patients, prop_R*number_of_patients) #patients who carry resistant organisms
-  prop.r.ent= rtnorm(number_of_patients, mean=r_mean, lower=0)
-  prop.r.ent.norm= (prop.r.ent-min(prop.r.ent))/(max(prop.r.ent)-min(prop.r.ent))#proportion of R in total population of Enterobacteriaceae (normalised)
-  r_transmitted= log(prop.r.ent.norm*exp(total_existing))
-  r_transmit_matrix= matrix(rep(r_transmitted, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
+  #amount of S and R carried 
+  r_bact = rep(log(0), number_of_patients) #dummy vector
+  prop_R_id = sample(1:number_of_patients, round(prop_R*number_of_patients)) #patients who carry R > thres
   
-  r_bact = rep(log(0), number_of_patients)
-  r_bact[prop_R_id]= log(prop.r.ent.norm[prop_R_id]*exp(total_existing[prop_R_id])) #total number of resistant Enterobacteriaceae for each patient (log)
-  s_bact = log(exp(total_existing) - exp(r_bact)) #total number of sensitive Enterobacteriaceae for each patient (log)
+  prop.r.ent = rexp(round(prop_R*number_of_patients),1/r_mean)#proportion of total amount of Enterobacteriaceae carried that is R
+  prop.r.ent.norm = (prop.r.ent-min(prop.r.ent))/(max(prop.r.ent)-min(prop.r.ent)) #normalised 
+  
+  r_threshold_transmission = log(r_thres * exp(total_existing[prop_R_id])) 
+  r_amount = log((prop.r.ent.norm+1) * exp(r_threshold_transmission))  #total number of R for each patient (log)
+  r_amount[which(r_amount>total_existing[prop_R_id])] = total_existing[prop_R_id][which(r_amount>total_existing[prop_R_id])]
+  r_bact[prop_R_id] = r_amount
+  s_bact = log(exp(total_existing) - exp(r_bact)) #total number of S for each patient (log)
   
   S_Bactlevelstart = matrix(NA, n.day, n.bed)
   R_Bactlevelstart = matrix(NA, n.day, n.bed)
@@ -37,6 +38,10 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_mean, K)
     R_Bactlevelstart[end_idx:(end_idx + los.array[2, i] - 1)] = c(r_bact[i], rep(NA, los.array[2, i]-1))
     end_idx = end_idx + los.array[2, i]
   }
+  
+  #transmission/threshold of R matrix 
+  r_thresholds = log(r_thres * exp(total_existing)) 
+  r_transmit_matrix= matrix(rep(r_thresholds, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
   
   return(list(S_Bactlevelstart, R_Bactlevelstart, total_capacity_matrix, r_transmit_matrix)) # in log
 }
@@ -71,35 +76,26 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
   
   # For each day (first day should be filled)
   for(i in 2:nrow(patient.matrix)){
+    
     # calculate how many people has R above 0 (log)
     r_num = sum(R_table[i-1,] >= r_thres_matrix[i-1,])
+    if (is.na(r_num)) {r_num=0}
     # from number of r, calculate probability of transmission
     prop_r = 1-((1-pi_ssr)^r_num) 
     
     ###### Convert all log scale parameters into normal scale for addition, then convert back to log
     #for each person:
     for(j in 1:ncol(patient.matrix)){
+      
       if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
-        
-        # roll for transmission
-        roll = runif(1, 0, 1)
         # calculate effect of R logistic bacteria growth (abs)
         R_grow = r_growth*exp(R_table[i-1, j])*(1 - ((exp(R_table[i-1, j]) + exp(S_table[i-1, j]))/exp(total_capacity[i, j]))) 
-        #add effect of transmission if roll pass prob check and if previous R level is 0 (abs)
-        R_trans = exp(r_trans[i,j])*(roll < prop_r)# & !R_table[i-1, j])
         # add effect of abx death if abx.matrix is r abx (== 2) (abs)
         R_abx = -(abx.matrix[i-1, j] == 2)*abx.r.aginst.r*R_grow
         # apply effects to current table (abs first because log of a negative number is NaN)
-        R_table[i, j] = exp(R_table[i-1, j]) + R_grow + R_trans + R_abx
-        
-        # trim if value goes beyond range
-        if(R_table[i, j] > exp(total_capacity[i, j])){
-          R_table[i, j] = exp(total_capacity[i, j]) #abs
-        }
-        if(R_table[i, j] < 1){ #if less than 1 bacteria
-          R_table[i, j] = 0 #abs
-        }
-        R_table[i, j] = log(R_table[i, j]) #log
+        R_table[i, j] = exp(R_table[i-1, j]) + R_grow + R_abx
+      } else {
+        R_table[i, j] = exp(R_table[i, j]) #if filled, change to abs
       }
       
       if(is.na(S_table[i, j])){ 
@@ -110,15 +106,39 @@ nextDay <- function(patient.matrix, los.array, abx.matrix, colo.matrix,
         S_abx_r = -(abx.matrix[i-1, j] == 2)*abx.r.aginst.s*S_grow
         # apply effects (abs first because log of a negative number is NaN)
         S_table[i, j] = exp(S_table[i-1, j]) + S_grow + S_abx_s + S_abx_r
-        # trim range
-        if(S_table[i, j] > exp(total_capacity[i, j])){
-          S_table[i, j] = exp(total_capacity[i, j])
-        }
-        if(S_table[i, j] < 1){ #if less than 1 bacteria
-          S_table[i, j] = 0
-        }
-        S_table[i, j] = log(S_table[i, j]) #log
+      } else { 
+        S_table[i, j] = exp(S_table[i, j]) #if filled, change to abs
       }
+      
+      #transmission of R if roll pass prob check 
+      roll = runif(1, 0, 1) # roll for transmission
+      R_trans = exp(r_trans[i,j])*(roll < prop_r) # abs 
+      
+      # trim range - transmission only happens if R and S have not exceeded total capacity
+      if( S_table[i, j] + R_table[i, j] > exp(total_capacity[i, j])){ 
+        
+        ### no transmission if S and R more than total_capacity
+        S_table[i, j] = S_table[i, j] / (S_table[i, j] + R_table[i, j]) * exp(total_capacity[i, j]) #S and R each given their proportion of the total capacity (abs)
+        R_table[i, j] = R_table[i, j] / (S_table[i, j] + R_table[i, j]) * exp(total_capacity[i, j]) 
+        
+        } else { #transmission if S and R less than total_capacity
+          
+          if ( S_table[i, j] + R_table[i, j] + R_trans > exp(total_capacity[i, j])) {
+          ### transmission if S and R less than total_capacity but with transmission exceeds total_capacity
+          S_table[i, j] = S_table[i, j] / (S_table[i, j] + R_table[i, j] + R_trans) * exp(total_capacity[i, j]) #S and R+R_trans each given their proportion of the total capacity (abs)
+          R_table[i, j] = (R_table[i, j] + R_trans) / (S_table[i, j] + R_table[i, j] + R_trans) * exp(total_capacity[i, j]) 
+          
+          } else {
+            ### transmission if sum of S and R and transmitted R are less than the total capacity
+            #transmission happens with full amount of R_trans
+            R_table[i, j] = R_table[i, j] + R_trans 
+          }
+        }
+      
+      # covert to log 
+      S_table[i, j] = log(S_table[i, j]) #log
+      R_table[i, j] = log(R_table[i, j]) #log
+      
     }
   }
   
@@ -138,13 +158,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
   
   timestep = 1
   n.day = 300
-  
-  if (abx.r> 1){ #scenario A
-    iterations= 100
-  } else { #scenario B
-    iterations= 50
-  }
- 
+  iterations= 100
   
   #iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
   iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
@@ -157,7 +171,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     patient.matrix=matrixes[[1]]
     abx.matrix=matrixes[[2]]
     los.array = summary.los(patient.matrix=patient.matrix)
-    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean, K=K)
+    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean, r_thres=r_thres, K=K)
     
     colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                       pi_ssr=pi_ssr, total_prop=total_prop, K=K, 
@@ -186,7 +200,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     patient.matrix=matrixes[[1]]
     abx.matrix=matrixes[[2]]
     los.array = summary.los(patient.matrix=patient.matrix)
-    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean, K=K)
+    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R, r_mean=r_mean, r_thres=r_thres, K=K)
     
     colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                       pi_ssr=pi_ssr, total_prop=total_prop, K=K, 
@@ -224,12 +238,7 @@ prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
   
   timestep = 1
   n.day = 300
-  
-  if (abx.r > 1){ #scenario A
-    iterations= 100
-  } else { #scenario B
-    iterations= 50
-  }
+  iterations= 100
   
   iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)
   
@@ -241,7 +250,7 @@ prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
     patient.matrix=matrixes[[1]]
     abx.matrix=matrixes[[2]]
     los.array = summary.los(patient.matrix=patient.matrix)
-    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean,K=K)
+    colo.matrix = colo.table(patient.matrix=patient.matrix, los.array=los.array, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, r_thres=r_thres, K=K)
     
     colo.matrix_filled_iter = nextDay(patient.matrix=patient.matrix, los.array=los.array, abx.matrix=abx.matrix, colo.matrix=colo.matrix, 
                                       pi_ssr=pi_ssr, total_prop=total_prop, K=K, r_mean=r_mean, r_growth=r_growth,r_thres=r_thres, s_growth=s_growth,

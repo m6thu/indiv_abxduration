@@ -41,11 +41,11 @@ parameters <- list(
     c("qunif", list(min=0, max=1), "prop_R"),            # probability of a patient coming into the ward carrying R
     c("qunif", list(min=0,max=0.002), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
     c("qunif", list(min=0,max=1), "r_mean"),             # r_mean = mean R proportion for those carrying R
-    c("qunif", list(min=0.01,max=0.1), "r_growth"),         # r_growth = growth constant for logistic growth
+    c("qunif", list(min=0.01,max=0.05), "r_growth"),         # r_growth = growth constant for logistic growth
     c("qunif", list(min=0,max=0.9), "r_thres"),             # r_thres = threshold amount of bacteria before R can be transmitted
-    c("qunif", list(min=0.01,max=0.1), "s_growth"),         # s_growth = amount transmitted on log scale
+    c("qunif", list(min=0.005,max=0.015), "s_growth"),         # s_growth = amount transmitted on log scale
     c("qunif", list(min=10,max=15), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-    c("qunif", list(min=0,max=0.0000001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+    c("qunif", list(min=10,max=15), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
     c("qunif", list(min=3, max=7), "short_dur"),           # mean short duration of narrow spectrum antibiotics (normal distribution) 
     c("qunif", list(min=14, max=21), "long_dur")           # mean long duration of narrow spectrum antibiotics (normal distribution)
     )
@@ -65,8 +65,8 @@ if(!(sum(factors == parameters_diff_prevalence_freq) ==  length(parameters_diff_
 
 # Use the LHS function to generate a hypercube 
 ##run 1
-abxr='zero'
-N=2000
+abxr='notzero'
+N=1000
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time

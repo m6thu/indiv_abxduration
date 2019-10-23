@@ -50,7 +50,7 @@ los.abx.table <- function(n.bed, n.day, max.los,
     
     #uniform durations 
     all_abx[id.abx.r.day1]= rep(list(rep(2, meanDur)), length(id.abx.r.day1))
-    all_abx[id.abx.s.day1]= rep(list(rep(2, meanDur)), length(id.abx.s.day1))
+    all_abx[id.abx.s.day1]= rep(list(rep(1, meanDur)), length(id.abx.s.day1))
     
     for (i in 1:length(all_abx)){
         all_abx[[i]]=all_abx[[i]][1:all_los[i]] #extend length to los

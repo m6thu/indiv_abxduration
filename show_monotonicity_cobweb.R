@@ -1,8 +1,8 @@
 library(epiR) #calculate p values for PRCC
 library(pse)
-
-output1=get(load('runs/LHS_binary_600_notzero_24Sep2019_1912BST.Rdata'))
-output2=get(load('runs/LHS_binary_700_notzero_24Sep2019_2007BST.Rdata'))
+setwd('Documents/nBox/git_projects/indiv_abxduration/')
+output1=get(load('runs/LHS_binary_800_zero_18Oct2019_1308BST.Rdata'))
+output2=get(load('runs/LHS_binary_900_zero_18Oct2019_1357BST.Rdata'))
 parameters<-parameters_diff_prevalence_freq
 
 # 1. Check monotonicity 

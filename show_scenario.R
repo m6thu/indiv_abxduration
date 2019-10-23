@@ -10,14 +10,14 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "binary"
+model <- "frequency"
 
 source("default_params.R")
 source('los_abx_matrix.R')
 source(paste0("model_", model,".R"))
 
-abx.s=0.2
-abx.r=0.00000001
+abx.s=10
+abx.r=10
 
 dataformosaic<-function(data,label,n.bed=n.bed, n.day=n.day, timestep=timestep){
     
@@ -26,7 +26,6 @@ dataformosaic<-function(data,label,n.bed=n.bed, n.day=n.day, timestep=timestep){
     colnames(data.t)=as.factor(1:(n.day*timestep))
     data.melt=melt(data.t)
     colnames(data.melt)=c('Bed number','Time (days)',label)
-    data.melt[,3]=as.factor(data.melt[,3])
     
     return(data.melt)
     
@@ -59,7 +58,7 @@ if(model == "simple"){
     abx.matrix.short=matrixes.short[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los=los.array.short, 
-                                   prop_R=prop_R,prop_S_nonR=prop_S_nonR)
+                                   prop_R=prop_R, prop_S=prop_S)
     
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, 
                                       abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
@@ -73,7 +72,7 @@ if(model == "simple"){
     abx.matrix.long=matrixes.long[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los=los.array.long, 
-                                  prop_R=prop_R,prop_S_nonR=prop_S_nonR)
+                                  prop_R=prop_R,prop_S=prop_S)
     
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, 
                                      abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
@@ -82,7 +81,9 @@ if(model == "simple"){
     #Plots 
     ####Abx use plots 
     mosaicdata.abx.short = dataformosaic(data=abx.matrix.short ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.abx.short$`Antibiotic type`=as.factor(mosaicdata.abx.short$`Antibiotic type`)
     mosaicdata.abx.long = dataformosaic(data=abx.matrix.long ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.abx.long$`Antibiotic type`=as.factor(mosaicdata.abx.long$`Antibiotic type`)
     
     winteralmond=c('white',"#87C2BE","#5E8E7B")
     lgdcol=rgb(0.185, 0.188, 0.154, alpha = .05)
@@ -90,7 +91,7 @@ if(model == "simple"){
     
     p.abx.short=ggplot(mosaicdata.abx.short, aes(`Time (days)`, `Bed number`)) + 
         geom_tile(aes(fill = `Antibiotic type`)) + 
-        scale_fill_manual(values=winteralmond,labels = c("none", "kill S", "kill R"),limits = c("0", "1", "2"), name='Antibiotic type')+
+        scale_fill_manual(values=winteralmond, labels = c("none", "kill S", "kill R"),limits = c("0", "1", "2"), name='Antibiotic type')+
         theme_bw(base_size=base_size) + 
         labs(title= 'Short antibiotic treatment duration',
              x = "Time (days)", y="Bed number")+ 
@@ -231,7 +232,7 @@ if(model == "simple"){
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
     colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los=los.array.short, 
-                             prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                             prop_R=prop_R, prop_r=prop_r, prop_Sr=prop_Sr, prop_S=prop_S)
     
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
                                       pi_ssr=pi_ssr, bif=bif, mu=mu, repop.r=repop.r,
@@ -246,7 +247,7 @@ if(model == "simple"){
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
     colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los=los.array.long, 
-                                   prop_R=prop_R, prop_S_nonR=prop_S_nonR, prop_Sr_inR=prop_Sr_inR, prop_sr_inR=prop_sr_inR)
+                                  prop_R=prop_R, prop_r=prop_r, prop_Sr=prop_Sr, prop_S=prop_S)
     
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
                                        pi_ssr=pi_ssr, bif=bif, mu=mu, repop.r=repop.r,
@@ -255,7 +256,9 @@ if(model == "simple"){
     #Plots 
     ####Abx use plots 
     mosaicdata.abx.short = dataformosaic(data=abx.matrix.short ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.abx.short$`Antibiotic type`=as.factor(mosaicdata.abx.short$`Antibiotic type`)
     mosaicdata.abx.long = dataformosaic(data=abx.matrix.long ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.abx.long$`Antibiotic type`=as.factor(mosaicdata.abx.long$`Antibiotic type`)
     
     winteralmond=c('white',"#87C2BE","#5E8E7B")
     lgdcol=rgb(0.185, 0.188, 0.154, alpha = .05)
@@ -403,11 +406,11 @@ if(model == "simple"){
     day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
-    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, K=K)
+    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, r_thres=r_thres, K=K)
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
-    r_thres_short=colo.matrix.short[[4]]
+    r_thres_short= colo.matrix.short[[4]]
     
     matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
@@ -416,16 +419,18 @@ if(model == "simple"){
     day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
-    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean,K=K)
+    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, r_thres=r_thres, K=K)
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
                                        pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
-    r_thres_long=colo.matrix.long[[4]]
+    r_thres_long= colo.matrix.long[[4]]
     
     #Plots 
     ####Abx use plots 
     mosaicdata.abx.short = dataformosaic(data=abx.matrix.short ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.abx.short$`Antibiotic type`=as.factor(mosaicdata.abx.short$`Antibiotic type`)
     mosaicdata.abx.long = dataformosaic(data=abx.matrix.long ,label='Antibiotic type',n.bed=n.bed, n.day=n.day, timestep=timestep)
+    mosaicdata.abx.long$`Antibiotic type`=as.factor(mosaicdata.abx.long$`Antibiotic type`)
     
     winteralmond=c('white',"#87C2BE","#5E8E7B")
     lgdcol=rgb(0.185, 0.188, 0.154, alpha = .05)
@@ -469,11 +474,11 @@ if(model == "simple"){
     
     ##Carriage mosaic 
     mosaicdata.car.short = dataformosaic(data=colo_table_filled_short,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.short$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.short$`Number of R`))>=as.vector(r_thres_short))
+    mosaicdata.car.short$abovethreshold= as.factor(mosaicdata.car.short$`Number of R`>= as.vector(t(r_thres_short)))
     
     mosaicdata.car.long = dataformosaic(data=colo_table_filled_long,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.long$abovethreshold= as.factor(as.numeric(as.character(mosaicdata.car.long$`Number of R`))>=as.vector(r_thres_long))
-    
+    mosaicdata.car.long$abovethreshold= as.factor(mosaicdata.car.long$`Number of R`>= as.vector(t(r_thres_long)))
+
     sunflower=c("#d6e1d9",'#ee7a12')
     
     p.car.short=ggplot(mosaicdata.car.short, aes(`Time (days)`, `Bed number`)) + 
@@ -513,7 +518,7 @@ if(model == "simple"){
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
     ##total R per day 
-    totalRperday.short= rowSums(colo_table_filled_short >=r_thres_short)
+    totalRperday.short= rowSums(colo_table_filled_short >= r_thres_short)
     totalRperday.short.avg= rowMeans(matrix(totalRperday.short, ncol=timestep, byrow=T))
     Rperdaydata.short=data.frame(`Time (days)`= 1:n.day, 
                                  `Total R per day`= totalRperday.short.avg)
@@ -525,7 +530,7 @@ if(model == "simple"){
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
               axis.title = element_text(size=base_size+2))
     
-    totalRperday.long=rowSums(colo_table_filled_long >=r_thres_long)
+    totalRperday.long=rowSums(colo_table_filled_long >= r_thres_long)
     totalRperday.long.avg= rowMeans(matrix(totalRperday.long, ncol=timestep, byrow=T))
     Rperdaydata.long=data.frame(`Time (days)`= 1:n.day, 
                                 `Total R per day`= totalRperday.long.avg)

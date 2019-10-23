@@ -8,7 +8,7 @@ require(parallel) # load parallel processing package to use multiple cores on co
 
 setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 
-cl <- makeCluster(detectCores()-1)
+cl <- makeCluster(detectCores())
 
 model <- 'frequency'
 # source functions on all cores
@@ -38,14 +38,14 @@ parameters <- list(
   c("qunif", list(min=0.1, max=1), "p.r.day1"),          # probability of being prescribed broad spectrum antibiotic on day 1 of admission 
   c("qunif", list(min=2, max=27), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
   c("qunif", list(min=0.1, max=1), "total_prop"),      # mean of total starting amount of enterobacteriaceae on log scale
-  c("qunif", list(min=0, max=1), "prop_R"),            # probability of a patient coming into the ward carrying R
+  c("qunif", list(min=0, max=0.5), "prop_R"),            # probability of a patient coming into the ward carrying R
   c("qunif", list(min=0,max=0.002), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
   c("qunif", list(min=0,max=1), "r_mean"),             # r_mean = mean R proportion for those carrying R
-  c("qunif", list(min=0.01,max=0.1), "r_growth"),         # r_growth = growth constant for logistic growth
-  c("qunif", list(min=0,max=0.9), "r_thres"),             # r_thres = threshold amount of bacteria before R can be transmitted
-  c("qunif", list(min=0.01,max=0.1), "s_growth"),         # s_growth = amount transmitted on log scale
+  c("qunif", list(min=0.01,max=0.05), "r_growth"),         # r_growth = growth constant for logistic growth
+  c("qunif", list(min=0,max=0.5), "r_thres"),             # r_thres = threshold amount of bacteria before R can be transmitted
+  c("qunif", list(min=0.005,max=0.015), "s_growth"),         # s_growth = amount transmitted on log scale
   c("qunif", list(min=10,max=15), "abx.s"),               # abxr_killr = amount of r killed by broad spectrum abx r
-  c("qunif", list(min=10,max=15), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
+  c("qunif", list(min=0,max=0.000001), "abx.r"),               # abxr_kills = amount of s killed by broad spectrum abx r
   c("qunif", list(min=3, max=21), "meanDur")           # mean duration of narrow spectrum antibiotics (normal distribution) 
 )
 
@@ -64,8 +64,8 @@ if(!(sum(factors == parameters_prevalence_freq) ==  length(parameters_prevalence
 
 # Use the LHD function to generate a hypercube 
 ##run 1
-abxr='notzero'
-N=700
+abxr='zero'
+N=500
 old <- Sys.time() # get start time
 LHS.freq<- LHS(modelRun.freq, factors, N=N, q, q.arg, nboot=100,cl=cl)
 # print elapsed time

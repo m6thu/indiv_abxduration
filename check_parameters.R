@@ -16,10 +16,10 @@ plotlos<-function(n.patient, min, max){
             xlab="Length of stay",ylab="Proportion of patients")
   
   for (iter in 1:length(los)){
-  all_los = ceiling(rexp(n.patient, 1/los[iter]))
-  all_los[all_los > 5*los[iter]] = los[iter]
-  dens=density(all_los)
-  lines(x=dens$x, y=dens$y, type = 'l',col='grey50')
+    all_los = ceiling(rexp(n.patient, 1/los[iter]))
+    all_los[all_los > 5*los[iter]] = los[iter]
+    dens=density(all_los)
+    lines(x=dens$x, y=dens$y, type = 'l',col='grey50')
   }
   
   all_los = ceiling(rexp(n.patient, 1/min))
@@ -40,69 +40,62 @@ plotpara<-function(parameter,max, min, nday=30){
   
   ####General parameters
   iter=200
-  timesteps=c(3,1)
-  models=c('Models 1 and 2','Model 3')
+  timestep=1
   
   #max value of the parameter 
   r_num=0:50
   
   if (parameter=='pi_ssr') {
-    par(mfrow=c(1,2))
+    
+    #For max value 
+    day.risk=list()
 
-    for (type in 1:length(models)) {
-      
-      #For max value 
-      day.risk=list()
-      timestep=timesteps[type]
-      for (i in 1:length(r_num)){
-        pi_ssr = 1-(1-max)^(1/timestep)# max pi_ssr 
-        #per timestep, r_num=10, chance of transmission 
-        prop_R = 1-((1-pi_ssr)^r_num[i])
-        day.risk[[i]]=cumsum((1-prop_R)^(1:max(nday*timestep)-1)*prop_R)
-      }
-      day.risk.df=data.frame(matrix(unlist(day.risk), ncol=length(day.risk)))
-      
-      plot(x=1:max(nday*timestep), y=day.risk.df[,2], ylim=c(0:1), type = 'l', 
-           col='grey50',
-           xaxt='n',
-           ylab='Cumulative daily risk of a patient being transmitted R', 
-           xlab=paste0('Number of days (timestep=', timestep,')'),
-           main=paste0('pi_ssr (', models[type],')'), 
-           sub=paste0('max=',max,'  min=',min))
-      axis(1, at = seq(0, max(nday*timestep), length=7), las=2, 
-           labels=seq(0, max(nday*timestep), length=7)/timestep)
-      for (i in 3:ncol(day.risk.df)){
-        lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
-      }
-      #label red for the line with r_num=40
-      lines(x=1:max(nday*timestep), y=day.risk.df[,41], type = 'l', col='red')
-      
-      #For min value 
-      day.risk=list()
-      timestep=timesteps[type]
-      for (i in 1:length(r_num)){
-        pi_ssr = 1-(1-min)^(1/timestep)# max pi_ssr 
-        #per timestep, r_num=10, chance of transmission 
-        prop_R = 1-((1-pi_ssr)^r_num[i])
-        day.risk[[i]]=cumsum((1-prop_R)^(1:max(nday*timestep)-1)*prop_R)
-      }
-      day.risk.df=data.frame(matrix(unlist(day.risk), ncol=length(day.risk)))
-      
-      lines(x=1:max(nday*timestep), y=day.risk.df[,2], type = 'l', 
-           col='grey50')
-      for (i in 3:ncol(day.risk.df)){
-        lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
-      }
-      #label red for the line with r_num=40
-      lines(x=1:max(nday*timestep), y=day.risk.df[,41], type = 'l', col='red')
-      
+    for (i in 1:length(r_num)){
+      pi_ssr = 1-(1-max)^(1/timestep)# max pi_ssr 
+      #per timestep, r_num=10, chance of transmission 
+      prop_R = 1-((1-pi_ssr)^r_num[i])
+      day.risk[[i]]=cumsum((1-prop_R)^(1:max(nday*timestep)-1)*prop_R)
     }
-    text(250, 0.2, "Each line represents number of R in the ward (0-50)",cex = .8)
-    text(250, 0.15, "Red line highlights R=40", cex = .8)
+    day.risk.df=data.frame(matrix(unlist(day.risk), ncol=length(day.risk)))
+    
+    plot(x=1:max(nday*timestep), y=day.risk.df[,2], ylim=c(0:1), type = 'l', 
+         col='grey50',
+         xaxt='n',
+         ylab='Cumulative daily risk of a patient being transmitted R', 
+         xlab=paste0('Number of days (timestep=', timestep,')'),
+         main='pi_ssr', 
+         sub=paste0('max=',max,'  min=',min))
+    axis(1, at = seq(0, max(nday*timestep), length=7), las=2, 
+         labels=seq(0, max(nday*timestep), length=7)/timestep)
+    for (i in 3:ncol(day.risk.df)){
+      lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
+    }
+    #label red for the line with r_num=40
+    lines(x=1:max(nday*timestep), y=day.risk.df[,41], type = 'l', col='red')
+    
+    #For min value 
+    day.risk=list()
+    
+    for (i in 1:length(r_num)){
+      pi_ssr = 1-(1-min)^(1/timestep)# max pi_ssr 
+      #per timestep, r_num=10, chance of transmission 
+      prop_R = 1-((1-pi_ssr)^r_num[i])
+      day.risk[[i]]=cumsum((1-prop_R)^(1:max(nday*timestep)-1)*prop_R)
+    }
+    day.risk.df=data.frame(matrix(unlist(day.risk), ncol=length(day.risk)))
+    
+    lines(x=1:max(nday*timestep), y=day.risk.df[,2], type = 'l', 
+          col='grey50')
+    for (i in 3:ncol(day.risk.df)){
+      lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
+    }
+    #label red for the line with r_num=40
+    lines(x=1:max(nday*timestep), y=day.risk.df[,41], type = 'l', col='red')
+    
+    text(400, 0.2, "Each line represents number of R in the ward (0-50)",cex = .8)
+    text(400, 0.15, "Red line highlights R=40", cex = .8)
     
   } else {
-    par(mfrow=c(1,1))
-    timestep=3
     
     day.risk=list()
     
@@ -118,14 +111,14 @@ plotpara<-function(parameter,max, min, nday=30){
          xaxt='n',
          ylab='Cumulative daily risk', 
          xlab=paste0('Number of days (timestep=', timestep,')'),
-         main=paste0(parameter,' (Models 1 and 2)'), 
+         main=parameter,
          sub=paste0('max=',max,'  min=',min))
     axis(1, at = seq(0, max(nday*timestep), length=7), las=2, 
          labels=seq(0, max(nday*timestep), length=7)/timestep)
     for (i in 3:ncol(day.risk.df)){
       lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
     }
-    text(nday*2, min(day.risk.df)-0.01, "Each line represents a single iteration",
+    text(nday/2, min(day.risk.df)-0.01, "Each line represents a single iteration",
          cex = .8)
   }
 }
@@ -177,8 +170,8 @@ model='Frequency'
 source('default_params.R')
 
 ###check growth under no antibiotics, r_growth, s_growth
-growth.no.abx=function(min, max, k, total_prop, n.day=n.day){
-
+growth.no.abx=function(min, max, k, total_prop, n.day=n.day, parameter.name){
+  
   total_existing= log(total_prop*exp(k))
   
   growlist=list()
@@ -191,7 +184,7 @@ growth.no.abx=function(min, max, k, total_prop, n.day=n.day){
     bact=total_existing
     
     for (i in 1:n.day){
-
+      
       total[i]=bact
       
       # calculate effect of logistic bacteria growth (abs)
@@ -205,13 +198,12 @@ growth.no.abx=function(min, max, k, total_prop, n.day=n.day){
   
   day.risk.df=data.frame(matrix(unlist(growlist), ncol=iter))
   
-  par(mfrow=c(1,1))
   plot(x=1:n.day, y=day.risk.df[,2], 
        ylim=c(min(day.risk.df), max(day.risk.df)), type = 'l', col='grey50',
        xaxt='n',
        ylab='Cumulative growth', 
        xlab=paste0('Number of days'),
-       main=paste0('s_growth and r_growth (Model 3)'), 
+       main=parameter.name, 
        sub=paste0('max=',max,'  min=',min))
   axis(1, at = seq(0, max(n.day), length=7), las=2, 
        labels=seq(0, max(n.day), length=7))
@@ -244,9 +236,9 @@ y=((D*exp(phi1)*exp(phi2))/(exp(phi2)-exp(phi1)))*(exp(-exp(phi1*t))-exp(-exp(ph
 plot(t,y) #similar distribution as logistic growth
 
 ###check antibiotic killing 
-abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, n.day=n.day){
+abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, total_capacity, n.day=n.day){
   
-  total_existing= log(total_prop*exp(K))
+  total_existing= log(total_prop*exp(k)) #total number of Enterobacteriaceae is a proportion of the total capacity (log)
   
   growlist=list()
   iter=500
@@ -259,11 +251,11 @@ abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, n.
     bact=total_existing
     
     for (i in 1:n.day){
-
+      
       total[i]=bact
       
       # calculate effect of logistic bacteria growth (abs)
-      grow = growth*exp(bact)*(1 - (exp(bact)/exp(K)))
+      grow = growth*exp(bact)*(1 - (exp(bact)/exp(k)))
       
       # add effect of abx death 
       bact_abx = -abx*grow
@@ -271,9 +263,9 @@ abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, n.
       # apply effects to current number
       if (exp(bact) + grow + bact_abx<0) {
         bact=0
-        }else{
-      bact = log(exp(bact) + grow + bact_abx)
-        }
+      }else{
+        bact = log(exp(bact) + grow + bact_abx)
+      }
       
     }
     growlist[[g]]= exp(total)
@@ -281,7 +273,6 @@ abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, n.
   
   day.risk.df=data.frame(matrix(unlist(growlist), ncol=iter))
   
-  par(mfrow=c(1,1))
   plot(x=1:n.day, y=day.risk.df[,2], 
        ylim=c(min(day.risk.df),max(day.risk.df)), type = 'l', col='grey50',
        xaxt='n',
@@ -295,9 +286,9 @@ abx.killing=function(growth.min, growth.max, abx.min, abx.max, k, total_prop, n.
   for (i in 3:ncol(day.risk.df)){
     lines(x=1:max(n.day), y=day.risk.df[,i], type = 'l',col='grey50')
   }
-  text(n.day-5, max(day.risk.df)-100, "Each line represents a single iteration",
+  text(n.day/2, max(day.risk.df)-100, "Each line represents a single iteration",
        cex = .8)
-  text(n.day-5, max(day.risk.df)-500, paste0("Given K=22,", ", total_prop=",total_prop),
+  text(n.day/2, max(day.risk.df)-100000000, paste0("Given K=",k, ", total_prop=",total_prop),
        cex = .8)
 }
 
@@ -338,7 +329,7 @@ plotrmean<-function(n.patient, min, max){
     dens=density(prop.r.ent.norm)
     lines(x=dens$x, y=dens$y, type = 'l',col='grey50')
   }
-
+  
   prop.r.ent= rtnorm(n.patient, mean=max, lower=0)
   prop.r.ent.norm= (prop.r.ent-min(prop.r.ent))/(max(prop.r.ent)-min(prop.r.ent))#proportion of R in total population of Enterobacteriaceae (normalised)
   dens=density(prop.r.ent.norm)
@@ -349,8 +340,8 @@ plotrmean<-function(n.patient, min, max){
   dens=density(prop.r.ent.norm)
   lines(dens$x, dens$y, type="l", col='red')
   
-  text(0.6, 2, paste0("Red line highlights r_mean=",min,'(min)'), cex = .8)
-  text(0.6, 2.2, paste0("Blue line highlights r_mean=",max,'(max)'), cex = .8)
+  text(0.8, 2, paste0("Red line highlights r_mean=",min,'(min)'), cex = .8)
+  text(0.8, 2.2, paste0("Blue line highlights r_mean=",max,'(max)'), cex = .8)
   
 }
 
@@ -376,12 +367,20 @@ dev.off()
 
 #repop.s
 png(filename="repop.s.png", width = 800, height = 350)
-plotpara(parameter='repop.s',max=0.02, min=0.002, nday=120)
+plotpara(parameter='repop.s',max=0.015, min=0.005, nday=300)
+dev.off()
+
+png(filename="s_growth.png", width = 800, height = 350)
+growth.no.abx(min=0.005, max=0.015, k=14, total_prop=0.9, n.day=300, parameter.name = 's_growth')
 dev.off()
 
 #repop.r
 png(filename="repop.r.png", width = 800, height = 350)
-plotpara(parameter='repop.r',max=0.05, min=0.01, nday=12)
+plotpara(parameter='repop.r',max=0.05, min=0.01, nday=300)
+dev.off()
+
+png(filename="r_growth.png", width = 800, height = 350)
+growth.no.abx(min=0.01, max=0.05, k=14, total_prop=0.5, n.day=300, parameter.name = 'r_growth')
 dev.off()
 
 #mu
@@ -397,13 +396,9 @@ png(filename="cum.r.1.png", width = 800, height = 350)
 plot.cum.r.1(min=10, max=1000, nday=60)
 dev.off()
 
-png(filename="growth.png", width = 800, height = 350)
-growth.no.abx(min=0.01, max=0.1, k=22, total_prop=0.5, n.day=360)
-dev.off()
-
 png(filename="kill.png", width = 800, height = 350)
-abx.killing(growth.min=0.01, growth.max=0.1, abx.max=15, abx.min=10, 
-            k=22, total_prop=0.5, n.day=30)
+abx.killing(growth.min=0.005, growth.max=0.015, abx.max=30, abx.min=20, 
+            k=14, total_prop=0.5, n.day=30)
 dev.off()
 
 ######timestep
