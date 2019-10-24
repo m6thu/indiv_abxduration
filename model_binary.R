@@ -504,12 +504,6 @@ parameters_diff_prevalence_binary <- c("n.bed", "max.los",
                                        "p.infect", "cum.r.1", "p.r.day1",
                                        "short_dur", "long_dur")
 
-parameters_diff_prevalence <- c("n.bed", "max.los", 
-                                       "prop_R", "prop_r", "prop_Sr", "prop_S",
-                                       "bif", "pi_ssr", "repop.s","repop.r",
-                                       "mu", "abx.s", "abx.r",
-                                       "p.infect", "cum.r.1", "p.r.day1",
-                                       "short_dur", "long_dur")
 
 
 

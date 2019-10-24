@@ -291,10 +291,3 @@ parameters_diff_prevalence_freq <- c("n.bed", "max.los", "p.infect", "cum.r.1", 
                                      "abx.s", "abx.r",
                                      "short_dur", "long_dur")
 
-
-parameters_diff_prevalence <- c("n.bed", "max.los", "p.infect", "cum.r.1", "p.r.day1", 
-                                     "K", "total_prop", "prop_R",
-                                     "pi_ssr", "r_trans", "r_growth", 'r_thres','s_growth',
-                                     "abx.s", "abx.r",
-                                     "short_dur", "long_dur")
-
