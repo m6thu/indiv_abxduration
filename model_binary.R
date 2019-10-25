@@ -75,6 +75,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     prev_abx = abx.matrix[i-1, ]
     # count if there are any sR on the previous day
     R.previousday=which(prev_step == "sR")
+    n.bed = ncol(patient.matrix)
     r_num = length(R.previousday)
     
     
@@ -90,7 +91,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     # if there is any S (number of S > 0) in the previous day
     if(length(S)){
       # roll for transmission of R
-      prob_R = 1-((1-pi_r1)^r_num)
+      prob_R = 1-((1-pi_r1)^(r_num/n.bed))
       
       # Roll a random number for each S on the previous day for clearance
       roll= runif(length(S), 0, 1)
@@ -106,7 +107,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     ss = ss[!(ss %in% already_filled)]
     if(length(ss)){
       # roll for transmission of R
-      prob_R = 1-((1-pi_ssr)^r_num)
+      prob_R = 1-((1-pi_ssr)^(r_num/n.bed))
       
       roll = runif(length(ss), 0, 1)
       
@@ -192,7 +193,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     if(length(S)){
       
       # probability of transmission 
-      prob_R = 1-((1-pi_r1)^r_num)
+      prob_R = 1-((1-pi_r1)^(r_num/n.bed))
       
       if((abx.s+prob_R > 1)){
         stop(paste("Error stopifnot: abx.s+prob_R >1 in Second scenario: those with narrow antibiotics on previous day"))
@@ -215,7 +216,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     ss = ss[!(ss %in% already_filled)]
     if(length(ss)){
       # roll for transmission of R
-      prob_R = 1-((1-pi_ssr)^r_num)
+      prob_R = 1-((1-pi_ssr)^(r_num/n.bed))
       
       roll = runif(length(ss), 0, 1)
       
@@ -278,7 +279,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     # if there is any S (number of S > 0) in the previous day
     if(length(S)){
       # roll for transmission of R
-      prob_R = 1-((1-pi_r1)^r_num)
+      prob_R = 1-((1-pi_r1)^(r_num/n.bed))
       
       if((abx.r.aginst.s+prob_R > 1)){
         stop(paste("Error stopifnot: abx.r.aginst.s+prob_R >1 in Third scenario: those with broad antibiotics on previous day "))
@@ -301,7 +302,7 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     ss = ss[!(ss %in% already_filled)]
     if(length(ss)){
       # roll for transmission of R
-      prob_R = 1-((1-pi_ssr)^r_num)
+      prob_R = 1-((1-pi_ssr)^(r_num/n.bed))
       
       roll = runif(length(ss), 0, 1)
       
@@ -502,6 +503,7 @@ parameters_diff_prevalence_binary <- c("n.bed", "max.los",
                                        "mu", "abx.s", "abx.r",
                                        "p.infect", "cum.r.1", "p.r.day1",
                                        "short_dur", "long_dur")
+
 
 
 

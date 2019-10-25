@@ -36,22 +36,19 @@ plotlos<-function(n.patient, min, max){
   text(60, 0.12, paste0("Blue line highlights max.los=",max,'(max)'), cex = .8)
 }
 
-plotpara<-function(parameter,max, min, nday=30){
+plotpara<-function(parameter, max, min, nday=30){
   
   ####General parameters
   iter=200
   timestep=1
   
-  #max value of the parameter 
-  r_num=0:50
-  
   if (parameter=='pi_ssr') {
     
-    #For max value 
+    r_num=seq(0,0.1, length.out=iter)
+    
     day.risk=list()
-
     for (i in 1:length(r_num)){
-      pi_ssr = 1-(1-max)^(1/timestep)# max pi_ssr 
+      pi_ssr = 1-(1-max)^(1/timestep) # max pi_ssr 
       #per timestep, r_num=10, chance of transmission 
       prop_R = 1-((1-pi_ssr)^r_num[i])
       day.risk[[i]]=cumsum((1-prop_R)^(1:max(nday*timestep)-1)*prop_R)
@@ -70,12 +67,9 @@ plotpara<-function(parameter,max, min, nday=30){
     for (i in 3:ncol(day.risk.df)){
       lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
     }
-    #label red for the line with r_num=40
-    lines(x=1:max(nday*timestep), y=day.risk.df[,41], type = 'l', col='red')
     
     #For min value 
     day.risk=list()
-    
     for (i in 1:length(r_num)){
       pi_ssr = 1-(1-min)^(1/timestep)# max pi_ssr 
       #per timestep, r_num=10, chance of transmission 
@@ -85,15 +79,13 @@ plotpara<-function(parameter,max, min, nday=30){
     day.risk.df=data.frame(matrix(unlist(day.risk), ncol=length(day.risk)))
     
     lines(x=1:max(nday*timestep), y=day.risk.df[,2], type = 'l', 
-          col='grey50')
+          col='grey20')
     for (i in 3:ncol(day.risk.df)){
-      lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey50')
+      lines(x=1:max(nday*timestep), y=day.risk.df[,i], type = 'l',col='grey20')
     }
-    #label red for the line with r_num=40
-    lines(x=1:max(nday*timestep), y=day.risk.df[,41], type = 'l', col='red')
     
-    text(400, 0.2, "Each line represents number of R in the ward (0-50)",cex = .8)
-    text(400, 0.15, "Red line highlights R=40", cex = .8)
+    text(450, 0.05, "Light grey represents daily risk with max pi_ssr with proportion of R in the ward ranging 0-1",cex = .8)
+    text(450, 0.1, "Dark grey represents daily risk with min pi_ssr with proportion of R in the ward ranging 0-1  ", cex = .8)
     
   } else {
     
@@ -362,7 +354,7 @@ dev.off()
 
 #pi_ssr
 png(filename="pi_ssr.png", width = 800, height = 350)
-plotpara(parameter='pi_ssr',max=0.002, min=0.000001, nday=720)
+plotpara(parameter='pi_ssr',max=0.3, min=0.001, nday=720)
 dev.off()
 
 #repop.s

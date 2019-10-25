@@ -20,8 +20,8 @@ parameters <- list(
     c(runif(1,min=2, max=27), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
     c(runif(1,min=0.1, max=1), "total_prop"),             # mean of total starting amount of e coli on log scale
     c(runif(1,min=0,max=1), "prop_R"),              # mean of starting amount of resistant gut bacteria on log scale
-    c(runif(1,min=0,max=0.002), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
-    c(runif(1,min=0,max=1), "r_mean"),             # r_mean= R threshold level for tranmissibility
+    c(runif(1,min=0.001,max=0.3), "pi_ssr"),              # pi_ssr = daily probability of transmitting resistant E coli
+    c(runif(1,min=2,max=8), "r_trans"),             # r_mean= R threshold level for tranmissibility
     c(runif(1,min=0.01,max=0.05), "r_growth"),           # r_growth = growth constant for logistic growth
     c(runif(1,min=0,max=0.9), "r_thres"),             # r_thres = threshold amount of bacteria before R can be transmitted
     c(runif(1,min=0.005,max=0.015), "s_growth"),           # r_growth = growth constant for logistic growth

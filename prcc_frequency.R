@@ -39,8 +39,8 @@ parameters <- list(
   c("qunif", list(min=2, max=27), "K"),                  # gut holding capacity, on log scale, largest R number possible is exp(300) - typical colonic bacteria 10^14 number/mL content https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4991899/
   c("qunif", list(min=0.1, max=1), "total_prop"),      # mean of total starting amount of enterobacteriaceae on log scale
   c("qunif", list(min=0, max=0.5), "prop_R"),            # probability of a patient coming into the ward carrying R
-  c("qunif", list(min=0,max=0.002), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
-  c("qunif", list(min=0,max=1), "r_mean"),             # r_mean = mean R proportion for those carrying R
+  c("qunif", list(min=0.001,max=0.3), "pi_ssr"),             # pi_ssr = daily probability of transmitting resistant E coli
+  c("qunif", list(min=2,max=8), "r_trans"),             # r_mean = mean R proportion for those carrying R
   c("qunif", list(min=0.01,max=0.05), "r_growth"),         # r_growth = growth constant for logistic growth
   c("qunif", list(min=0,max=0.5), "r_thres"),             # r_thres = threshold amount of bacteria before R can be transmitted
   c("qunif", list(min=0.005,max=0.015), "s_growth"),         # s_growth = amount transmitted on log scale

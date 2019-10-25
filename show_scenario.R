@@ -10,14 +10,14 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "frequency"
+model <- "binary"
 
 source("default_params.R")
 source('los_abx_matrix.R')
 source(paste0("model_", model,".R"))
 
-abx.s=10
-abx.r=10
+abx.s=0.3
+abx.r=0.3
 
 dataformosaic<-function(data,label,n.bed=n.bed, n.day=n.day, timestep=timestep){
     
@@ -406,9 +406,9 @@ if(model == "simple"){
     day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
-    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, r_thres=r_thres, K=K)
+    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,r_trans = r_trans, r_thres=r_thres, K=K)
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
-                                      pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
+                                      pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_trans=r_trans, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     r_thres_short= colo.matrix.short[[4]]
     
@@ -419,9 +419,9 @@ if(model == "simple"){
     day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
-    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,r_mean = r_mean, r_thres=r_thres, K=K)
+    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,r_trans = r_trans, r_thres=r_thres, K=K)
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
-                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_mean=r_mean, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
+                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_trans=r_trans, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
     r_thres_long= colo.matrix.long[[4]]
     

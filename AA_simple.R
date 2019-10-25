@@ -26,14 +26,14 @@ clusterCall(cl, function() {source('model_simple.R')})
 parameters <- list(
     c(runif(1,min=5, max=50), "n.bed"),         #"n.bed", number of beds in the ward
     c(runif(1,min=3, max=20), "max.los"),       #"max.los", mean of length of stay
-    c(runif(1,min=0, max=0.5), "prop_R"),         #"prop_R",probability of initial carriage of resistant organisms
+    c(runif(1,min=0, max=1), "prop_R"),         #"prop_R",probability of initial carriage of resistant organisms
     c(runif(1,min=0, max=1), "prop_S"),        #"prop_S", proportion of S in the population of S and ss
     c(runif(1,min=0, max=1), "bif"),            #"bif", bacterial interference factor
-    c(runif(1,min=0, max=0.002), "pi_ssr"),      # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
+    c(runif(1,min=0.001, max=0.3), "pi_ssr"),      # "pi_ssr" probability of being transmitted r to ss (ss—> ssr)
     c(runif(1,min=0.005, max=0.015), "repop.s"), # "repop.s1" probability of ss repopulated to S (Palleja, Nature Biology, 2018 on gut recovery ~9 months)
     c(runif(1,min=0.002, max=0.02), "mu"),      # "mu_r", probability of decolonisation (Haggai Bar-Yoseph, JAC, 2016, decreasing colonization rates from 76.7% (95% CI=69.3%–82.8%) at 1 month to 35.2% (95% CI=28.2%–42.9%) at 12 months of follow-up)
     c(runif(1,min=0.1, max=0.5), "abx.s"),      # "abx.s", probability of S becoming ss after being on narrow spectrum antibiotics
-    c(runif(1,min=0, max=0.000001), "abx.r"),      # "abx.r", probability of R becoming ss after being on broad spectrum antibiotics
+    c(runif(1,min=0.1, max=0.5), "abx.r"),      # "abx.r", probability of R becoming ss after being on broad spectrum antibiotics
     c(runif(1,min=0.1, max=1), "p.infect"),     # "p.infect", probability of being prescribed antibiotics
     c(runif(1,min=10, max=1000), "cum.r.1"),    # admission day when cummulative prabability of HAI requiring abx.r is 1
     c(runif(1,min=0.1, max=1), "p.r.day1"),     # probability of being prescribed broad spectrum antibiotic on admission 
