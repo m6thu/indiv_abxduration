@@ -1,5 +1,6 @@
 source('msm_util_rtnorm.R')
 source('los_abx_matrix.R')
+load('exp_density_lookup.Rdata')
 
 colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_trans, r_thres, K){
   
@@ -10,24 +11,18 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_trans, r
   
   #total capacity for enterobacteriaceae growth (log)
   total_capacity = rnorm(number_of_patients, mean=K)
-  total_capacity_matrix= matrix(rep(total_capacity, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
+  total_capacity_matrix = matrix(rep(total_capacity, los.array[2,]), byrow = F, ncol = ncol(patient.matrix))
   
   #existing population 
-  total_existing= log(total_prop*exp(total_capacity)) #total number of Enterobacteriaceae is a proportion of the total capacity (log)
+  total_existing = log(total_prop*exp(total_capacity)) #total number of Enterobacteriaceae is a proportion of the total capacity (log)
   
   #amount of S and R carried 
-  r_bact = rep(log(0), number_of_patients) #dummy vector
-  prop_R_id = sample(1:number_of_patients, round(prop_R*number_of_patients)) #patients who carry R > thres
+  lambda <- explookup(prop_R, r_thres) # get exp distribution param based on density and threshold
+  r_bact <- log(rexp(round(number_of_patients), 1/lambda)) #total number of R for each patient sampled from distribution (log)
+  # for debug
+  #lambda <- explookup(0.3, 0.5) # get exp distribution param based on density and threshold
+  #hist(rexp(round(1000), 1/lambda))
   
-  
-  #prop.r.ent = rexp(round(prop_R*number_of_patients),1/r_mean)#proportion of total amount of Enterobacteriaceae carried that is R
-  #prop.r.ent.norm = (prop.r.ent-min(prop.r.ent))/(max(prop.r.ent)-min(prop.r.ent)) #normalised 
-  
-  #r_threshold_transmission = log(r_thres * exp(total_existing[prop_R_id])) 
-  #r_amount = log((prop.r.ent.norm+1) * exp(r_threshold_transmission))  #total number of R for each patient (log)
-  #r_amount[which(r_amount>total_existing[prop_R_id])] = total_existing[prop_R_id][which(r_amount>total_existing[prop_R_id])]
-  
-  r_bact[prop_R_id] = r_amount
   s_bact = log(exp(total_existing) - exp(r_bact)) #total number of S for each patient (log)
   
   S_Bactlevelstart = matrix(NA, n.day, n.bed)
