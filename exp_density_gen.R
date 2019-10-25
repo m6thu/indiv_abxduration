@@ -1,4 +1,5 @@
-#Understanding the exponential function
+#File hosted at https://www.dropbox.com/s/bow2mam1uvqz5ba/exp_density_lookup.Rdata?dl=1
+
 lambda <- seq(0,1000,0.001)
 thresholds <- seq(0,1,0.01)
 
