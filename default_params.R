@@ -28,15 +28,15 @@ binary.para = list(prop_S = 0.8,     # Proportion of large S within non-resistan
                    bif = 0.5,        # bacterial interference factor
                    mu = 0.01,        # mu= probability of clearance of Sr to become S
                    repop.s = 0.01, 
-                   repop.r= 0.01,    # probability of repopulation of Sr to become sR 
-                   abx.s = 0.4,
-                   abx.r = 0.2)
+                   repop.r= 0.025,    # probability of repopulation of Sr to become sR 
+                   abx.s = 0.3,
+                   abx.r = 0.3)
 
 ############# Frequency model #################
-frequency.para = list(K = 20,          # gut holding capacity
-                      total_prop = 0.4,# mean of total starting amount of gut bacteria on log scale
-                      r_growth = 0.05, # r_growth = growth constant for logistic growth
-                      s_growth = 0.015,
+frequency.para = list(K = 22,          # gut holding capacity
+                      total_prop = 0.5,# mean of total starting amount of gut bacteria on log scale
+                      r_growth = 0.025, # r_growth = growth constant for logistic growth
+                      s_growth = 0.01,
                       r_trans = 5,     # r_thres = R threshold level for tranmissibility
                       r_thres=0.2, 
                       abx.s = 10,

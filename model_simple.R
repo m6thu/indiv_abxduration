@@ -269,7 +269,7 @@ diff_prevalence <- function(n.bed, max.los,
   n.day=300
   sdDur=1
   
-  iterations=2
+  iterations=10
   
   iter_totalR = matrix(NA, nrow = n.day, ncol = iterations)
   
@@ -339,7 +339,7 @@ prevalence <- function(n.bed, max.los,
               p.infect, cum.r.1, p.r.day1, meanDur))
   
   timestep = 1
-  iterations = 1
+  iterations = 10
   n.day=300
   sdDur=1
   

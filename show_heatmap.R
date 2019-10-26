@@ -12,14 +12,14 @@ model='simple'
 source(paste0('model_',model,".R"))
 source("default_params.R")
 
-pixels=30 #how many pixels per heatmap
+pixels=10  #how many pixels per heatmap
 
 ###################### Change parameters here: START ##################
-y_name <- "prop_R"
-y_seq <- seq(0, 1, length.out = pixels)
+y_name <- "abx.s"
+y_seq <- seq(0, 0.5, length.out = pixels)
 
 x_name <- "repop.s"
-x_seq <- seq(0, 0.2, length.out = pixels)
+x_seq <- seq(0, 0.5, length.out = pixels)
 
 ###################### Change parameters here: END ####################
 
@@ -41,7 +41,7 @@ if (model == 'simple'){
   
   for (j in 1:ncol(default.para.df)) {
     
-    print(j, 'out of', pixels**2, 'runs')
+    print(paste(j, 'out of', pixels**2, 'runs'))
     
     save_runs[j] = diff_prevalence(n.bed=default.para.df[1,j], max.los=default.para.df[2, j], prop_R=default.para.df[3, j], prop_S=default.para.df[4, j],
                                    bif=default.para.df[5, j], pi_ssr=default.para.df[6, j], repop.s=default.para.df[7, j], 
@@ -54,7 +54,7 @@ if (model == 'simple'){
   
   for (j in 1:ncol(default.para.df)){
     
-    print(j, 'out of', pixels**2, 'runs')
+    print(paste(j, 'out of', pixels**2, 'runs'))
     
     save_runs[j] = diff_prevalence(n.bed=default.para.df[1,j], max.los=default.para.df[2,j], prop_R=default.para.df[3,j], prop_r=default.para.df[4,j], 
                                    prop_Sr=default.para.df[5,j], prop_S=default.para.df[6,j],
@@ -68,7 +68,7 @@ if (model == 'simple'){
   
   for (j in 1:ncol(default.para.df)){
     
-    print(j, 'out of', pixels**2, 'runs')
+    print(paste(j, 'out of', pixels**2, 'runs'))
     
     save_runs[j] = diff_prevalence(n.bed=default.para.df[1,j], max.los=default.para.df[2,j], p.infect=default.para.df[3,j], 
                                    cum.r.1=default.para.df[4,j], p.r.day1=default.para.df[5,j],
@@ -90,7 +90,7 @@ ggplot(outcome.df, aes(x, y)) +
   scale_fill_gradient2(low="blue", mid="white", high="red", 
                        midpoint=0, limits=range(outcome.df$outcome),
                        breaks = c(as.numeric(format(round(min(outcome.df$outcome),3),nsmall=3)),
-                                  0, 
+                                  as.numeric(format(round(0))), 
                                   as.numeric(format(round(max(outcome.df$outcome),3),nsmall=3))),
                        name = "Difference in resistance carriers \nin wards given long vs short \nantibiotic durations") +
   ylab(y_name)+

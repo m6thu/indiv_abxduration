@@ -1,13 +1,13 @@
 setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 rm(list=ls()) # Clean working environment
 
-model='frequency'
+model='simple'
 source('default_params.R')
 source(paste0('model_',model,'.R'))
 
 #simple
-diff_prevalence(n.bed,max.los,prop_R, prop_S, bif, pi_ssr, repop.s, mu, abx.s, abx.r,
-                p.infect, cum.r.1, p.r.day1, short_dur, long_dur)
+a=diff_prevalence(n.bed,max.los,prop_R, prop_S, bif, pi_ssr, repop.s, mu, abx.s, abx.r,
+                p.infect, cum.r.1, p.r.day1, short_dur, long_dur)[[3]]
 
 prevalence(n.bed,max.los, prop_R, prop_S, bif, pi_ssr, repop.s, mu, abx.s, abx.r, p.infect, cum.r.1, p.r.day1, meanDur)
 
