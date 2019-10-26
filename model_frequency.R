@@ -18,7 +18,8 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_trans, r
   
   #amount of S and R carried 
   lambda <- explookup(prop_R, r_thres) # get exp distribution param based on density and threshold
-  r_bact <- log(rexp(round(number_of_patients), 1/lambda)) #total number of R for each patient sampled from distribution (log)
+  r_bact <- rexp(round(number_of_patients), 1/lambda) #total number of R for each patient sampled from distribution (log)
+  r_bact <- log((r_bact - min(r_bact))/(max(r_bact) - min(r_bact))*exp(total_existing))
   # for debug
   #lambda <- explookup(0.3, 0.5) # get exp distribution param based on density and threshold
   #hist(rexp(round(1000), 1/lambda))
