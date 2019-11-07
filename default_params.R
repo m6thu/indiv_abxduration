@@ -1,46 +1,47 @@
 ############## Default parameters ##################
 
 #common parameters 
-common.para = list(n.bed=30,        # n.bed= number of beds in the ward
-                   max.los= 7,      # mean.max.los= mean of max length of stay (exponential distribution)
-                   n.day= 365,
-                   short_dur = 7,
-                   long_dur = 14,
-                   meanDur= 10,
-                   prop_R=0.3,      # Probability of being colonized with resistant strain on admission
-                   pi_ssr = 0.01,   # pi_ssr= probability of R transmitting 
-                   cum.r.1=500, 
-                   p.infect = 0.4,  # p=probability of receiving antibiotic
-                   p.r.day1 =0.2)
+common.para = list(n.bed =30,        # n.bed= number of beds in the ward
+                   max.los = 10,     # mean.max.los= mean of max length of stay (exponential distribution)
+                   n.day = 365,
+                   short_dur = 5,
+                   long_dur = 15,
+                   meanDur = 10,
+                   prop_R = 1,      # Probability of being colonized with resistant strain on admission
+                   pi_ssr = 0.1,    # pi_ssr= probability of R transmitting 
+                   cum.r.1 = 900, 
+                   p.infect = 0.2,  # p=probability of receiving antibiotic
+                   p.r.day1 = 0.2, 
+                   timestep = 1)
 
 ############# Simple model #################
-simple.para = list(prop_S = 0.8,    #Proportion of large S within non-resistant states (S+s)
+simple.para = list(prop_S = 0.5,    # Proportion of large S within non-resistant states (S+s)
                    bif = 0.5,       # bacterial interference factor 
-                   mu = 0.01,       # mu= probability of clearance of Sr to become S
+                   mu = 0.01,      # mu= probability of clearance of Sr to become S
                    repop.s = 0.01, 
-                   abx.s = 0.4,
-                   abx.r = 0.2)
+                   abx.s = 0.3,
+                   abx.r = 0.3)
 
 ############## Binary model ###################
-binary.para = list(prop_S = 0.8,     # Proportion of large S within non-resistant states (S+s)
-                   prop_Sr = 0.7,                  
-                   prop_r= 0.1,    
+binary.para = list(prop_S = 0.5,     # Proportion of large S within non-resistant states (S+s)
+                   prop_Sr = 0.4,                  
+                   prop_r = 0.5,    
                    bif = 0.5,        # bacterial interference factor
                    mu = 0.01,        # mu= probability of clearance of Sr to become S
                    repop.s = 0.01, 
-                   repop.r= 0.025,    # probability of repopulation of Sr to become sR 
+                   repop.r= 0.025,   # probability of repopulation of Sr to become sR 
                    abx.s = 0.3,
                    abx.r = 0.3)
 
 ############# Frequency model #################
-frequency.para = list(K = 22,          # gut holding capacity
-                      total_prop = 0.5,# mean of total starting amount of gut bacteria on log scale
+frequency.para = list(K = 15,           # gut holding capacity
+                      total_prop = 0.7, # mean of total starting amount of gut bacteria on log scale
                       r_growth = 0.025, # r_growth = growth constant for logistic growth
                       s_growth = 0.01,
-                      r_trans = 5,     # r_thres = R threshold level for tranmissibility
-                      r_thres=0.2, 
-                      abx.s = 10,
-                      abx.r = 10)
+                      r_trans = 5,      # r_thres = R threshold level for tranmissibility
+                      r_thres= 7, 
+                      abx.s = 12,
+                      abx.r = 12)
 
 if (model == 'simple') {
   

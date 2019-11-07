@@ -10,7 +10,7 @@ setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 
 plotprcc<-function(LHS.run){
   
-  prcc=LHS.run$prcc[[1]]$PRCC
+  prcc=LHS.run$prcc[[3]]$PRCC
   x.samples=LHS.run[['data']]
   y.output=LHS.run$res[,1,1]
   dat= cbind.data.frame(x.samples, y.output)

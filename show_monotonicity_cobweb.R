@@ -1,7 +1,7 @@
 library(epiR) #calculate p values for PRCC
 library(pse)
-setwd('Documents/nBox/git_projects/indiv_abxduration/')
-output1=get(load('runs/LHS_binary_800_zero_18Oct2019_1308BST.Rdata'))
+setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
+output1=get(load('runs/LHSdiff_simple_502_zero29Oct2019_1048GMT.Rdata'))
 output2=get(load('runs/LHS_binary_900_zero_18Oct2019_1357BST.Rdata'))
 parameters<-parameters_diff_prevalence_freq
 
@@ -40,19 +40,35 @@ xtable(corr.table)
 # Visualization of analysis 
 
 ##### Cobweb
-x.samples<-x.samples[, match(rownames(prcc), names(x.samples))] 
-outcome.df<-as.data.frame(cbind(x.samples,y.output)) #dummy matrix with parameter values in columns and outcome in last column
-for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that produced top 5% of the outcomes
-  if (outcome.df$y.output[i]<quantile(outcome.df$y.output,probs = 0.85)) { 
-    outcome.df$top5[i] <-0 } else {
-      outcome.df$top5[i] <-1
+require(plotrix) #load MASS package
+
+output=get(load('runs/LHSdiff_frequency_605_notzero_06Nov2019_1422GMT.Rdata'))
+x.samples=output[['data']]
+y.output=output$res[,3,]
+#x.samples<-x.samples[, match(rownames(prcc), names(x.samples))] 
+outcome.df<-as.data.frame(cbind(x.samples,y.output)) #matrix with parameter values in columns and outcome in last column
+for (i in 1:nrow(outcome.df)) {                      #label the rows of parameter values that produced top 20% of the outcomes
+  if (outcome.df$y.output[i]<quantile(outcome.df$y.output,probs = 0.8)) { 
+    outcome.df$top[i] <-0 } else {
+      outcome.df$top[i] <-1
     }
 }
-require(plotrix) #load MASS package
-blue<-alpha("lightskyblue", alpha=0.05)
-red<-alpha("#E85D75", alpha=0.15)
-colors<- c(blue, red) #choose 2 colors - 1 for parameters that produced top 5% of outcomes and one for the rest
-outcome.df$top5<- as.factor(outcome.df$top5)
+
+for (i in 1:nrow(outcome.df)) {       #label the rows of parameter values that produced bottom 20% of the outcomes
+  if (outcome.df$y.output[i]<quantile(outcome.df$y.output,probs = 0.2)) { 
+    outcome.df$bottom[i] <-1 } else {
+      outcome.df$bottom[i] <-0
+    }
+}
+
+blue<-alpha("lightskyblue", alpha=0.2)
+red<-alpha("#E85D75", alpha=0.2)
+colors<- c(blue, red) #1 for parameters that produced top outcomes and one for the bottom
+outcome.df$top<- as.factor(outcome.df$top)
+outcome.df$bottom<- as.factor(outcome.df$bottom)
+outcome.df=outcome.df[,-grep('dur',colnames(outcome.df))]
+outcome.df<- outcome.df[which(outcome.df$top==1 | outcome.df$bottom==1),]
+
 parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...) 
 {
   df <- as.data.frame(x)
@@ -72,11 +88,6 @@ parcoordlabel<-function (x, col = 1, lty = 1,  lblcol="black",...)
   }
   invisible()
 }
-c=parcoordlabel(outcome.df[,c(1:length(parameters))], col = colors[outcome.df$top5])
+parcoordlabel(outcome.df[,c(1:(ncol(x.samples)-2))], col = colors[outcome.df$top])
 
-##put cobweb and PRCC together 
-
-##### pic (partial inclination coefficient) is the sensitivity" of the model response in respect to each parameter
-pic(output1, nboot=40) 
-#represent the beta terms in y = alpha + beta*x regressions, after removing the linear effect of the other parameters
-
+plotprcc(output)

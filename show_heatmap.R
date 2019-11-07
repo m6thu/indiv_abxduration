@@ -6,20 +6,20 @@
 setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration')
 rm(list=ls()) # Clean working environment
 
-require(fields) #heatmap
+library(parallel)
 
-model='simple'
-source(paste0('model_',model,".R"))
+model='frequency'
+source(paste0('model_', model, '.R'))
 source("default_params.R")
 
-pixels=10  #how many pixels per heatmap
+pixels=15  #how many pixels per heatmap
 
 ###################### Change parameters here: START ##################
-y_name <- "abx.s"
-y_seq <- seq(0, 0.5, length.out = pixels)
+y_name <- "r_trans"
+y_seq <- seq(2, 10, length.out = pixels)
 
-x_name <- "repop.s"
-x_seq <- seq(0, 0.5, length.out = pixels)
+x_name <- "r_thres"
+x_seq <- seq(2, 10, length.out = pixels)
 
 ###################### Change parameters here: END ####################
 
@@ -29,69 +29,63 @@ default.para.df = as.data.frame(matrix(as.vector((rep(unlist(default.para.list),
 rownames(default.para.df) = names(default.para.list)
 colnames(default.para.df) = 1:pixels**2
 default.para.df = default.para.df[match(parameters_diff_prevalence, rownames(default.para.df)),]
-
-default.para.df[which(rownames(default.para.df)==x_name),] = rep(x_seq, each=pixels)
-default.para.df[which(rownames(default.para.df)==y_name),] = rep(y_seq, pixels)
-
-# empty vectors and matrix to save runs 
-save_runs <- list()
+default.para.df[grep(x_name,rownames(default.para.df)),] = rep(x_seq, each=pixels)
+default.para.df[grep(y_name,rownames(default.para.df)),] = rep(rep(y_seq, pixels), each=length(grep(y_name,rownames(default.para.df))))
+feed.list=as.list(default.para.df)
 
 ###run model 
 if (model == 'simple'){
   
-  for (j in 1:ncol(default.para.df)) {
-    
-    print(paste(j, 'out of', pixels**2, 'runs'))
-    
-    save_runs[j] = diff_prevalence(n.bed=default.para.df[1,j], max.los=default.para.df[2, j], prop_R=default.para.df[3, j], prop_S=default.para.df[4, j],
-                                   bif=default.para.df[5, j], pi_ssr=default.para.df[6, j], repop.s=default.para.df[7, j], 
-                                   mu=default.para.df[8, j], abx.s=default.para.df[9, j], abx.r=default.para.df[10, j], p.infect=default.para.df[11, j], 
-                                   cum.r.1=default.para.df[12, j], p.r.day1=default.para.df[13, j], 
-                                   short_dur=default.para.df[14, j], long_dur=default.para.df[15, j])[[3]]
+  foo=function (x) {
+    diff_prevalence(n.bed= x[1], max.los=x[2], prop_R=x[3], prop_S=x[4],
+                    bif=x[5], pi_ssr=x[6], repop.s=x[7], 
+                    mu=x[8], abx.s=x[9], abx.r=x[10], p.infect=x[11], 
+                    cum.r.1=x[12], p.r.day1=x[13], 
+                    short_dur=x[14], long_dur=x[15])[3]
   }
-
+  
+  save_runs=mclapply(feed.list, foo,  mc.cores = 11)
+  
 } else if (model == 'binary'){
   
-  for (j in 1:ncol(default.para.df)){
-    
-    print(paste(j, 'out of', pixels**2, 'runs'))
-    
-    save_runs[j] = diff_prevalence(n.bed=default.para.df[1,j], max.los=default.para.df[2,j], prop_R=default.para.df[3,j], prop_r=default.para.df[4,j], 
-                                   prop_Sr=default.para.df[5,j], prop_S=default.para.df[6,j],
-                                   bif=default.para.df[7,j], pi_ssr=default.para.df[8,j], repop.s=default.para.df[9,j], repop.r=default.para.df[10,j], 
-                                   mu=default.para.df[11,j], abx.s=default.para.df[12,j], abx.r=default.para.df[13,j], 
-                                   p.infect=default.para.df[14,j], cum.r.1=default.para.df[15,j], p.r.day1=default.para.df[16,j], 
-                                   short_dur=default.para.df[17,j], long_dur=default.para.df[18,j])[[3]]
+  foo=function (x) { 
+    diff_prevalence(n.bed=x[1], max.los=x[2], prop_R=x[3], prop_r=x[4], 
+                    prop_Sr=x[5], prop_S=x[6],
+                    bif=x[7], pi_ssr=x[8], repop.s=x[9], repop.r=x[10], 
+                    mu=x[11], abx.s=x[12], abx.r=x[13], 
+                    p.infect=x[14], cum.r.1=x[15], p.r.day1=x[16], 
+                    short_dur=x[17], long_dur=x[18])[3]
   }
+  
+  save_runs=mclapply(feed.list, foo, mc.cores = 11)
   
 } else if (model == 'frequency'){
   
-  for (j in 1:ncol(default.para.df)){
-    
-    print(paste(j, 'out of', pixels**2, 'runs'))
-    
-    save_runs[j] = diff_prevalence(n.bed=default.para.df[1,j], max.los=default.para.df[2,j], p.infect=default.para.df[3,j], 
-                                   cum.r.1=default.para.df[4,j], p.r.day1=default.para.df[5,j],
-                                   K=default.para.df[6,j], total_prop=default.para.df[7,j], prop_R=default.para.df[8,j], pi_ssr=default.para.df[9,j], 
-                                   r_trans=default.para.df[10,j], r_growth=default.para.df[11,j], r_thres=default.para.df[12,j], s_growth=default.para.df[13,j],
-                                   abx.s=default.para.df[14,j], abx.r=default.para.df[15,j], short_dur=default.para.df[16,j],long_dur=default.para.df[17,j])[[3]]
+  foo=function (x) { 
+    diff_prevalence(n.bed=x[1], max.los=x[2], p.infect=x[3], 
+                    cum.r.1=x[4], p.r.day1=x[5],
+                    K=x[6], total_prop=x[7], prop_R=x[8], pi_ssr=x[9], 
+                    r_trans=x[10], r_growth=x[11], r_thres=x[12], s_growth=x[13],
+                    abx.s=x[14], abx.r=x[15], short_dur=x[16],long_dur=x[17])[3]
   }
+  
+  save_runs=mclapply(feed.list, foo,  mc.cores = 11)
 }
 
-if (length(save_runs)!=ncol(default.para.df)){
+if (length(save_runs)!= ncol(default.para.df)){
   print('The runs did not complete! Stop here and check the parameter range')
 }
 
 outcome.df= cbind.data.frame(x=rep(x_seq, each=pixels), 
-                             y=rep(y_seq, pixels) ,
+                             y=rep(y_seq, pixels),
                              outcome=unlist(save_runs))
 ggplot(outcome.df, aes(x, y)) +
   geom_tile(aes(fill = outcome)) +
-  scale_fill_gradient2(low="blue", mid="white", high="red", 
+  scale_fill_gradient2(low="#388697", mid="grey95", high="#CC2936", 
                        midpoint=0, limits=range(outcome.df$outcome),
-                       breaks = c(as.numeric(format(round(min(outcome.df$outcome),3),nsmall=3)),
-                                  as.numeric(format(round(0))), 
-                                  as.numeric(format(round(max(outcome.df$outcome),3),nsmall=3))),
+                       breaks = c(as.numeric(format(round(min(outcome.df$outcome),3),nsmall=3))+0.001,
+                                  as.numeric(format(round(0),0), nsmall=0), 
+                                  as.numeric(format(round(max(outcome.df$outcome),3),nsmall=3))-0.001),
                        name = "Difference in resistance carriers \nin wards given long vs short \nantibiotic durations") +
   ylab(y_name)+
   xlab(x_name)+

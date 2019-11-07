@@ -155,6 +155,7 @@ plot.cum.r.1=function(min, max,nday){
 }
 
 ###########Frequency model ###########
+######################################
 setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 source('model_frequency.R')
 source('los_abx_matrix.R')

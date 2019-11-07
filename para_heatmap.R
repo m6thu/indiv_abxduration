@@ -13,7 +13,7 @@ source('model_simple.R')
 source('model_binary.R')
 source('model_frequency.R')
 
-parameters=as.factor(unique(c(parameters_prevalence_simple, parameters_prevalence_binary, parameters_prevalence_freq)))
+parameters=as.factor(unique(c(parameters_diff_prevalence_simple, parameters_diff_prevalence_binary, parameters_diff_prevalence_freq)))
 levels(parameters) =  rev(c("n.bed", "max.los", #ward level
                             "prop_S", "prop_Sr","prop_r","prop_R", "total_prop", "K", #Carriage status on day one of admission to the ward  
                             "repop.s","s_growth", #Regrowth of susceptible Enterobacteriaceae 
@@ -21,8 +21,8 @@ levels(parameters) =  rev(c("n.bed", "max.los", #ward level
                             "r_thres", "r_trans","pi_ssr","bif", #Transmission of resistant Enterobacteriaceae 
                             "mu",#decolonisation 
                             "abx.s", "abx.r", #antibiotics killing
-                            "p.infect", "p.r.day1", "cum.r.1", #Number of antibiotic prescriptions 
-                            "meanDur")) #antibiotics duration 
+                            "p.infect", "p.r.day1", "cum.r.1", 
+                            "short_dur", "long_dur")) #Number of antibiotic prescriptions 
 labs.df=data.frame(parameters=parameters, values=NA)
 models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3', 
          'Scenario B\n Model 1', 'Scenario B\n Model 2', 'Scenario B\n Model 3', 
@@ -40,13 +40,13 @@ models=c('Scenario A\n Model 1', 'Scenario A\n Model 2', 'Scenario A\n Model 3',
 # }
 
 getposition<-function(data,labs=labs.df){
-  prcc= data$prcc[[1]]$PRCC
+  prcc= data$prcc[[3]]$PRCC
   #row.names(prcc)[4]='prop_S'
   prcc$ranking=NA
   prcc$ranking[which(prcc$original<0)] = scales::rescale(prcc$original[which(prcc$original<0)], 
-                                                                          to=c(0,0.5))
+                                                         to=c(0,0.5))
   prcc$ranking[which(prcc$original>0)] = scales::rescale(prcc$original[prcc$original>0], 
-                                                                          to=c(0.5,1))
+                                                         to=c(0.5,1))
   
   prcc= prcc[order(prcc$ranking),] #arrange in ranking order
   # low = which(prcc$`min. c.i.` < 0 & prcc$`max. c.i.`< 0)
@@ -62,16 +62,12 @@ getposition<-function(data,labs=labs.df){
   return(out)
 }
 
-Amodel1=get(load('runs/LHS_simple_900_notzero16Oct2019_1837BST.Rdata')) #abx_r>0
-colnames(Amodel1$data)[4]='prop_S'
-Amodel2=get(load('runs/LHS_binary_900_notzero_18Oct2019_1627BST.Rdata'))
-Amodel3=get(load('runs/LHS_frequency_1300_notzero_17Oct2019_1157BST.Rdata'))
-Amodel3=get(load('runs/LHS_frequency_500_notzero_22Oct2019_0735BST.Rdata'))
-Bmodel1=get(load('runs/LHS_simple_900_zero16Oct2019_1651BST.Rdata')) #abx_r>0
-colnames(Bmodel1$data)[4]='prop_S'
-Bmodel2=get(load('runs/LHS_binary_900_zero_18Oct2019_1357BST.Rdata')) 
-Bmodel3=get(load('runs/LHS_frequency_1500_zero_21Oct2019_1051BST.Rdata'))
-Bmodel3=get(load('runs/LHS_frequency_501_zero_22Oct2019_1222BST.Rdata'))
+Amodel1=get(load('runs/LHSdiff_simple_1000_notzero04Nov2019_0117GMT.Rdata')) #abx_r>0
+Amodel2=get(load('runs/LHSdiff_binary_1001_notzero_05Nov2019_0139GMT.Rdata'))
+Amodel3=get(load('runs/LHSdiff_frequency_500_notzero_07Nov2019_1416GMT.Rdata'))
+Bmodel1=get(load('runs/LHSdiff_simple_1000_notzero04Nov2019_0255GMT.Rdata')) #abx_r>0
+Bmodel2=get(load('runs/LHSdiff_binary_1001_zero_05Nov2019_0037GMT.Rdata')) 
+Bmodel3=get(load('runs/LHSdiff_frequency_500_zero_07Nov2019_1339GMT.Rdata'))
 
 Amodel1.p= getposition(Amodel1)
 Amodel2.p= getposition(Amodel2)
@@ -87,6 +83,11 @@ forplot=rbind.data.frame(Amodel1.p, Amodel2.p, Amodel3.p,
                          forlabels)
 forplot$model= rep(models, each=length(parameters))
 forplot$ranking[grep('abx.r',forplot$parameters)[4:6]]=NA
+forplot=forplot[!forplot$parameters=='short_dur',]
+forplot=forplot[!forplot$parameters=='long_dur',]
+parameters=parameters[!parameters=='short_dur']
+parameters=parameters[!parameters=='long_dur']
+parameters=as.character(parameters)
 
 base_size=9
 ggplot(forplot, aes(model, parameters)) + 
@@ -99,19 +100,18 @@ ggplot(forplot, aes(model, parameters)) +
                                 'Does not affect \nprevalence of resistant carriers', 
                                 #'Does not affect difference in\nprevalence of resistant carriers', 
                                 'Higher value increases\nprevalence of resistant carriers'))+
-                                #'Higher value favours short duration'))+
+  #'Higher value favours short duration'))+
   theme_grey(base_size = base_size) + 
   labs(x = "", y="", fill = "")+ 
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0),
-                   labels=c('Duration of antibiotics', 
-                            '','','Antibiotic prescriptions', 
+                   labels=c('','','Antibiotic prescriptions', 
                             '','Antibiotic killing',
                             'Decolonisation',
-                            '','', 'Resistance transmission', 
-                            '','', 
-                            '','Enterobacteriaceae growth ',
-                            '','','','','','','Baseline carriage status', 
+                            '','','', 'Resistance transmission', 
+                            '', 
+                            '','','Enterobacteriaceae growth',
+                            '','','','','','Baseline carriage status', 
                             '','Ward characteristics'))+
   theme(legend.position ='bottom', 
         legend.justification = c(0.6, 1),
@@ -119,8 +119,8 @@ ggplot(forplot, aes(model, parameters)) +
         axis.ticks = element_blank(), 
         axis.text.y = element_text(face='bold.italic', size=7),
         axis.text.x = element_text(size = base_size, angle = 330, hjust = 0, colour = "grey50"))+
-  annotate(geom = 'text', x=1, y=c(1:length(parameters)), label=Amodel1.p[,1], colour='grey40', size=3)+
+  annotate(geom = 'text', x=1, y=c(1:length(parameters)), label=Amodel1.p[-c(1,2),1], colour='grey40', size=3)+
   guides(fill=guide_colorbar(nbin = 200, raster = F))+
-  geom_hline(yintercept=c(1.5, 4.5, 6.5, 7.5, 11.5, 15.5, 21.5), color='grey', size=0.5)+
+  geom_hline(yintercept=c(3.5, 5.5, 6.5, 10.5, 14.5, 20.5), color='grey', size=0.5)+
   geom_vline(xintercept = 4.5,  color = "black", size=0.5)
 

@@ -1,57 +1,76 @@
 #File hosted at https://www.dropbox.com/s/bow2mam1uvqz5ba/exp_density_lookup.Rdata?dl=1
 
-lambda <- seq(0,1000,0.001)
-thresholds <- seq(0,1,0.01)
-
+beta.df= data.frame( beta = seq(0, 1000, 0.01),
+                     alpha = 1,
+                     thresholds = rep(seq(0, 1, 0.01), each = 1000/0.01+1),
+                     area = NA)
+                     
 D <- matrix(NA, nrow=length(lambda), ncol = length(thresholds))
 for(i in 1:length(lambda)){
-    for(j in 1:length(thresholds)){
-        D[i, j] <- pexp(thresholds[j], rate = lambda[i])
-    }
+  for(j in 1:length(thresholds)){
+    D[i, j] <- pbeta(thresholds[j], shape1=1,shape2 = lambda[i])
+  }
 }
 rownames(D) <- lambda
-colnames(D) <- thresholds
+colnames(D) <- format(round(thresholds, 2), nsmall = 2)
+
+##old 
+# explookup <- function(density, thresholds){
+#   
+#   if(density > 1 && thresholds == 0){
+#     stop("Density requested higher than 0 when threshold is 0.")}
+#   idx <- which.min(abs(density-D[,toString(thresholds)]))
+#   #debug
+#   #print(paste("ans: ", density, D[idx,toString(thresholds)]))
+#   #interpolation between values
+#   
+#   lambda <- as.numeric(row.names(D)[idx])
+#   return(lambda)
+# }
 
 explookup <- function(density, thresholds){
-    
-    if(density > 1 && thresholds == 0){
-        stop("Density requested higher than 0 when threshold is 0.")}
-    idx <- which.min(abs(density-D[,toString(thresholds)]))
-    #debug
-    #print(paste("ans: ", density, D[idx,toString(thresholds)]))
-    #interpolation between values
-    
-    lambda <- as.numeric(row.names(D)[idx])
-    return(lambda)
+  
+  if(density > 1 && thresholds == 0){
+    stop("Density requested higher than 0 when threshold is 0.")}
+  
+  .thresholds= format(round(thresholds, 2), nsmall = 2)
+  idx <- which.min(abs((1-density) - D[, which(colnames(D)==.thresholds)]))
+  
+  #debug
+  #print(paste("ans: ", density, D[idx,toString(thresholds)]))
+  #interpolation between values
+  
+  lambda <- as.numeric(row.names(D)[idx])
+  return(lambda)
 }
 
 # Test range of generated densities at all threshold levels
 testlookup <- function(dresolution, tresolution){
-    
-    dtest <- seq(0, 1, by=dresolution)
-    ttest <- seq(tresolution, 1, by=tresolution)
-    error_mat <- matrix(NA, nrow=length(dtest), ncol = length(ttest))
-    
-    for(i in dtest){
-        for(j in ttest){
-            res_lambda <- explookup(i, j)
-            if(is.nan(D[toString(res_lambda), toString(j)])){
-                stop(paste('an answer in test range is NaN:', 
-                           i, j, D[toString(res_lambda), toString(j)]))}
-            if(is.na(D[toString(res_lambda), toString(j)])){
-                stop(paste('an answer in test range is NA:', 
-                           i, j, D[toString(res_lambda), toString(j)]))}
-            #print(paste(i, D[toString(res_lambda), toString(j)], abs(i-D[toString(res_lambda), toString(j)])))
-            # Get lookup error
-            error_mat[which(dtest == i),which(ttest == j)] <- 
-                abs(i - D[toString(res_lambda), toString(j)])
-            
-            if(error_mat[which(dtest == i),which(ttest == j)] > 0.01){ print(paste(i, j)) }
-        }
+  
+  dtest <- seq(0, 1, by=dresolution)
+  ttest <- seq(tresolution, 1, by=tresolution)
+  error_mat <- matrix(NA, nrow=length(dtest), ncol = length(ttest))
+  
+  for(i in dtest){
+    for(j in ttest){
+      res_lambda <- explookup(i, j)
+      if(is.nan(D[toString(res_lambda), toString(j)])){
+        stop(paste('an answer in test range is NaN:', 
+                   i, j, D[toString(res_lambda), toString(j)]))}
+      if(is.na(D[toString(res_lambda), toString(j)])){
+        stop(paste('an answer in test range is NA:', 
+                   i, j, D[toString(res_lambda), toString(j)]))}
+      #print(paste(i, D[toString(res_lambda), toString(j)], abs(i-D[toString(res_lambda), toString(j)])))
+      # Get lookup error
+      error_mat[which(dtest == i),which(ttest == j)] <- 
+        abs(i - D[toString(res_lambda), toString(j)])
+      
+      if(error_mat[which(dtest == i),which(ttest == j)] > 0.01){ print(paste(i, j)) }
     }
-    print(paste("Resolution - density:", dresolution, ",threshold:", tresolution))
-    print(paste("For resolution generated function has lookup mean error of:", mean(error_mat)))
-    print(paste("lookup max error of:", max(error_mat)))
+  }
+  print(paste("Resolution - density:", dresolution, ",threshold:", tresolution))
+  print(paste("For resolution generated function has lookup mean error of:", mean(error_mat)))
+  print(paste("lookup max error of:", max(error_mat)))
 }
 testlookup(0.01, 0.01)
 # gen res(0.01, 0.001) ~831.6Mb 25 Oct 2019
@@ -62,7 +81,7 @@ testlookup(0.01, 0.01)
 
 # Rough test because integrate at low values may have issues
 # https://stat.ethz.ch/pipermail/r-help/2008-December/182311.html
-lambda <- explookup(0.3, 0.5) # get exp distribution param based on density and threshold
+lambda <- explookup(0.302345, 0.502345) # get exp distribution param based on density and threshold
 dist <- rexp(round(1000), 1/lambda)
 pdf <- density(dist)
 plot(pdf)

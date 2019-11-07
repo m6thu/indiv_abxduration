@@ -146,17 +146,17 @@ nextDay <- function(patient.matrix, abx.matrix, colo.matrix,
     if(length(sr)){
       
       if(repop.r+repop.s + mu > 1){
-        stop(paste("Error stopifnot: repop.r+repop.s + mu > 1 in First scenario: those with no antibiotics on previous day"))
-      }
+         stop(paste("Error stopifnot: repop.r+repop.s + mu > 1 in First scenario: those with no antibiotics on previous day"))
+       }
       
       roll= runif(length(sr), 0, 1)
       
       # If roll passes repop.r R grows
       sR_idx = sr[roll < repop.r]
       # if roll does not pass repop.r event and passes repop.s 
-      Sr_idx = sr[roll > repop.r  & roll <= repop.s+repop.r]
+      Sr_idx = sr[roll > repop.r & roll <= repop.r + repop.s]
       # if roll does not pass repop.r and repop.s, and passes mu
-      ss_idx = sr[roll>repop.s+repop.r & roll <= repop.s+repop.r+mu]
+      ss_idx = sr[roll > repop.r + repop.s & roll <= repop.r + repop.s + mu]
       
       same_idx= sr[!(sr %in% c(sR_idx, Sr_idx, ss_idx))]
       
@@ -379,9 +379,9 @@ diff_prevalence <- function(n.bed, max.los,
   n.day = 300
   
   if (abx.r>0.01){ #scenario A
-    iterations= 150
+    iterations= 1
   } else { #scenario B
-    iterations= 100
+    iterations= 1
   }
   
   iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)
@@ -454,9 +454,9 @@ prevalence <- function(n.bed, max.los,
   n.day = 300
   
   if (abx.r>0.01){ #scenario A
-    iterations= 150
+    iterations= 50
   } else { #scenario B
-    iterations= 100
+    iterations= 50
   }
   
   iter_totalsR = matrix(NA, nrow = n.day, ncol = iterations)

@@ -10,14 +10,11 @@ library(ggpubr)
 library(reshape)
 
 # model can be "simple", "binary", or "frequency"
-model <- "binary"
+model <- "frequency"
 
 source("default_params.R")
 source('los_abx_matrix.R')
 source(paste0("model_", model,".R"))
-
-abx.s=0.3
-abx.r=0.3
 
 dataformosaic<-function(data,label,n.bed=n.bed, n.day=n.day, timestep=timestep){
     
@@ -406,11 +403,10 @@ if(model == "simple"){
     day1.short= admitdays(patient.matrix.short)
     abx.matrix.short=matrixes[[2]]
     los.array.short = summary.los(patient.matrix=patient.matrix.short)
-    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,r_trans = r_trans, r_thres=r_thres, K=K)
+    colo.matrix.short = colo.table(patient.matrix=patient.matrix.short, los.array=los.array.short, total_prop=total_prop, prop_R=prop_R,r_thres=r_thres, K=K)
     colo_table_filled_short = nextDay(patient.matrix=patient.matrix.short, los.array=los.array.short, abx.matrix=abx.matrix.short, colo.matrix=colo.matrix.short, 
-                                      pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_trans=r_trans, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
+                                      pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_growth=r_growth, r_thres=r_thres, r_trans=r_trans,s_growth=s_growth,
                                       abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
-    r_thres_short= colo.matrix.short[[4]]
     
     matrixes = los.abx.table(n.bed=n.bed, n.day=n.day, max.los=max.los, 
                              p.infect=p.infect, p.r.day1=p.r.day1, cum.r.1=cum.r.1, 
@@ -419,11 +415,10 @@ if(model == "simple"){
     day1.long= admitdays(patient.matrix.long)
     abx.matrix.long=matrixes[[2]]
     los.array.long = summary.los(patient.matrix=patient.matrix.long)
-    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,r_trans = r_trans, r_thres=r_thres, K=K)
+    colo.matrix.long = colo.table(patient.matrix=patient.matrix.long, los.array=los.array.long, total_prop=total_prop, prop_R=prop_R,r_thres=r_thres, K=K)
     colo_table_filled_long = nextDay(patient.matrix=patient.matrix.long, los.array=los.array.long, abx.matrix=abx.matrix.long, colo.matrix=colo.matrix.long, 
-                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_trans=r_trans, r_growth=r_growth, r_thres=r_thres, s_growth=s_growth,
+                                       pi_ssr=pi_ssr, total_prop = total_prop, K=K, r_growth=r_growth, r_thres=r_thres, r_trans=r_trans,s_growth=s_growth,
                                        abx.s=abx.s, abx.r=abx.r, timestep=timestep)[[2]]
-    r_thres_long= colo.matrix.long[[4]]
     
     #Plots 
     ####Abx use plots 
@@ -474,10 +469,10 @@ if(model == "simple"){
     
     ##Carriage mosaic 
     mosaicdata.car.short = dataformosaic(data=colo_table_filled_short,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.short$abovethreshold= as.factor(mosaicdata.car.short$`Number of R`>= as.vector(t(r_thres_short)))
+    mosaicdata.car.short$abovethreshold= as.factor(mosaicdata.car.short$`Number of R`>= r_thres)
     
     mosaicdata.car.long = dataformosaic(data=colo_table_filled_long,label='Number of R',n.bed=n.bed, n.day=n.day, timestep=timestep)
-    mosaicdata.car.long$abovethreshold= as.factor(mosaicdata.car.long$`Number of R`>= as.vector(t(r_thres_long)))
+    mosaicdata.car.long$abovethreshold= as.factor(mosaicdata.car.long$`Number of R`>= r_thres)
 
     sunflower=c("#d6e1d9",'#ee7a12')
     
@@ -518,7 +513,7 @@ if(model == "simple"){
     car.mosaic=ggarrange(p.car.short, p.car.long, ncol=2, common.legend = T, legend = 'bottom')
     
     ##total R per day 
-    totalRperday.short= rowSums(colo_table_filled_short >= r_thres_short)
+    totalRperday.short= rowSums(colo_table_filled_short >= r_thres)
     totalRperday.short.avg= rowMeans(matrix(totalRperday.short, ncol=timestep, byrow=T))
     Rperdaydata.short=data.frame(`Time (days)`= 1:n.day, 
                                  `Total R per day`= totalRperday.short.avg)
@@ -530,7 +525,7 @@ if(model == "simple"){
         theme(axis.text = element_text(size = base_size+2, colour = "grey50"), 
               axis.title = element_text(size=base_size+2))
     
-    totalRperday.long=rowSums(colo_table_filled_long >= r_thres_long)
+    totalRperday.long=rowSums(colo_table_filled_long >= r_thres)
     totalRperday.long.avg= rowMeans(matrix(totalRperday.long, ncol=timestep, byrow=T))
     Rperdaydata.long=data.frame(`Time (days)`= 1:n.day, 
                                 `Total R per day`= totalRperday.long.avg)
