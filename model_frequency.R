@@ -3,6 +3,7 @@ source('los_abx_matrix.R')
 
 r_beta = rbeta(5000, 0.1, 2) 
 r_beta_norm <- (r_beta-min(r_beta)) / (max(r_beta) - min(r_beta))
+
 # shape 1 and shape 2  based on rene gut data 
 # d = read.csv('gutdata/Ini_CTXm_copies_qPCR.csv')
 # hist(d$ini_CTXm_copies)
@@ -32,14 +33,20 @@ colo.table <- function(patient.matrix, los.array, total_prop, prop_R, r_thres, K
   total_existing [which(total_existing >= total_capacity)] = total_capacity [which(total_existing >= total_capacity)] #those exceeding total capacity will be given their own full capacity
   
   #amount of S and R carried 
-  r.id = sample(1:number_of_patients, size= round(prop_R * number_of_patients))
+  r.id = sample(1:number_of_patients, size= floor(prop_R * number_of_patients))
+  s.id = (1:number_of_patients) [-r.id]
   
   r_bact = rep(NA, number_of_patients)
-  for (ind in 1:number_of_patients){
+  for (ind in r.id){
     #expand r_beta to each individual's existing population
     r_list_full = r_beta_norm * total_existing [ind]
-    r_bact[ind] = ifelse(any(r.id==ind),  as.numeric(sample(as.character(r_list_full[which(r_list_full >= r_thres)]), 1)),  #list of r amounts to sample from for R
-                         as.numeric(sample(as.character(r_list_full[which(r_list_full < r_thres)]), 1)))#list of r amounts to sample from for S
+    r_bact[ind] = sample(r_list_full[which(r_list_full >= r_thres)], 1)#list of r amounts to sample from for R
+  }
+  
+  for (ind in s.id){
+    #expand r_beta to each individual's existing population
+    r_list_full = r_beta_norm * total_existing [ind]
+    r_bact[ind] = sample(r_list_full[which(r_list_full < r_thres)], 1)#list of r amounts to sample from for S
   }
 
   #check below equal to prop_R
@@ -181,7 +188,7 @@ diff_prevalence <- function(n.bed, max.los, p.infect, cum.r.1, p.r.day1,
   
   timestep = 1
   n.day = 300
-  iterations=20
+  iterations=50
   
   #iter_totalR.no = matrix(NA, nrow = n.day, ncol = iterations)
   iter_totalR.thres = matrix(NA, nrow = n.day, ncol = iterations)

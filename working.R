@@ -47,6 +47,9 @@ abx.r=0.00000001
 short_dur=3.664
 long_dur=16.9
 
+r_trans=10
+r_thres=2
+
 matrixes=los.abx.table(n.bed, n.day, max.los, p.infect, p.r.day1, cum.r.1,meanDur, timestep=1)
 patient.matrix=matrixes[[1]]
 abx.matrix=matrixes[[2]]

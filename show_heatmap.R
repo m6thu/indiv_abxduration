@@ -7,12 +7,13 @@ setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration')
 rm(list=ls()) # Clean working environment
 
 library(parallel)
+library(ggplot2)
 
 model='frequency'
 source(paste0('model_', model, '.R'))
 source("default_params.R")
 
-pixels=15  #how many pixels per heatmap
+pixels=5  #how many pixels per heatmap
 
 ###################### Change parameters here: START ##################
 y_name <- "r_trans"

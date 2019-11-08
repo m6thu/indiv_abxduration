@@ -2,14 +2,14 @@
 
 #common parameters 
 common.para = list(n.bed =30,        # n.bed= number of beds in the ward
-                   max.los = 10,     # mean.max.los= mean of max length of stay (exponential distribution)
+                   max.los = 15,     # mean.max.los= mean of max length of stay (exponential distribution)
                    n.day = 365,
                    short_dur = 5,
                    long_dur = 15,
                    meanDur = 10,
-                   prop_R = 1,      # Probability of being colonized with resistant strain on admission
+                   prop_R = 0.2,      # Probability of being colonized with resistant strain on admission
                    pi_ssr = 0.1,    # pi_ssr= probability of R transmitting 
-                   cum.r.1 = 900, 
+                   cum.r.1 = 500, 
                    p.infect = 0.2,  # p=probability of receiving antibiotic
                    p.r.day1 = 0.2, 
                    timestep = 1)
