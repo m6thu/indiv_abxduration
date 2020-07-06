@@ -1,7 +1,10 @@
-#######Modelling Day Project######
-#######Parameter exploration######
+###################################################################################
+###Effect of antibiotic duration on resistance carriage in hospitalised patients###
+###################### explore PRCC of binary model ###############################
+###################################################################################
+rm(list=ls()) # Clean working environment
+
 ################################### Dependencies and functions ################################################
-setwd('/Users/moyin/Documents/nBox/git_projects/indiv_abxduration/')
 
 # SAMPLE PARAMETER SPACE 
 # load libraries 
@@ -9,7 +12,7 @@ require(pse) #load pse package for Latin Hypercube
 require(sensitivity) #load sensitivity package for sensitivity analysis
 require(parallel) # load parallel processing package to use multiple cores on computer (or cluster)
 
-cl <- makeCluster(detectCores())
+cl <-makeCluster(12, outfile=paste0('/Users/moyin/Desktop/parallel_error_binary_', Sys.time(), '.txt'))
 
 model <- 'binary'
 #source(paste0("model_binary.R"))
@@ -32,19 +35,19 @@ modelRun.binary <- function (data.df) { #data.df is a dataframe of the parameter
 parameters <- list(
     c("qunif", list(min=5, max=50), "n.bed"),         #n.bed; number of beds in the ward
     c("qunif", list(min=3, max=20), "max.los"),       #max.los; mean of length of stay (exponential distribution)
-    c("qunif", list(min=0, max=1), "prop_R"),       #probability of initial carriage of resistant organisms
+    c("qunif", list(min=0, max=0.8), "prop_R"),       #probability of initial carriage of resistant organisms
     c("qunif", list(min=0, max=1), "prop_r"),         #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
     c("qunif", list(min=0, max=1), "prop_Sr"),        #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
     c("qunif", list(min=0, max=1), "prop_S"),         #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
     c("qunif", list(min=0, max=1), "bif"),            #bacterial interference factor (pi_ssr = pi_r1 * bif )
     c("qunif", list(min=0.001, max=0.3), "pi_ssr"),   #probability of being transmitted r to ss (ss—> ssr)
-    c("qunif", list(min=0.005, max=0.015), "repop.s"),#probability of regrowth of S  (s—>S)
-    c("qunif", list(min=0.01, max=0.05), "repop.r"),  #probability of regrowth of s (sr—> sR)
+    c("qunif", list(min=0.02, max=0.12), "repop.s"),  #probability of regrowth of S  (s—>S)
+    c("qunif", list(min=0.02, max=0.15), "repop.r"),  #probability of regrowth of s (sr—> sR)
     c("qunif", list(min=0.002, max=0.02), "mu"),      #probability of being decolonised to S (Sr—> S) 
     c("qunif", list(min=0.1, max=0.5), "abx.s"),      #probability of clearing S to become s
-    c("qunif", list(min=0.1, max=0.5), "abx.r"),  #probability of clearing R to become r
+    c("qunif", list(min=0, max=0.0000000001), "abx.r"),  #probability of clearing R to become r
     c("qunif", list(min=0.1, max=1), "p.infect"),     #probability of being prescribed narrow spectrum antibiotic
-    c("qunif", list(min=10, max=1000), "cum.r.1"),    #admission day when cummulative prabability of HAI requiring abx.r is 1
+    c("qunif", list(min=30, max=300), "cum.r.1"),     #admission day when cummulative prabability of HAI requiring abx.r is 1
     c("qunif", list(min=0.1, max=1), "p.r.day1"),     #probability of being prescribed broad spectrum antibiotic on day 1 of admission 
     c("qunif", list(min=3, max=7), "short_dur"),      #mean short duration of antibiotics (normal distribution) 
     c("qunif", list(min=14, max=21), "long_dur")      #mean long duration of antibiotics (normal distribution) 
@@ -66,9 +69,9 @@ if(!(sum(factors == parameters_diff_prevalence_binary) ==  length(parameters_dif
 
 #Run model and save runs 
 ##run 1
-abxr='notzero'
+abxr='zero'
 old <- Sys.time() # get start time
-N=1001
+N=370
 LHS.binary <- LHS(modelRun.binary, factors, N=N, q, q.arg, nboot=100, cl=cl)
 new <- Sys.time() - old # calculate difference
 print(new) # print in nice format
@@ -86,4 +89,15 @@ image_name <- paste0("LHSdiff_", model, "_", N, "_",abxr, "_",format(Sys.time(),
 save(LHS.binary2, file=paste0("./runs/", image_name, ".Rdata"))
 
 stopCluster(cl)
+
+# Check agreement between runs to decide if our sample size for adequate 
+# Symmetric Best Measure of Agreement (SBMA) between the PRCC coeffients of two runs with different sample sizes.
+output1=get(load('runs/LHSdiff_simple_200_zero15Mar2020_1715GMT.Rdata'))
+output2=get(load('runs/LHSdiff_simple_300_zero16Mar2020_0021GMT.Rdata'))
+(mySbma <- sbma(output1, output2))
+# value of -1 indicates complete disagreement between the runs 
+# value of 1 indicated complete agreement  (>0.7 acceptable)
+# caveat: if none of the model parameters is monotonically correlated with the output, 
+# the agreement between runs may stay as low as 0.2 even for very large hypercubes.
+
 
