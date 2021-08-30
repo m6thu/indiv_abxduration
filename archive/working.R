@@ -70,6 +70,9 @@ p.r.day1=0.65952380952381
 K=15
 total_prop=0.1
 prop_R=0.8
+prop_Sr=0.8
+prop_r=0.8
+fitness.r = 0.1
 pi_ssr=0.221690476190476
 r_trans=7
 r_growth=0.753703703703704
@@ -79,6 +82,16 @@ abx.s=  0.797354497354497
 abx.r= 9.78835978835979e-15
 short_dur=6.43915343915344
 long_dur= 17.2037037037037
+n.day = 300
+iterations = 2
+meanDur = 3
+p.r.after = 0.3
+prop_S = 0.3
+timestep = 1
+bif = 0.9
+repop.s = 0.0001
+mu = 0.0001
+burn_in = 100
 
 matrixes=los.abx.table(n.bed, n.day, max.los, p.infect, p.r.day1, cum.r.1,meanDur, timestep=1)
 patient.matrix=matrixes[[1]]

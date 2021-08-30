@@ -1,22 +1,21 @@
 ############## Shared parameters ##################
 #fixed parameters 
 n.bed<-20                             # n.bed= number of beds in the ward
-mean.max.los<-7                      # mean.max.los= mean of max length of stay (exponential distribution)
-sdDur <- 3                              # sdDur = sd of duration of antibiotics
-n.day<-500
+mean.max.los<-7                       # mean.max.los= mean of max length of stay (exponential distribution)
+sdDur <- 1                            # sdDur = sd of duration of antibiotics
+n.day<-300
 
 ############# Simple model #################
 short_dur <- 5
 long_dur <- 20
 
-p <- 0.4                             # p=probability of receiving antibiotic
+p <- 0.4                            # p=probability of receiving antibiotic
 prob_StartBact_R <- 0.4             # Probability of being colonized with resistant strain on admission
-prop_S_nonR <- 0.5                # Proportion of large S within non-resistant states (S+s)
-bif <- 0.3 # bacterial interference factor 
-pi_ssr <- 0.0001 # pi_s= probability of R transmitting to ss
+prop_S_nonR <- 0.5                  # Proportion of large S within non-resistant states (S+s)
+bif <- 0.3                          # bacterial interference factor 
+pi_ssr <- 0.0001                    # pi_s= probability of R transmitting to ss
 repop.s1 <- 0
-mu_r <- 0  # mu_r= rate of clearance of R to become S 
-abx.clear <- 0.5  # probability of clearing S to become ss under antibiotic treatment 
+mu_r <- 0                           # mu_r= rate of clearance of R to become S 
 
 ############## Binary model ###################
 short_dur.s <- 5

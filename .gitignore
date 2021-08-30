@@ -37,3 +37,11 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+*.Rdata
+*.txt
+
+#archived files 
+/archive
+
+#AA_test
+/AA_tests/AA_runs/*.csv

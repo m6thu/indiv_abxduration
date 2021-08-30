@@ -1,0 +1,805 @@
+---
+title: "Ranges of parameters used"
+author: "Mo Yin"
+date: "5/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list = ls())
+setwd("/Users/moyin/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration")
+```
+
+This document includes how the ranges for the various models were decided and the respective references used. 
+
+## $\color{blue}{\text{Ward characteristics}}$
+
+### n.bed 
+
+Taken arbitrarily at 5-50 
+
+### max.los 
+
+How does max.los relate to final distribution of los, given that:
+
+* From the los_abx_matrix*.R function 
+```{r, eval = FALSE}
+all_los = ceiling(rexp(n.patient, 1/max.los))
+all_los[all_los > (5 * max.los)] = ceiling(max.los)
+```
+* Also, in the following step, prescription of antibiotic during admission, may prolong los (in the varydur function)?
+
+
+If we take the following values and plug into los_abx_table_varydur.R:
+```{r}
+n = 100
+
+para.df = data.frame(max.los = runif(n, min = 3, max = 20),
+                     n.bed = runif(n, min = 5, max = 50),
+                     n.day = 400,
+                     p.infect = runif(n, min = 0.1, max = 1),
+                     p.r.day1 = runif(n, min = 0.1, max = 1),
+                     p.r.after = runif(n, min = 0.1, max = 1),
+                     cum.r.1 = runif(n, min = 30, max = 300),
+                     meanDur = runif(n, min = 3, max = 21),
+                     timestep = 1)
+
+```
+
+```{r, include = F}
+source('~/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration/models/los_abx_matrix_varydur.R')
+source('~/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration/models/summary_los.R')
+source('~/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration/models/msm_util_rtnorm.R')
+
+para.list = as.list(as.data.frame(t(para.df)))
+
+mats = lapply(para.list, function(x) {
+  names(x) = names(para.df)
+  los_abx_table_varydur(max.los = x['max.los'], n.bed = x['n.bed'], n.day = x['n.day'], p.infect = x['p.infect'],
+                        p.r.day1 = x['p.r.day1'], p.r.after = x['p.r.after'], cum.r.1 = x['cum.r.1'], meanDur = x['meanDur'],
+                        timestep = x['timestep'])
+})
+
+```
+
+
+```{r, echo = F}
+
+los = lapply(mats, function(x){summary_los(x[[1]])[2,]})
+
+plot(density(unlist(los)), main = "", xlab = 'length of stay in days')
+
+```
+
+## $\color{blue}{\text{Antibiotic prescription}}$
+
+### p.infect, p.r.day1, p.r.after
+
+Taken arbitrarily at 0.1 to 1
+
+### cum.r.1
+
+How does cum.r.1 relate to the proportion of patients receiving antibiotics in the ward on any given day?
+
+If we take the following values and plug into los_abx_table_varydur.R (same as above):
+```{r}
+n = 100
+
+para.df = data.frame(max.los = runif(n, min = 3, max = 20),
+                     n.bed = runif(n, min = 5, max = 50),
+                     n.day = 400,
+                     p.infect = runif(n, min = 0.1, max = 1),
+                     p.r.day1 = runif(n, min = 0.1, max = 1),
+                     p.r.after = runif(n, min = 0.1, max = 1),
+                     cum.r.1 = runif(n, min = 30, max = 300),
+                     meanDur = runif(n, min = 3, max = 21),
+                     timestep = 1)
+
+```
+
+```{r, include = F}
+
+abx.propperday = lapply(mats, function(x){rowMeans(x[[2]] > 0)})
+
+```
+
+
+```{r, echo = F}
+
+plot(density(unlist(abx.propperday)), main = "", xlab = 'Proportion of patients on antibiotics on any particular day')
+
+```
+
+## $\color{blue}{\text{Transmission}}$
+
+### pi_ssr
+
+Community setting: 
+
+* Tangden 2010: 24/ 100 acquired ESBL-producing Escherichia coli after the trip. The median length of stay abroad was 2 weeks (range, 1 to 26 weeks). 
+
+Hospital setting: 
+
+* Hilty 2012: A total of 88 hospital patients were exposed for 715 days to the 40 index in patients with ESBL-Ec for a mean (± SD) of 8.1 days (± 5.8). The mean (± SD) follow-up time of the hospital contacts was 27.6 days (± 40.0). The overall transmission rate for ESBL-Ec was 4.5% (4 of 88 exposed contacts), corresponding to an incidence of transmission of 5.6 cases per 1000 exposure days. ESBL-Kp: 8.3%
+
+* Fankhauser 2009: Transmission rate of 2.8% and 4.2 cases per 1000 exposure days
+
+* Uemura 2017: 1 month 41 beds, 20 new cases = ~ 30 days for cumulative risk to become 0.50
+
+* Maamar 2016: 2 months, 63 patients baseline ESBL carriage 20.63% (13/63) at admission. Among the 50 non-carriers, 35 were resampled during their hospitalization and the acquisition rate was 42.85% (15/35). 
+
+* Tran 2019: Prevalence of CRE colonisation increased on average 4.2%/day and mean CRE colonisation rates increased from 13% on the day of admission to 89% at day 15 of hospital stay. At the NICU, CRE colonisation increased from 32% at admission to 87% at discharge
+
+Hence upper limit of pi_ssr = 80% cumulative risk in 2 weeks (Tran);
+Lower limit of pi_ssr = 0
+
+
+In all three models, transmissions are modeled as independent events depending on the number of other R carriers in the ward.
+```{r}
+
+n = 100
+
+# range of transmission parameter and max number of R carriers in the ward given the ward capacity
+pi_ssr = runif(n, min = 0, max = 0.3)
+``` 
+
+
+```{r, echo = FALSE}
+# max of daily transmission risk 
+pi = lapply(pi_ssr, function(x) {1 - ((1 - x) ^ 1)})
+
+# number of days of observation 
+obs.day = 1:30 
+
+# transmission risk per day (for an individual to be transmitted R on one day given not yet transmitted in the previous days)
+riskcumsum = lapply(pi, function(x){
+  cumsum((1 - x)^(obs.day - 1) * x)
+})
+riskcumsum.df = do.call('rbind', riskcumsum)
+riskcumsum.mean = colMeans(riskcumsum.df)
+
+plot(y = riskcumsum.mean, x = obs.day, main = "Assuming all patients in the wards are R carriers", 
+     ylab = 'Cumulative risk of infection per day',
+     xlab = 'Day in the ward', type = 'l')
+
+```   
+
+### r_thres and r_trans (population growth model) 
+
+Taken arbitrarily at 0.01 to 0.2
+
+
+### bif (simple 3 state model) 
+
+Taken arbitrarily at 0 to 1
+
+## $\color{blue}{\text{Baseline carriage status}}$
+
+### prop_R 
+How many Rs (and sR, Sr, sr, s, S) are there on admission?
+
+Codes from the various models to determine initial carriage status
+```{r, eval = FALSE}
+# simple 3 state model 
+prop_R = c("qunif", list(min=0, max=0.8))       #"prob_StartBact_R",probability of initial carriage of resistant organisms
+prop_S = c("qunif", list(min=0, max=1))         #"prop_S", proportion of S in the population of S and ss
+
+prop_start_S = prop_S * (1 - prop_R)
+
+# cocarriage 5 state model 
+prop_R = c("qunif", list(min=0, max=0.8))          #probability of initial carriage of resistant organisms
+prop_r = c("qunif", list(min=0, max=1))            #proportion of S in (S+s): prob_start_S <- prop_S_nonR*(1-prob_R)
+prop_Sr = c("qunif", list(min=0, max=1))           #proportion of Sr in (r+R): prob_start_Sr <- prop_Sr_inR*prob_R
+prop_S = c("qunif", list(min=0, max=1))            #proportion of sr in (r+r): prob_start_sr <- prop_sr_inR*prob_R
+
+prob_start_sR = prop_R
+#S, ss, Sr, sr come from (1-prop_R)
+#Sr, sr come from prop_r*(1-prop_R)
+prob_start_Sr = prop_Sr * prop_r * (1 - prop_R)
+prob_start_sr = (1 - prop_Sr) * prop_r * (1 - prop_R)
+#S, ss come from (1-prop_r)*(1-prop_R)
+prob_start_S = prop_S * (1 - prop_r) * (1 - prop_R)
+prob_start_ss = (1 - prop_S) * (1 - prop_r) * (1 - prop_R)
+
+# population growth model 
+total_capacity = rnorm(number_of_patients, mean = K) #in log 
+total_capacity_matrix = matrix(rep(total_capacity, los.array[2,]), byrow = F, ncol = ncol(patient.matrix)) #in log 
+
+#existing population 
+#existing population mean is proportion (total_prop) of total capacity instead of a proportion of the 
+#distribution of the total capacity so that some starts at full capacity while others are not 
+#which is similar to model 2 where there is sr 
+total_existing_mean = log(total_prop * exp(total_capacity)) #in log 
+total_existing = rnorm(number_of_patients, mean = total_existing_mean) #total number of Enterobacteriaceae is a proportion of the capacity (log)
+total_existing [which(total_existing >= total_capacity)] = total_capacity [which(total_existing >= total_capacity)] #those exceeding total capacity will be given their own full capacity
+
+#amount of S and R carried 
+r_thres_log = log(r_thres * exp(total_existing)) # a proportion of the total gut capacity 
+r_thres_matrix = matrix(rep(r_thres_log, los.array[2,]), byrow = F, ncol = ncol(patient.matrix)) #in log 
+
+morethan_rthres = which(total_existing > r_thres_log)  #pick patients who have existing Enterobacteriaceae more than r_thres (log) 
+r.id = sample(morethan_rthres, size = floor(prop_R * number_of_patients)) 
+if (length(r.id) > 0) {s.id = (1:number_of_patients) [-r.id]} else {s.id = (1:number_of_patients)}
+
+```
+
+Taking the same para.list as above, and taking prop_R 0 to 0.8, and other parameters as above.
+
+```{r, include = FALSE}
+
+#### SIMPLE 3 state
+source('~/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration/models/model_simple3state.R')
+
+simple.init = lapply(mats, function(x){
+  x[[3]] = runif(1, min = 0, 0.8) # prop_R
+  x[[4]] = runif(1, min = 0, 1)   # prop_S
+  return(x)
+})
+
+simple.init.summary = lapply(simple.init, function(x){
+  patient.matrix = x[[1]]
+  n.patient = max(patient.matrix)
+  los.array = summary_los(patient.matrix)
+  prop_R = x[[3]]
+  prop_S = x[[4]]
+  init = colo.table(patient.matrix = patient.matrix, los = los.array, 
+                    prop_R = prop_R, prop_S = prop_S)
+  data.frame(R = sum(init == 'R', na.rm = T)/n.patient,
+             S = sum(init == 'S', na.rm = T)/n.patient,
+             ss = sum(init == 'ss', na.rm = T)/n.patient)
+})
+simple.init.df = do.call('rbind', simple.init.summary)
+simple.init.mean = colMeans(simple.init.df)
+
+#### COCARRIAGE 5 STATE
+source('~/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration/models/model_cocarriage5state.R')
+
+cocarriage.init = lapply(mats, function(x){
+  x[[3]] = runif(1, min = 0, max = 0.8) # prop_R
+  x[[4]] = runif(1, min = 0, max = 1)   # prop_r
+  x[[5]] = runif(1, min = 0, max = 1)   # prop_Sr
+  x[[6]] = runif(1, min = 0, max = 1)   # prop_S
+  return(x)
+})
+
+cocarriage.init.summary = lapply(cocarriage.init, function(x){
+  patient.matrix = x[[1]]
+  n.patient = max(patient.matrix)
+  los.array = summary_los(patient.matrix)
+  prop_R = x[[3]]
+  prop_r = x[[4]]
+  prop_Sr = x[[5]]
+  prop_S = x[[6]]
+  init = colo.table(patient.matrix = patient.matrix, los = los.array, 
+                    prop_R = prop_R, prop_r = prop_r, prop_Sr = prop_Sr, 
+                    prop_S = prop_S)
+  data.frame(R = sum(init == 'sR', na.rm = T)/n.patient,
+             sr = sum(init == 'sr', na.rm = T)/n.patient,
+             Sr = sum(init == 'Sr', na.rm = T)/n.patient,
+             S = sum(init == 'S', na.rm = T)/n.patient,
+             ss = sum(init == 'ss', na.rm = T)/n.patient)
+})
+cocarriage.init.df = do.call('rbind', cocarriage.init.summary)
+cocarriage.init.mean = colMeans(cocarriage.init.df)
+
+#### POPULATION GROWTH
+source('~/Documents/nBox/git_projects/indiv_abxduration(inc metaanalysis)/indiv_abxduration/models/model_populationgrowth.R')
+populationgrowth.init = lapply(mats, function(x){
+  x[[3]] = runif(1, min = 0, max = 0.8) # prop_R
+  x[[4]] = runif(1, min = 0.1, max = 0.9) # total_prop
+  x[[5]] = runif(1, min = 0.01, max = 0.2) # r_thres
+  x[[6]] = runif(1, min = exp(18), max = exp(24)) # K
+  return(x)
+})
+
+populationgrowth.init.summary = lapply(populationgrowth.init, function(x){
+  patient.matrix = x[[1]]
+  n.patient = max(patient.matrix)
+  los.array = summary_los(patient.matrix)
+  prop_R = x[[3]]
+  total_prop = x[[4]]
+  r_thres = x[[5]]
+  K = x[[6]]
+  init = colo.table(patient.matrix = patient.matrix, los = los.array, 
+                    total_prop = total_prop, prop_R = prop_R,  r_thres = r_thres,
+                    K = K)
+  sum(init[[2]] > init[[4]], na.rm = T)/n.patient
+})
+populationgrowth.init.mean = data.frame(R = mean(unlist(populationgrowth.init.summary)))
+
+mean.tab = plyr::rbind.fill(as.data.frame(t(simple.init.mean)), 
+                            as.data.frame(t(cocarriage.init.mean)), 
+                            as.data.frame(populationgrowth.init.mean))
+
+rownames(mean.tab) = c('Simple 3 state', 'Co-carriage 5 state', 'Population growth')
+```
+
+Starting states for patients admitted into the wards (mean proportion of all the admitted patients per iteration):
+
+```{r, echo = FALSE, message = FALSE}
+library(dplyr)
+library(huxtable)
+as_hux(mean.tab) %>%
+  set_all_padding(4) %>% 
+  set_outer_padding(0) %>% 
+  set_number_format(2) %>% 
+  set_bold(row = 1, col = everywhere) %>% 
+  set_bottom_border(row = 1, col = everywhere) %>% 
+  set_width(0.4 ) %>%
+  add_rownames()
+
+```
+
+### K (population growth model) (Mean total gut carrying capacity for Enterobacteriaceae (log scale)) 
+
+* Tongeren 2005
+-	Total carrying capacity ~ log(2*10^11) = 26
+-	Enterobacteriaceae ~ log(7*10^7) = 18 
+-	Proportion of Enterobacteriaceae ~ 0.002
+
+* Ranninella 2019
+-	The density of bacterial cells in the colon has been estimated at 1011 to 1012 per milliliter (log values are 25-27)
+
+Hence, if total carrying capacity of gut 25-28, and proportion of Enterobacteriaceae 0.001 to 0.01, then K = 18-24
+
+### total_prop (population growth model)
+
+Taken arbitrarily at 0.1 to 0.9
+
+## $\color{blue}{\text{Decolonisation}}$
+
+### mu (simple 3 state and cocarriage 5 state model)
+
+* Haggai Bar-Yoseph 2016: colonization 100% at baseline, to 76.7% (95% CI=69.3%–82.8%) at 1 month, to 35.2% (95% CI=28.2%–42.9%) at 12 months = decolonized 17.2-30.7% 1 month, 57.1-71.8% 12 months
+
+* Mo 2020: probability of decolonization in 1 year was 98.5%, mean carriage duration was 86 days
+
+```{r, echo = FALSE, message = FALSE}
+# max of daily decolonisation probability
+
+mu = runif(n, min = 0.002, max = 0.02)
+
+# number of days of observation 
+obs.day = 1:365
+
+# decolonisation probs per day (for an individual to be decolonised of R on one day given not yet colonised in the previous days)
+riskcumsum = lapply(mu, function(x){
+  cumsum((1 - x)^(obs.day - 1) * x)
+})
+riskcumsum.df = as.data.frame(do.call('rbind', riskcumsum))
+colnames(riskcumsum.df) = obs.day
+riskcumsum.df$iter = 1:n
+riskcumsum.long = reshape2::melt(riskcumsum.df, id.vars = 'iter', value.name = 'probs', 
+                                 id.name = 'iter', variable.name = 'day')
+riskcumsum.long$day = as.numeric(riskcumsum.long$day)
+
+library(ggplot2)
+
+ggplot(riskcumsum.long, aes(x = day, y = probs, group = iter)) + 
+  geom_line(color = 'grey', alpha = 0.4) +
+  ylab('Cumulative probability of decolonisation per day') +
+  xlab('Day of observation') + 
+  scale_x_continuous(breaks = seq(0, max(obs.day), by = 25)) + 
+  theme_bw()
+```
+
+## Enterobacteriaceae growth 
+
+### repop.s (simple 3 state and cocarriage 5 state model)
+
+* Palleja 2018: 12 healthy men over a 6-month period following a 4-day intervention with a cocktail of meropenem, gentamicin and vancomycin. The gut microbiota of the subjects recovered to near-baseline composition within 1.5 months, although 9 common species, which were present in all subjects before the treatment, remained undetectable in most of the subjects after 180 days. 
+
+In this range (0.02-0.12), most would have recovered in 45 days; while the lower limit may take up to 180-200 days.  
+
+```{r, echo = FALSE, message = FALSE}
+# max of daily decolonisation probability
+repop.s = runif(n, min = 0.02, max = 0.12)
+
+# number of days of observation 
+obs.day = 1:200
+
+# recovery of microbiome probs per day (for an individual to have recovered on one day given not yet recovered in the previous days)
+riskcumsum = lapply(repop.s, function(x){
+  cumsum((1 - x)^(obs.day - 1) * x)
+})
+riskcumsum.df = as.data.frame(do.call('rbind', riskcumsum))
+colnames(riskcumsum.df) = obs.day
+riskcumsum.df$iter = 1:n
+riskcumsum.long = reshape2::melt(riskcumsum.df, id.vars = 'iter', value.name = 'probs', 
+                                 id.name = 'iter', variable.name = 'day')
+riskcumsum.long$day = as.numeric(riskcumsum.long$day)
+
+ggplot(riskcumsum.long, aes(x = day, y = probs, group = iter)) + 
+  geom_line(color = 'grey', alpha = 0.4) +
+  ylab('Cumulative probability of recovery (S growth) per day') +
+  xlab('Day of observation') + 
+  scale_x_continuous(breaks = seq(0, max(obs.day), by = 25)) + 
+  theme_bw()
+```
+
+### s_growth (population growth model)
+
+Here also have to consider r_growth and fitness.r, related to s_growth by `r print("r_growth = repop.s * fitness.r")`. 
+
+The population growth model is set up such that when S + R exceed total capacity, S growth will take over while R dies off. This is related to decolonisation (mu in the other 2 models).
+
+The graph below shows S and R growth without antibiotic killing over a year using s_growth min = 0.001, max = 0.5, and fitness.r min = 0, max = 5. 
+
+Note in the graph below, each panel refers to the results from a single combination of parameters. 
+
+```{r, include = FALSE}
+
+growth.perparacombi = lapply(populationgrowth.init, function(x){
+  
+  n.day = 365
+  n.bed = 30
+  patient.matrix = matrix(rep(1:n.bed, each = n.day), nrow = n.day)
+  n.patient = max(patient.matrix)
+  los.array = summary_los(patient.matrix)
+  prop_R = x[[3]]
+  total_prop = x[[4]]
+  r_thres = x[[5]]
+  K = x[[6]]
+  colo.matrix = colo.table(patient.matrix = patient.matrix, los = los.array, 
+                           total_prop = total_prop, prop_R = prop_R,  r_thres = r_thres,
+                           K = K)
+  
+  S_table = exp(colo.matrix[[1]]) #in abs
+  R_table = exp(colo.matrix[[2]]) #in abs
+  
+  #capacity matrix for enterobacteriaceae growth (abs)
+  total_capacity = exp(colo.matrix[[3]]) 
+  
+  s_growth = runif(1, min = 0.001, max = 0.5)
+  fitness.cost = runif(1, min = 0, max = 2)
+  
+  r_growth = s_growth * fitness.cost
+  
+  # For each day (first day should be filled)
+  for(i in 2:nrow(patient.matrix)){
+    
+    ###### Convert all log scale parameters into normal scale for addition, then convert back to log
+    #for each person:
+    for(j in 1:ncol(patient.matrix)){
+      
+      #print(c(i,j))
+      
+      if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
+        # calculate effect of R logistic bacteria growth (abs) - only R growth if on antibiotics
+        R_grow = r_growth * R_table[i-1, j] * (1 - ((R_table[i-1, j] + S_table[i-1, j])/total_capacity[i, j])) 
+        # add effects to current table (abs first because log of a negative number is NaN)
+        R_table[i, j] = R_table[i-1, j] + R_grow 
+      } else {
+        R_table[i, j] = R_table[i, j] #if filled (abs)
+      }
+      if (R_table[i, j] < 0) {R_table[i, j] = 0}
+      
+      if(is.na(S_table[i, j])){ 
+        # calculate effect of S logistic bacteria growth (in absolute numbers)
+        S_grow = s_growth * S_table[i-1, j] * (1 - ((R_table[i-1, j] + S_table[i-1, j])/total_capacity[i, j])) # S may grow to max capacity
+        # apply effects (abs first because log of a negative number is NaN)
+        S_table[i, j] = S_table[i-1, j] + S_grow
+      } else { 
+        S_table[i, j] = S_table[i, j] #if filled (abs)
+      }
+      if (S_table[i, j] < 0) {S_table[i, j] = 0}
+      
+      
+      # trim range 
+      ### transmission only happens if R and S have not exceeded total capacity and S is not fully occupying the capacity
+      if(S_table[i, j] + R_table[i, j] > total_capacity[i, j]){ ## if existing S and R already exceed total capacity (abs)
+        
+        if (S_table[i, j] > total_capacity[i, j]) { # S has a growing advantage
+          S_table[i, j] = total_capacity[i, j]
+          R_table[i, j] = 0 
+        } else {
+          S_table[i, j] = S_table[i, j]
+          R_table[i, j] = total_capacity[i, j] - S_table[i, j] 
+        }
+        
+        #natural attrition of S and R take place according to their density if capacity exceeded
+        
+      } 
+      
+    }
+  }
+  
+  R_mean = rowMeans(R_table)
+  S_mean = rowMeans(S_table)
+  
+  return(list(R_mean = R_mean, S_mean = S_mean))
+  
+})
+
+clean.list = lapply(growth.perparacombi, function(x){
+  
+  data.frame(day = rep(1:length(x$R_mean), 2), 
+             perday = c(x$R_mean, x$S_mean), 
+             type = rep(c('R', 'S'), each = length(x$R_mean)))
+  
+})
+
+clean.df = do.call('rbind', clean.list) 
+clean.df$paraset = rep(1:(nrow(clean.df)/(nrow(clean.list[[1]]))), each = (nrow(clean.list[[1]])))
+clean.df$iter = rep(1:(nrow(clean.df)/(nrow(clean.list[[1]])/2)), each = (nrow(clean.list[[1]])/2))
+```
+
+```{r, message=F, echo=FALSE, fig.width=10, fig.height=10}
+ggplot(clean.df, aes(x = day, y = perday, group = iter, color = type)) + 
+  geom_line(alpha = 0.4) + 
+  ylab('Absolute numbers of bacteria') + 
+  xlab('Day of observation') + 
+  facet_wrap(.~ paraset) +
+  theme_bw() + 
+  theme(legend.position = 'bottom', 
+        strip.background = element_blank(),
+        strip.text.x = element_blank())
+```
+
+### fitness.r
+
+```{r, eval = FALSE}
+pop.r = repop.s * fitness.r 
+```
+
+Taken arbitrarily at 0.1 (very slow R growth compared to S growth) to 5 (faster growth than S)
+
+
+## $\color{blue}{\text{Antibiotic killing}}$
+
+Karslake Plos Comp. Biol 2016 : The inhibitory effects of antibiotics often decrease with increasing density of the starting microbial population, a phenomenon known as the inoculum effect
+
+Hence we take antibiotic killing to be density dependent in the population growth model.
+
+### abx.s (Third generation cephalosporin for third generation cephalosporin resistance)
+
+* Kemmerich 1983: E coli 9 log to <3 log after ceftazidime for 8 days
+
+The graph below shows S and R growth with third generation cephalosporin killing using abx.s min = 0.1, max = 0.5 and abx.r set to 0. Each patient received third generation cephalosporin for the first 8 days of admission.
+
+Note in the graph below, each panel refers to the results from a single combination of parameters. 
+
+```{r, include = FALSE}
+
+growth.perparacombi = lapply(populationgrowth.init, function(x){
+  
+  n.day = 30
+  n.bed = 30
+  patient.matrix = matrix(rep(1:n.bed, each = n.day), nrow = n.day)
+  n.patient = max(patient.matrix)
+  los.array = summary_los(patient.matrix)
+  prop_R = x[[3]]
+  total_prop = x[[4]]
+  r_thres = x[[5]]
+  K = x[[6]]
+  colo.matrix = colo.table(patient.matrix = patient.matrix, los = los.array, 
+                           total_prop = total_prop, prop_R = prop_R,  r_thres = r_thres,
+                           K = K)
+  
+  S_table = exp(colo.matrix[[1]]) #in abs
+  R_table = exp(colo.matrix[[2]]) #in abs
+  
+  # abx.matrix 
+  dur = 8
+  abx.matrix = matrix(rep(c(rep(1,dur), rep(0, n.day - dur)), each = n.bed), 
+                      byrow = T, 
+                      nrow = n.day)
+  
+  #capacity matrix for enterobacteriaceae growth (abs)
+  total_capacity = exp(colo.matrix[[3]]) 
+  
+  s_growth = runif(1, min = 0.1, max = 1)
+  fitness.cost = runif(1, min = 0, max = 2)
+  
+  abx.s = runif(1, min = 0.1, max = 0.5)
+  abx.r = 0 
+  
+  r_growth = s_growth * fitness.cost
+  
+  # For each day (first day should be filled)
+  for(i in 2:nrow(patient.matrix)){
+    
+    ###### Convert all log scale parameters into normal scale for addition, then convert back to log
+    #for each person:
+    for(j in 1:ncol(patient.matrix)){
+      
+      #print(c(i,j))
+      
+      if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
+        # calculate effect of R logistic bacteria growth (abs) - only R growth if on antibiotics
+        R_grow = r_growth * R_table[i-1, j] * (1 - ((R_table[i-1, j] + S_table[i-1, j])/total_capacity[i, j])) 
+        # abx killing if abx.matrix is r abx (== 2) (abs)
+        R_abx = -(abx.matrix[i-1, j] == 2) * abx.r * R_table[i-1, j]
+        # add effects to current table (abs first because log of a negative number is NaN)
+        R_table[i, j] = R_table[i-1, j] + R_grow + R_abx
+      } else {
+        R_table[i, j] = R_table[i, j] #if filled (abs)
+      }
+      if (R_table[i, j] < 0) {R_table[i, j] = 0}
+      
+      if(is.na(S_table[i, j])){ 
+        # calculate effect of S logistic bacteria growth (in absolute numbers)
+        S_grow = s_growth * S_table[i-1, j] * (1 - (S_table[i-1, j]/total_capacity[i, j])) # S may grow to max capacity
+        # calculate killing effect of antibiotics R and antibiotics S (abs)
+        S_abx = -(abx.matrix[i-1, j] >= 1) * abx.s * S_table[i-1, j]
+        # apply effects (abs first because log of a negative number is NaN)
+        S_table[i, j] = S_table[i-1, j] + S_grow + S_abx
+      } else { 
+        S_table[i, j] = S_table[i, j] #if filled (abs)
+      }
+      if (S_table[i, j] < 0) {S_table[i, j] = 0}
+      
+      
+      # transmission and trim range 
+      ### transmission only happens if R and S have not exceeded total capacity and S is not fully occupying the capacity
+      if(S_table[i, j] + R_table[i, j] > total_capacity[i, j]){ ## if existing S and R already exceed total capacity (abs)
+        
+        S_table[i, j] =  S_table[i, j] / (S_table[i, j] + R_table[i, j]) * total_capacity[i, j]
+        R_table[i, j] =  R_table[i, j] / (S_table[i, j] + R_table[i, j]) * total_capacity[i, j]
+        
+        #natural attrition of S and R take place according to their density if capacity exceeded
+        
+      } 
+    }
+  }
+  
+  R_mean = rowMeans(R_table)
+  S_mean = rowMeans(S_table)
+  
+  return(list(R_mean = R_mean, S_mean = S_mean))
+  
+})
+
+clean.list = lapply(growth.perparacombi, function(x){
+  
+  data.frame(day = rep(1:length(x$R_mean), 2), 
+             perday = c(x$R_mean, x$S_mean), 
+             type = rep(c('R', 'S'), each = length(x$R_mean)))
+  
+})
+
+clean.df = do.call('rbind', clean.list) 
+clean.df$paraset = rep(1:(nrow(clean.df)/(nrow(clean.list[[1]]))), each = (nrow(clean.list[[1]])))
+clean.df$iter = rep(1:(nrow(clean.df)/(nrow(clean.list[[1]])/2)), each = (nrow(clean.list[[1]])/2))
+```
+
+```{r, message=F, echo=FALSE, fig.width=10, fig.height=10}
+ggplot(clean.df, aes(x = day, y = perday, group = iter, color = type)) + 
+  geom_line(alpha = 0.4) + 
+  ylab('Absolute numbers of bacteria') + 
+  xlab('Day of observation') + 
+  facet_wrap(.~ paraset) +
+  theme_bw() + 
+  theme(legend.position = 'bottom', 
+        strip.background = element_blank(),
+        strip.text.x = element_blank())
+```
+
+### abx.r (Carbapenem for third generation cephalosporin resistance)
+
+* Kager 1989: Enterobacteriaceae 4-9 log to <1 log in all patients after 2 days of imipenem
+
+The graph below shows S and R growth with carbapenem killing using abx.s min = 0.1, max = 0.5 and abx.r min = 0.1, max = 0.5. Each patient received carbapenem for the first 8 days of admission.
+
+Note in the graph below, each panel refers to the results from a single combination of parameters. 
+
+```{r, include = FALSE}
+
+growth.perparacombi = lapply(populationgrowth.init, function(x){
+  
+  n.day = 30
+  n.bed = 30
+  patient.matrix = matrix(rep(1:n.bed, each = n.day), nrow = n.day)
+  n.patient = max(patient.matrix)
+  los.array = summary_los(patient.matrix)
+  prop_R = x[[3]]
+  total_prop = x[[4]]
+  r_thres = x[[5]]
+  K = x[[6]]
+  colo.matrix = colo.table(patient.matrix = patient.matrix, los = los.array, 
+                           total_prop = total_prop, prop_R = prop_R,  r_thres = r_thres,
+                           K = K)
+  
+  S_table = exp(colo.matrix[[1]]) #in abs
+  R_table = exp(colo.matrix[[2]]) #in abs
+  
+  # abx.matrix 
+  dur = 8
+  abx.matrix = matrix(rep(c(rep(2, dur), rep(0, n.day - dur)), each = n.bed), 
+                      byrow = T, 
+                      nrow = n.day)
+  
+  #capacity matrix for enterobacteriaceae growth (abs)
+  total_capacity = exp(colo.matrix[[3]]) 
+  
+  s_growth = runif(1, min = 0.1, max = 1)
+  fitness.cost = runif(1, min = 0, max = 2)
+  
+  abx.s = runif(1, min = 0.1, max = 0.5)
+  abx.r = runif(1, min = 0.1, max = 0.5)
+  
+  r_growth = s_growth * fitness.cost
+  
+  # For each day (first day should be filled)
+  for(i in 2:nrow(patient.matrix)){
+    
+    ###### Convert all log scale parameters into normal scale for addition, then convert back to log
+    #for each person:
+    for(j in 1:ncol(patient.matrix)){
+      
+      #print(c(i,j))
+      
+      if(is.na(R_table[i, j])){ # pick any; S and R should be filled in same slots
+        # calculate effect of R logistic bacteria growth (abs) - only R growth if on antibiotics
+        R_grow = r_growth * R_table[i-1, j] * (1 - ((R_table[i-1, j] + S_table[i-1, j])/total_capacity[i, j])) 
+        # abx killing if abx.matrix is r abx (== 2) (abs)
+        R_abx = -(abx.matrix[i-1, j] == 2) * abx.r * R_table[i-1, j]
+        # add effects to current table (abs first because log of a negative number is NaN)
+        R_table[i, j] = R_table[i-1, j] + R_grow + R_abx
+      } else {
+        R_table[i, j] = R_table[i, j] #if filled (abs)
+      }
+      if (R_table[i, j] < 0) {R_table[i, j] = 0}
+      
+      if(is.na(S_table[i, j])){ 
+        # calculate effect of S logistic bacteria growth (in absolute numbers)
+        S_grow = s_growth * S_table[i-1, j] * (1 - (S_table[i-1, j]/total_capacity[i, j])) # S may grow to max capacity
+        # calculate killing effect of antibiotics R and antibiotics S (abs)
+        S_abx = -(abx.matrix[i-1, j] >= 1) * abx.s * S_table[i-1, j]
+        # apply effects (abs first because log of a negative number is NaN)
+        S_table[i, j] = S_table[i-1, j] + S_grow + S_abx
+      } else { 
+        S_table[i, j] = S_table[i, j] #if filled (abs)
+      }
+      if (S_table[i, j] < 0) {S_table[i, j] = 0}
+      
+      
+      # transmission and trim range 
+      ### transmission only happens if R and S have not exceeded total capacity and S is not fully occupying the capacity
+      if(S_table[i, j] + R_table[i, j] > total_capacity[i, j]){ ## if existing S and R already exceed total capacity (abs)
+        
+        S_table[i, j] =  S_table[i, j] / (S_table[i, j] + R_table[i, j]) * total_capacity[i, j]
+        R_table[i, j] =  R_table[i, j] / (S_table[i, j] + R_table[i, j]) * total_capacity[i, j]
+        
+        #natural attrition of S and R take place according to their density if capacity exceeded
+        
+      } 
+    }
+  }
+  
+  R_mean = rowMeans(R_table)
+  S_mean = rowMeans(S_table)
+  
+  return(list(R_mean = R_mean, S_mean = S_mean))
+  
+})
+
+clean.list = lapply(growth.perparacombi, function(x){
+  
+  data.frame(day = rep(1:length(x$R_mean), 2), 
+             perday = c(x$R_mean, x$S_mean), 
+             type = rep(c('R', 'S'), each = length(x$R_mean)))
+  
+})
+
+clean.df = do.call('rbind', clean.list) 
+clean.df$paraset = rep(1:(nrow(clean.df)/(nrow(clean.list[[1]]))), each = (nrow(clean.list[[1]])))
+clean.df$iter = rep(1:(nrow(clean.df)/(nrow(clean.list[[1]])/2)), each = (nrow(clean.list[[1]])/2))
+```
+
+```{r, message=F, echo=FALSE, fig.width=10, fig.height=10}
+ggplot(clean.df, aes(x = day, y = perday, group = iter, color = type)) + 
+  geom_line(alpha = 0.4) + 
+  ylab('Absolute numbers of bacteria') + 
+  xlab('Day of observation') + 
+  facet_wrap(.~ paraset) +
+  theme_bw() + 
+  theme(legend.position = 'bottom', 
+        strip.background = element_blank(),
+        strip.text.x = element_blank())
+```
+
+
+
+
